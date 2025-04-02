@@ -6,7 +6,10 @@ import { ApiErrorResponse } from "./ApiResponse";
 
 // ----------------------------------------------------------------------
 
-const axiosInstance = axios.create({ baseURL: HOST_API });
+const axiosInstance = axios.create({
+  baseURL: HOST_API,
+  withCredentials: true,
+});
 
 axiosInstance.interceptors.response.use(
   (res) => res,
