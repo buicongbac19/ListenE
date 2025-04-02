@@ -150,7 +150,7 @@ export default function LoginForm({ shiftLeft, setShiftLeft }: Props) {
           }}
         >
           <Link
-            href="/register/forgot-password"
+            href="/auth/forgot-password"
             underline="none"
             sx={{
               fontSize: "20px",

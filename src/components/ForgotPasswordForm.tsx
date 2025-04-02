@@ -48,7 +48,7 @@ export default function ForgotPasswordForm() {
       const response = await resetPassword(data);
       if (response.status === 200)
         showSnackbar("Đổi mật khẩu thành công", "success");
-      navigate("/register");
+      navigate("/auth");
     } catch (error: any) {
       setError("email", {
         type: "manual",
@@ -309,7 +309,7 @@ export default function ForgotPasswordForm() {
         <Typography variant="body1" component="span">
           Nhớ mật khẩu?{" "}
         </Typography>
-        <Link href="/register" sx={{ cursor: "pointer" }} underline="hover">
+        <Link href="/auth" sx={{ cursor: "pointer" }} underline="hover">
           Đăng nhập
         </Link>
       </Box>

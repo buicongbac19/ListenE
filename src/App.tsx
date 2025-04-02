@@ -26,15 +26,12 @@ function App() {
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route path="home" element={<Home />} />
               </Route>
-              <Route path="/" element={<Navigate to="/register" replace />} />
+              <Route path="/" element={<Navigate to="/auth" replace />} />
 
               <Route path="/manage-user" element={<UserListView />} />
             </Route>
-            <Route path="/register" element={<Authentication />} />
-            <Route
-              path="/register/forgot-password"
-              element={<ForgotPassword />}
-            />
+            <Route path="/auth" element={<Authentication />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
           </Routes>
         </Router>
       </NavBarProvider>

@@ -41,7 +41,7 @@ export default function ResponsiveAppBar() {
     if (setting === "Đăng xuất") {
       try {
         await logout();
-        window.location.href = "/register";
+        window.location.href = "/auth";
       } catch (error) {
         console.error(error);
       }
