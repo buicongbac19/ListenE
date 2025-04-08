@@ -288,7 +288,6 @@ export default function TrackAudioSplitter({
       const extractedData = extractedBuffer.getChannelData(channel);
 
       const startOffset = Math.floor(start * sampleRate);
-      const endOffset = Math.floor(end * sampleRate);
 
       for (let i = 0; i < extractedData.length; i++) {
         extractedData[i] = channelData[startOffset + i];

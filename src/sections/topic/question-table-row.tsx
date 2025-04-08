@@ -28,7 +28,7 @@ export default function QuestionTableRow({
   onEditRow,
   onDeleteRow,
 }: Props) {
-  const { id, name } = row;
+  const { name } = row;
 
   const confirm = useBoolean();
 
