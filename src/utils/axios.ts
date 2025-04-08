@@ -71,4 +71,8 @@ export const endpoints = {
     details: "/api/user",
     search: "/api/product/search",
   },
+  topic: {
+    root: "/topics",
+    list: "/topics",
+  },
 };

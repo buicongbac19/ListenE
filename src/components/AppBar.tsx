@@ -50,7 +50,14 @@ export default function ResponsiveAppBar() {
 
   return (
     <AppBar
-      sx={{ width: "100vw", position: "fixed", top: 0, left: 0, right: 0 }}
+      sx={{
+        width: "100vw",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+      }}
       position="static"
     >
       <Container maxWidth="xl">

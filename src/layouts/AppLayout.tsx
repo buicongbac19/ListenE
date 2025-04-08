@@ -13,7 +13,7 @@ const DashboardLayout: React.FC = () => {
       }}
     >
       <AppBar />
-      <Box sx={{ flexGrow: 1, padding: "20px 20px 0 0" }}>
+      <Box sx={{ flexGrow: 1, paddingTop: "20px" }}>
         <Outlet />
       </Box>
     </Box>

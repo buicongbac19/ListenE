@@ -10,10 +10,20 @@ const DashboardLayout: React.FC = () => {
         display: "flex",
         width: "100vw",
         backgroundColor: "#f1f1f3",
+        minHeight: "100vh",
+        height: "100%",
+        overflow: "hidden",
       }}
     >
       <NavBar />
-      <Box sx={{ flexGrow: 1, padding: "20px" }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          padding: "20px",
+          overflow: "auto",
+          marginLeft: "200px",
+        }}
+      >
         <Outlet />
       </Box>
     </Box>

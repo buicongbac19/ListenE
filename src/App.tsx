@@ -14,6 +14,10 @@ import { SnackbarProvider } from "./components/snackbar";
 
 import { UserListView } from "./sections/user/view";
 
+import TrackManager from "./sections/track/track-manager";
+
+import { TopicListView } from "./sections/topic/view";
+
 import "./App.css";
 
 function App() {
@@ -25,6 +29,12 @@ function App() {
             <Route path="/" element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route path="home" element={<Home />} />
+
+                {/* Tracks route */}
+                <Route path="manage-track" element={<TrackManager />} />
+
+                {/* Topics route */}
+                <Route path="manage-topic" element={<TopicListView />} />
               </Route>
               <Route path="/" element={<Navigate to="/auth" replace />} />
 

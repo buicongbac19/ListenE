@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import GroupIcon from "@mui/icons-material/Group";
+import PlayLessonIcon from "@mui/icons-material/PlayLesson";
+import TopicIcon from "@mui/icons-material/Topic";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import { useNavigate } from "react-router-dom";
 import { useNavBar } from "../provider/NavBarProvider";
@@ -32,10 +32,15 @@ export default function NavBar() {
         display: "flex",
         flexDirection: "column",
         height: "100vh",
+        minHeight: "100vh",
+        position: "fixed",
+        left: 0,
+        top: 0,
         alignItems: "center",
         justifyContent: "center",
         padding: "20px 20px 0 0",
         backgroundColor: "#fff",
+        overflow: "hidden",
       }}
       value={value}
       onChange={handleChange}
@@ -61,28 +66,13 @@ export default function NavBar() {
           border: "none",
           width: "calc(100% + 40px)",
         }}
-        label="Quản lý người dùng"
-        value="cars"
-        icon={<GroupIcon />}
+        label="Quản lý các topic"
+        value="topics"
+        icon={<TopicIcon />}
         onClick={() => {
-          navigate("/dashboard/manage-car");
-          setValue("cars");
-          localStorage.setItem("navItem", "cars");
-        }}
-      />
-      <BottomNavigationAction
-        sx={{
-          outline: "none !important",
-          border: "none",
-          width: "calc(100% + 40px)",
-        }}
-        label="Quản lý các track"
-        value="customers"
-        icon={<GraphicEqIcon />}
-        onClick={() => {
-          navigate("/dashboard/manage-track");
-          setValue("customers");
-          localStorage.setItem("navItem", "customers");
+          navigate("/dashboard/manage-topic");
+          setValue("topics");
+          localStorage.setItem("navItem", "topics");
         }}
       />
       <BottomNavigationAction
@@ -92,12 +82,27 @@ export default function NavBar() {
           width: "calc(100% + 40px)",
         }}
         label="Quản lý đơn hàng"
-        value="orders"
-        icon={<ShoppingCartIcon />}
+        value="sessions"
+        icon={<PlayLessonIcon />}
         onClick={() => {
-          navigate("/dashboard/manage-order");
-          setValue("orders");
-          localStorage.setItem("navItem", "orders");
+          navigate("/dashboard/manage-session");
+          setValue("sessions");
+          localStorage.setItem("navItem", "sessions");
+        }}
+      />
+      <BottomNavigationAction
+        sx={{
+          outline: "none !important",
+          border: "none",
+          width: "calc(100% + 40px)",
+        }}
+        label="Quản lý các track"
+        value="tracks"
+        icon={<GraphicEqIcon />}
+        onClick={() => {
+          navigate("/dashboard/manage-track");
+          setValue("tracks");
+          localStorage.setItem("navItem", "tracks");
         }}
       />
     </BottomNavigation>
