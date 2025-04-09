@@ -62,7 +62,7 @@ export default function LoginForm({ shiftLeft, setShiftLeft }: Props) {
     try {
       const response = await login(data);
       if (response.status === 200) {
-        navigate("/home");
+        navigate("/topics");
       } else {
         throw new Error(response.data.message || "Đăng nhập thất bại");
       }

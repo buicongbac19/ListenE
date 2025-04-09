@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { Box } from "@mui/material";
-import AppBar from "../components/AppBar";
+import ResponsiveAppBar from "../components/AppBar";
 
 const DashboardLayout: React.FC = () => {
   return (
@@ -12,7 +12,7 @@ const DashboardLayout: React.FC = () => {
         backgroundColor: "#f1f1f3",
       }}
     >
-      <AppBar />
+      <ResponsiveAppBar />
       <Box sx={{ flexGrow: 1, paddingTop: "20px" }}>
         <Outlet />
       </Box>

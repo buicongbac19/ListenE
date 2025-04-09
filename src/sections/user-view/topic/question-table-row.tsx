@@ -7,11 +7,11 @@ import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
 import { Typography } from "@mui/material";
 
-import { useBoolean } from "../../hooks/use-boolean";
+import { useBoolean } from "../../../hooks/use-boolean";
 
-import { ConfirmDialog } from "../../components/custom-dialog";
+import { ConfirmDialog } from "../../../components/custom-dialog";
 
-import { ITopicItem } from "../../types/topic";
+import { ITopicItem } from "../../../types/topic";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
