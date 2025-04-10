@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 import { Box } from "@mui/material";
 import ResponsiveAppBar from "../components/AppBar";
 
-const DashboardLayout: React.FC = () => {
+const AppLayout: React.FC = () => {
   return (
     <Box
       sx={{
@@ -20,4 +20,4 @@ const DashboardLayout: React.FC = () => {
   );
 };
 
-export default DashboardLayout;
+export default AppLayout;

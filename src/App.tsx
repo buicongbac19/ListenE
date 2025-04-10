@@ -1,9 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Authentication from "./pages/Auththentication";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
@@ -93,21 +88,29 @@ function App() {
             <AnimatePresence mode="wait">
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/topics" element={<TopicsPage />} />
-                <Route path="/topic/:topicId" element={<TopicDetailsPage />} />
-                <Route
-                  path="/session/:sessionId"
-                  element={<SessionDetailsPage />}
-                />
-                <Route path="/track/:trackId" element={<TrackPracticePage />} />
-                <Route path="/dashboard" element={<DashboardLayout />}>
-                  {/* Tracks route */}
-                  <Route path="manage-track" element={<TrackManager />} />
+                <Route element={<AppLayout />}>
+                  <Route path="/topics" element={<TopicsPage />} />
+                  <Route
+                    path="/topic/:topicId"
+                    element={<TopicDetailsPage />}
+                  />
+                  <Route
+                    path="/session/:sessionId"
+                    element={<SessionDetailsPage />}
+                  />
+                  <Route
+                    path="/track/:trackId"
+                    element={<TrackPracticePage />}
+                  />
+                  <Route path="/dashboard" element={<DashboardLayout />}>
+                    {/* Tracks route */}
+                    <Route path="manage-track" element={<TrackManager />} />
 
-                  {/* Topics route */}
+                    {/* Topics route */}
+                  </Route>
+
+                  <Route path="/manage-user" element={<UserListView />} />
                 </Route>
-
-                <Route path="/manage-user" element={<UserListView />} />
                 <Route path="/auth" element={<Authentication />} />
                 <Route
                   path="/auth/forgot-password"
