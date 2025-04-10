@@ -1,3 +1,5 @@
+"use client";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Authentication from "./pages/Auththentication";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -14,6 +16,8 @@ import TrackManager from "./sections/dashboard-view/track/track-manager";
 import TopicDetailsPage from "./pages/TopicDetailsPage";
 import SessionDetailsPage from "./pages/SessionDetailsPage";
 import TrackPracticePage from "./pages/TrackPracticePage";
+import TrackSegmentsPage from "./pages/TrackSegmentsPage";
+import SegmentPracticePage from "./pages/SegmentPracticePage";
 import TopicsPage from "./pages/TopicsPage";
 
 import { AnimatePresence } from "framer-motion";
@@ -101,6 +105,14 @@ function App() {
                   <Route
                     path="/track/:trackId"
                     element={<TrackPracticePage />}
+                  />
+                  <Route
+                    path="/track/:trackId/segments"
+                    element={<TrackSegmentsPage />}
+                  />
+                  <Route
+                    path="/track/:trackId/segment/:segmentId"
+                    element={<SegmentPracticePage />}
                   />
                   <Route path="/dashboard" element={<DashboardLayout />}>
                     {/* Tracks route */}

@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -17,6 +19,7 @@ import {
   LinearProgress,
   Chip,
   Avatar,
+  ButtonGroup,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -25,10 +28,11 @@ import {
   CheckCircle,
   Headphones,
   VolumeUp,
+  FormatListBulleted,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { ISessionItem } from "../types/session";
-import { ITrackItem } from "../types/track";
+import type { ISessionItem } from "../types/session";
+import type { ITrackItem } from "../types/track";
 
 const mockSessions: ISessionItem[] = [
   {
@@ -150,6 +154,16 @@ const SessionDetailsPage = () => {
 
   const handleTrackClick = (trackId: number) => {
     navigate(`/track/${trackId}`);
+  };
+
+  const handlePracticeAll = (trackId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/track/${trackId}`);
+  };
+
+  const handlePracticeParts = (trackId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/track/${trackId}/segments`);
   };
 
   const calculateProgress = () => {
@@ -383,24 +397,44 @@ const SessionDetailsPage = () => {
                         sx={{
                           mt: "auto",
                           display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
+                          flexDirection: "column",
+                          gap: 2,
                         }}
                       >
                         <Button
                           startIcon={<VolumeUp />}
                           size="small"
                           variant="text"
+                          sx={{ alignSelf: "flex-start" }}
                         >
                           Preview
                         </Button>
-                        <Button
+
+                        <ButtonGroup
                           variant="contained"
-                          size="small"
-                          endIcon={<PlayArrow />}
+                          fullWidth
+                          sx={{
+                            mt: 1,
+                            "& .MuiButtonGroup-grouped:not(:last-of-type)": {
+                              borderColor: "rgba(255, 255, 255, 0.3)",
+                            },
+                          }}
                         >
-                          Practice
-                        </Button>
+                          <Button
+                            onClick={(e) => handlePracticeAll(track.id, e)}
+                            startIcon={<PlayArrow />}
+                            sx={{ flex: 1 }}
+                          >
+                            Làm Tất Cả
+                          </Button>
+                          <Button
+                            onClick={(e) => handlePracticeParts(track.id, e)}
+                            startIcon={<FormatListBulleted />}
+                            sx={{ flex: 1 }}
+                          >
+                            Làm Từng Phần
+                          </Button>
+                        </ButtonGroup>
                       </Box>
                     </CardContent>
                   </Card>
