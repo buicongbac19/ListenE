@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 import { useState, useEffect } from "react";
 import {
@@ -15,7 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ArrowForward, Bookmark, BookmarkBorder } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { ITopicItem } from "../types/topic";
+import type { ITopicItem } from "../types/topic";
 import IconButton from "./IconButton";
 import { getAllTopics } from "../api/topic";
 
@@ -115,6 +117,8 @@ export default function TopicList({
                         cursor: "pointer",
                         position: "relative",
                         overflow: "visible",
+                        display: "flex",
+                        flexDirection: "column",
                       }}
                       onClick={() => handleTopicClick(topic.id)}
                     >
@@ -165,19 +169,42 @@ export default function TopicList({
                           }}
                         />
                       </Box>
-                      <CardContent sx={{ pt: 3 }}>
+                      <CardContent
+                        sx={{
+                          pt: 3,
+                          display: "flex",
+                          flexDirection: "column",
+                          flexGrow: 1,
+                        }}
+                      >
                         <Typography
                           variant="h5"
                           component="h3"
                           gutterBottom
-                          sx={{ fontWeight: 600 }}
+                          sx={{
+                            fontWeight: 600,
+                            height: "2.6em", // Approximately 2 lines for the title
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                          }}
                         >
                           {topic.name}
                         </Typography>
                         <Typography
                           variant="body2"
                           color="text.secondary"
-                          sx={{ mb: 2 }}
+                          sx={{
+                            mb: 2,
+                            height: "4.5em", // Approximately 3 lines of text
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                          }}
                         >
                           {topic.description}
                         </Typography>
@@ -186,6 +213,7 @@ export default function TopicList({
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
+                            mt: "auto", // Push to bottom of card
                           }}
                         >
                           <Typography variant="body2" color="text.secondary">
