@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
   Container,
   Typography,
@@ -78,7 +77,6 @@ export default function SegmentPracticePage() {
   const [segments, setSegments] = useState<ISegmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
@@ -121,8 +119,6 @@ export default function SegmentPracticePage() {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume / 100;
-
       if (isPlaying) {
         audioRef.current.play().catch((error) => {
           console.error("Audio playback failed:", error);
@@ -132,7 +128,7 @@ export default function SegmentPracticePage() {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, volume, isMuted]);
+  }, [isPlaying, isMuted]);
 
   useEffect(() => {
     // Reset all states when navigating to a different segment

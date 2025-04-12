@@ -140,7 +140,6 @@ const TrackPracticePage = () => {
   const [track, setTrack] = useState<ITrackReponseItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
@@ -159,8 +158,8 @@ const TrackPracticePage = () => {
 
   const handleGetDetailsTrack = async (
     topicId: number,
-    sessionId: number,
-    trackId: number
+    sessionId: number
+    // trackId: number
   ) => {
     setLoading(true);
     try {
@@ -185,15 +184,13 @@ const TrackPracticePage = () => {
     if (topicId && sessionId && trackId)
       handleGetDetailsTrack(
         Number(topicId),
-        Number(sessionId),
-        Number(trackId)
+        Number(sessionId)
+        // Number(trackId)
       );
   }, [topicId, sessionId, trackId]);
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume / 100;
-
       if (isPlaying) {
         audioRef.current.play().catch((error) => {
           console.error("Audio playback failed:", error);
@@ -203,17 +200,10 @@ const TrackPracticePage = () => {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, volume, isMuted]);
+  }, [isPlaying, isMuted]);
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
-  };
-
-  const handleVolumeChange = (_event: Event, newValue: number | number[]) => {
-    setVolume(newValue as number);
-    if (isMuted && (newValue as number) > 0) {
-      setIsMuted(false);
-    }
   };
 
   const toggleMute = () => {

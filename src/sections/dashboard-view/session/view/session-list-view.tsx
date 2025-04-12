@@ -64,7 +64,7 @@ export default function SessionListView() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  //   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
   const [sessions, setSessions] = useState<ISession[]>([]);
   const [loading, setLoading] = useState(true);
