@@ -81,7 +81,7 @@ export default function NavBar() {
           border: "none",
           width: "calc(100% + 40px)",
         }}
-        label="Quản lý đơn hàng"
+        label="Quản lý các session"
         value="sessions"
         icon={<PlayLessonIcon />}
         onClick={() => {

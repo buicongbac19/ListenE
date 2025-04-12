@@ -1,10 +1,10 @@
 export type ITopicItem = {
   id: number;
   name: string;
+  thumbnailUrl: string;
   description: string;
-  thumbnail: string;
-  sessionCount: number;
   level: "Beginner" | "Intermediate" | "Advanced";
+  sessionCount: number;
   isFavorite?: boolean;
 };
 

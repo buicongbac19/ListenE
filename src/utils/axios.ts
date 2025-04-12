@@ -73,6 +73,21 @@ export const endpoints = {
   },
   topic: {
     root: "/topics",
-    list: "/topics",
+    listSession: (topicId: number) => `/topics/${topicId}/sessions`,
+  },
+  session: {
+    root: "/sessions",
+    listTrack: (sessionId: number) => `/sessions/${sessionId}/tracks`,
+    createTrack: (sessionId: number) => `/sessions/${sessionId}/tracks`,
+  },
+  track: {
+    root: "/tracks",
+    details: (trackId: number) => `/tracks/${trackId}`,
+    delete: (trackId: number) => `/tracks/${trackId}`,
+    update: (trackId: number) => `/tracks/${trackId}`,
+  },
+  segment: {
+    root: "/segment",
+    checking: (segmentId: number) => `segments/${segmentId}/checking`,
   },
 };

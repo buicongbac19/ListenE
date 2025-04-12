@@ -11,10 +11,9 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
-import AdbIcon from "@mui/icons-material/Adb";
 import { logout } from "../api/auth";
 
-const pages = ["Products", "Pricing", "Blog"];
+const pages = ["Home", "Topics"];
 const settings = ["Hồ sơ", "Tài khoản", "Cài đặt", "Đăng xuất"];
 
 export default function ResponsiveAppBar() {
@@ -56,30 +55,23 @@ export default function ResponsiveAppBar() {
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 1000,
+        zIndex: 10000,
       }}
       position="static"
     >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
-          <Typography
-            variant="h6"
-            noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
+          <Box
+            component="img"
+            src="https://res.cloudinary.com/dvk5yt0oi/image/upload/v1744288383/488853516_1039026811419837_2527203561768815018_n_y1fahn.png"
+            alt="Language Learning"
             sx={{
-              mr: 2,
-              display: { xs: "none", md: "flex" },
-              fontFamily: "monospace",
-              fontWeight: 700,
-              letterSpacing: ".3rem",
-              color: "inherit",
-              textDecoration: "none",
+              width: "65px",
+              height: "auto",
+              borderRadius: 4,
+              transform: "perspective(1000px) rotateY(-5deg)",
             }}
-          >
-            LOGO
-          </Typography>
+          />
 
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
             <IconButton
@@ -115,25 +107,6 @@ export default function ResponsiveAppBar() {
               ))}
             </Menu>
           </Box>
-          <AdbIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
-          <Typography
-            variant="h5"
-            noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
-            sx={{
-              mr: 2,
-              display: { xs: "flex", md: "none" },
-              flexGrow: 1,
-              fontFamily: "monospace",
-              fontWeight: 700,
-              letterSpacing: ".3rem",
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            LOGO
-          </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
               <Button

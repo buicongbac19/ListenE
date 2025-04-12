@@ -13,6 +13,8 @@ import { UserListView } from "./sections/user/view";
 
 import TrackManager from "./sections/dashboard-view/track/track-manager";
 
+import { SessionListView } from "./sections/dashboard-view/session/view";
+
 import TopicDetailsPage from "./pages/TopicDetailsPage";
 import SessionDetailsPage from "./pages/SessionDetailsPage";
 import TrackPracticePage from "./pages/TrackPracticePage";
@@ -99,26 +101,34 @@ function App() {
                     element={<TopicDetailsPage />}
                   />
                   <Route
-                    path="/session/:sessionId"
+                    path="/topic/:topicId/session/:sessionId"
                     element={<SessionDetailsPage />}
                   />
                   <Route
-                    path="/track/:trackId"
+                    path="/topic/:topicId/session/:sessionId/track/:trackId"
                     element={<TrackPracticePage />}
                   />
                   <Route
-                    path="/track/:trackId/segments"
+                    path="/topic/:topicId/session/:sessionId/track/:trackId/segments"
                     element={<TrackSegmentsPage />}
                   />
                   <Route
-                    path="/track/:trackId/segment/:segmentId"
+                    path="/topic/:topicId/session/:sessionId/track/:trackId/segment/:segmentId"
                     element={<SegmentPracticePage />}
                   />
                   <Route path="/dashboard" element={<DashboardLayout />}>
                     {/* Tracks route */}
-                    <Route path="manage-track" element={<TrackManager />} />
+                    <Route
+                      path="sessions/:sessionId/create-track"
+                      element={<TrackManager />}
+                    />
 
                     {/* Topics route */}
+
+                    <Route
+                      path="manage-sessions"
+                      element={<SessionListView />}
+                    />
                   </Route>
 
                   <Route path="/manage-user" element={<UserListView />} />

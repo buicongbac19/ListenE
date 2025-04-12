@@ -22,6 +22,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
+  Tooltip,
+  Zoom,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -34,55 +37,107 @@ import {
   Mic,
   Send,
   EmojiEvents,
+  CheckCircle,
+  Cancel,
+  QuestionMark,
+  GradingOutlined,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
+import type { ITrackReponseItem } from "../types/track";
+import { getDetailsTopic } from "../api/topic";
+import { getDetailsSession } from "../api/session";
+import type { ITopicItem } from "../types/topic";
+import type { ISessionItem } from "../types/session";
 
-// Mock data
-interface Track {
-  id: number;
-  name: string;
-  sessionId: number;
-  sessionName: string;
-  topicId: number;
-  topicName: string;
-  audioUrl: string;
-  transcript: string;
-  difficulty: "Easy" | "Medium" | "Hard";
+// Define interfaces for the API response
+interface CheckedWord {
+  word: string;
+  resultType: "Correct" | "MissingOrWrong" | "Wrong";
+  order: number;
 }
 
-const mockTracks: Track[] = [
-  {
-    id: 1,
-    name: "Introducing Yourself",
-    sessionId: 1,
-    sessionName: "Greetings and Introductions",
-    topicId: 1,
-    topicName: "Daily Conversations",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3", // Using a real audio URL for demo
-    transcript:
-      "Hi, my name is Sarah. I'm from Canada. It's nice to meet you. What's your name?",
-    difficulty: "Easy",
-  },
-  {
-    id: 2,
-    name: "Greeting Someone New",
-    sessionId: 1,
-    sessionName: "Greetings and Introductions",
-    topicId: 1,
-    topicName: "Daily Conversations",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-614.mp3", // Using a real audio URL for demo
-    transcript:
-      "Hello there! I don't think we've met before. I'm John. What's your name?",
-    difficulty: "Easy",
-  },
-];
+interface ScoreResponse {
+  segmentId: number;
+  checkedWords: CheckedWord[];
+  redundancy: number;
+  redundancyRate: number;
+  correctRate: number;
+  score: number;
+  maxScore: number;
+  correctTranscript: string;
+}
+
+const mockTracks: ITrackReponseItem = {
+  id: 1,
+  name: "Introducing Yourself",
+  fullAudioUrl:
+    "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",
+  fullAudioTranscript:
+    "Hi, my name is Sarah. I'm from Canada. It's nice to meet you. What's your name?",
+  fullAudioDuration: "00::00::36.6497959",
+  difficulty: "Easy",
+  segments: [],
+};
+
+// Mock API function for checking user input
+const checkUserInput = async (
+  segmentId: number,
+  content: string
+): Promise<ScoreResponse> => {
+  // In a real app, this would be an API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Simulate API response
+      const userWords = content.toLowerCase().split(/\s+/);
+      const correctWords = mockTracks.fullAudioTranscript
+        .toLowerCase()
+        .split(/\s+/);
+
+      const checkedWords: CheckedWord[] = [];
+      let correctCount = 0;
+
+      userWords.forEach((word, index) => {
+        if (index < correctWords.length && word === correctWords[index]) {
+          checkedWords.push({
+            word,
+            resultType: "Correct",
+            order: index + 1,
+          });
+          correctCount++;
+        } else {
+          checkedWords.push({
+            word,
+            resultType: "MissingOrWrong",
+            order: index + 1,
+          });
+        }
+      });
+
+      const correctRate =
+        correctWords.length > 0
+          ? (correctCount / correctWords.length) * 100
+          : 0;
+
+      resolve({
+        segmentId,
+        checkedWords,
+        redundancy: 0,
+        redundancyRate: 0,
+        correctRate,
+        score: Math.round(correctRate),
+        maxScore: 100,
+        correctTranscript: mockTracks.fullAudioTranscript,
+      });
+    }, 1500); // Simulate network delay
+  });
+};
 
 const TrackPracticePage = () => {
-  const { trackId } = useParams();
+  const { topicId, sessionId, trackId } = useParams();
   const navigate = useNavigate();
-  const [track, setTrack] = useState<Track | null>(null);
+  const [topic, setTopic] = useState<ITopicItem | null>(null);
+  const [session, setSession] = useState<ISessionItem | null>(null);
+  const [track, setTrack] = useState<ITrackReponseItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(80);
@@ -92,28 +147,52 @@ const TrackPracticePage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [scoreResult, setScoreResult] = useState<ScoreResponse | null>(null);
+  const [isScoring, setIsScoring] = useState(false);
+  const [hasScored, setHasScored] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    // Simulate API call
-    const fetchTrackDetails = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+  const handleGetDetailsTrack = async (
+    topicId: number,
+    sessionId: number,
+    trackId: number
+  ) => {
+    setLoading(true);
+    try {
+      const [topicRes, sessionsRes] = await Promise.all([
+        getDetailsTopic(topicId),
+        getDetailsSession(sessionId),
+        // getDetailsTrack(trackId),
+      ]);
 
-      const foundTrack =
-        mockTracks.find((t) => t.id === Number(trackId)) || null;
-
-      setTrack(foundTrack);
+      setTopic(topicRes?.data?.data);
+      setSession(sessionsRes?.data?.data);
+      // setTrack(tracksRes?.data?.data);
+      setTrack(mockTracks);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchTrackDetails();
-  }, [trackId]);
+  useEffect(() => {
+    if (topicId && sessionId && trackId)
+      handleGetDetailsTrack(
+        Number(topicId),
+        Number(sessionId),
+        Number(trackId)
+      );
+  }, [topicId, sessionId, trackId]);
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
+      audioRef.current.volume = isMuted ? 0 : volume / 100;
 
       if (isPlaying) {
         audioRef.current.play().catch((error) => {
@@ -124,7 +203,7 @@ const TrackPracticePage = () => {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, volume]);
+  }, [isPlaying, volume, isMuted]);
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -139,14 +218,38 @@ const TrackPracticePage = () => {
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? volume / 100 : 0;
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current && !isDragging) {
+      setCurrentTime(audioRef.current.currentTime);
     }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleProgressChange = (_event: Event, newValue: number | number[]) => {
+    if (audioRef.current) {
+      const newTime = newValue as number;
+      setCurrentTime(newTime);
+      audioRef.current.currentTime = newTime;
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
   const handleReplay = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
+      setCurrentTime(0);
       audioRef.current.play().catch((error) => {
         console.error("Audio replay failed:", error);
       });
@@ -156,30 +259,31 @@ const TrackPracticePage = () => {
 
   const handleSubmit = () => {
     if (!userInput.trim()) return;
+    setSubmitted(true);
+  };
 
-    // Simple scoring algorithm (in a real app, this would be more sophisticated)
-    if (track) {
-      const transcript = track.transcript.toLowerCase();
-      const input = userInput.toLowerCase();
+  const handleScoreSubmission = async () => {
+    if (!track || !userInput.trim()) return;
 
-      // Calculate similarity (very basic)
-      const words1 = transcript.split(/\s+/);
-      const words2 = input.split(/\s+/);
+    setIsScoring(true);
+    try {
+      // Call the API to check the user's input
+      const result = await checkUserInput(track.id, userInput);
+      setScoreResult(result);
+      setScore(result.score);
+      setHasScored(true);
 
-      let matchCount = 0;
-      for (const word of words2) {
-        if (words1.includes(word)) {
-          matchCount++;
-        }
-      }
-
-      const calculatedScore = Math.round((matchCount / words1.length) * 100);
-      setScore(calculatedScore);
-      setSubmitted(true);
-
-      if (calculatedScore >= 80) {
+      // Show success dialog if score is high
+      if (result.score >= 80) {
         setShowSuccessDialog(true);
       }
+
+      // Show transcript after scoring
+      setShowTranscript(true);
+    } catch (error) {
+      console.error("Error scoring submission:", error);
+    } finally {
+      setIsScoring(false);
     }
   };
 
@@ -188,6 +292,8 @@ const TrackPracticePage = () => {
     setSubmitted(false);
     setScore(null);
     setShowTranscript(false);
+    setScoreResult(null);
+    setHasScored(false);
 
     // Focus on input
     setTimeout(() => {
@@ -197,10 +303,47 @@ const TrackPracticePage = () => {
     }, 100);
   };
 
+  // Get the result type color
+  const getResultColor = (resultType: string) => {
+    switch (resultType) {
+      case "Correct":
+        return "success.main";
+      case "MissingOrWrong":
+        return "error.main";
+      case "Wrong":
+        return "error.main";
+      default:
+        return "text.primary";
+    }
+  };
+
+  // Get the result type icon
+  const getResultIcon = (resultType: string) => {
+    switch (resultType) {
+      case "Correct":
+        return <CheckCircle fontSize="small" color="success" />;
+      case "MissingOrWrong":
+        return <Cancel fontSize="small" color="error" />;
+      case "Wrong":
+        return <Cancel fontSize="small" color="error" />;
+      default:
+        return <QuestionMark fontSize="small" />;
+    }
+  };
+
   // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
+
+  const wordAnimation = {
+    hidden: { opacity: 0, y: 10 },
+    show: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3 },
+    }),
   };
 
   if (loading) {
@@ -287,18 +430,20 @@ const TrackPracticePage = () => {
           <Link
             underline="hover"
             color="inherit"
-            onClick={() => navigate(`/topic/${track.topicId}`)}
+            onClick={() => navigate(`/topic/${topic?.id}`)}
             style={{ cursor: "pointer" }}
           >
-            {track.topicName}
+            {topic?.name}
           </Link>
           <Link
             underline="hover"
             color="inherit"
-            onClick={() => navigate(`/session/${track.sessionId}`)}
+            onClick={() =>
+              navigate(`/topic/${topic?.id}/session/${session?.id}`)
+            }
             style={{ cursor: "pointer" }}
           >
-            {track.sessionName}
+            {session?.name}
           </Link>
           <Typography color="text.primary">{track.name}</Typography>
         </Breadcrumbs>
@@ -306,7 +451,9 @@ const TrackPracticePage = () => {
         <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() => navigate(`/session/${track.sessionId}`)}
+            onClick={() =>
+              navigate(`/topic/${topic?.id}/session/${session?.id}`)
+            }
             sx={{ mr: 2 }}
           >
             Back
@@ -335,7 +482,7 @@ const TrackPracticePage = () => {
           </Box>
         </Box>
 
-        <Card sx={{ mb: 4, borderRadius: 3 }}>
+        <Card sx={{ mb: 4, borderRadius: 3, overflow: "hidden" }}>
           <CardContent>
             <Box sx={{ textAlign: "center", mb: 3 }}>
               <Typography variant="h6" gutterBottom>
@@ -351,65 +498,103 @@ const TrackPracticePage = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                bgcolor: "primary.main",
+                background: "linear-gradient(135deg, #4568dc 0%, #b06ab3 100%)",
                 color: "white",
                 mb: 3,
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                <IconButton
-                  onClick={handleReplay}
-                  sx={{
-                    width: "56px",
-                    color: "white",
-                    bgcolor: "rgba(255,255,255,0.2)",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                    mx: 1,
-                  }}
-                >
-                  <Replay />
-                </IconButton>
-                <IconButton
-                  onClick={togglePlayPause}
-                  sx={{
-                    color: "white",
-                    bgcolor: "rgba(255,255,255,0.2)",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                    mx: 1,
-                    width: 56,
-                    height: 56,
-                  }}
-                >
-                  {isPlaying ? (
-                    <Pause fontSize="large" />
-                  ) : (
-                    <PlayArrow fontSize="large" />
-                  )}
-                </IconButton>
-                <IconButton
-                  onClick={toggleMute}
-                  sx={{
-                    width: "56px",
-                    color: "white",
-                    bgcolor: "rgba(255,255,255,0.2)",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                    mx: 1,
-                  }}
-                >
-                  {isMuted ? <VolumeMute /> : <VolumeUp />}
-                </IconButton>
-              </Box>
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  opacity: 0.1,
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fillOpacity='1' fillRule='evenodd'/%3E%3C/svg%3E\")",
+                }}
+              />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+                  <IconButton
+                    onClick={handleReplay}
+                    sx={{
+                      width: "56px",
+                      height: "56px",
+                      color: "white",
+                      bgcolor: "rgba(255,255,255,0.2)",
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,0.3)",
+                        transform: "scale(1.1)",
+                      },
+                      mx: 1,
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <Replay />
+                  </IconButton>
+                  <IconButton
+                    onClick={togglePlayPause}
+                    sx={{
+                      color: "white",
+                      bgcolor: "rgba(255,255,255,0.2)",
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,0.3)",
+                        transform: "scale(1.1)",
+                      },
+                      mx: 1,
+                      width: 72,
+                      height: 72,
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    {isPlaying ? (
+                      <Pause fontSize="large" />
+                    ) : (
+                      <PlayArrow fontSize="large" />
+                    )}
+                  </IconButton>
+                  <IconButton
+                    onClick={toggleMute}
+                    sx={{
+                      width: "56px",
+                      height: "56px",
+                      color: "white",
+                      bgcolor: "rgba(255,255,255,0.2)",
+                      mx: 1,
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        transform: "scale(1.1)",
+                        bgcolor: "rgba(255,255,255,0.3)",
+                      },
+                    }}
+                  >
+                    {isMuted ? <VolumeMute /> : <VolumeUp />}
+                  </IconButton>
+                </Box>
+              </motion.div>
 
-              <Box sx={{ px: 2 }}>
+              <Box sx={{ px: 2, mb: 2, mt: 2 }}>
                 <Slider
-                  value={volume}
-                  onChange={handleVolumeChange}
-                  aria-labelledby="volume-slider"
+                  value={currentTime}
+                  min={0}
+                  max={duration || 100}
+                  onChange={handleProgressChange}
+                  onMouseDown={() => setIsDragging(true)}
+                  onMouseUp={() => setIsDragging(false)}
+                  aria-labelledby="audio-progress-slider"
                   sx={{
                     color: "white",
                     "& .MuiSlider-thumb": {
-                      width: 16,
-                      height: 16,
+                      width: 12,
+                      height: 12,
                       "&:hover, &.Mui-focusVisible": {
                         boxShadow: "0px 0px 0px 8px rgba(255, 255, 255, 0.16)",
                       },
@@ -419,13 +604,31 @@ const TrackPracticePage = () => {
                     },
                   }}
                 />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "white",
+                    fontSize: "0.75rem",
+                    mt: 0.5,
+                  }}
+                >
+                  <Typography variant="caption" color="white">
+                    {formatTime(currentTime)}
+                  </Typography>
+                  <Typography variant="caption" color="white">
+                    {formatTime(duration)}
+                  </Typography>
+                </Box>
               </Box>
 
               {/* Hidden audio element */}
               <audio
                 ref={audioRef}
-                src={track.audioUrl}
+                src={track.fullAudioUrl}
                 onEnded={() => setIsPlaying(false)}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
               />
             </Paper>
 
@@ -440,7 +643,7 @@ const TrackPracticePage = () => {
                 placeholder="Type the sentence you heard..."
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
-                disabled={submitted}
+                disabled={submitted && hasScored}
                 inputRef={inputRef}
                 sx={{ mb: 2 }}
               />
@@ -449,7 +652,8 @@ const TrackPracticePage = () => {
                 <Button
                   variant="outlined"
                   onClick={() => setShowTranscript(!showTranscript)}
-                  disabled={submitted}
+                  disabled={!hasScored}
+                  sx={{ visibility: hasScored ? "visible" : "hidden" }}
                 >
                   {showTranscript ? "Hide Transcript" : "Show Transcript"}
                 </Button>
@@ -462,6 +666,22 @@ const TrackPracticePage = () => {
                     disabled={!userInput.trim()}
                   >
                     Submit
+                  </Button>
+                ) : !hasScored ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleScoreSubmission}
+                    disabled={isScoring}
+                    startIcon={
+                      isScoring ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <GradingOutlined />
+                      )
+                    }
+                  >
+                    {isScoring ? "Scoring..." : "Chấm Điểm"}
                   </Button>
                 ) : (
                   <Button
@@ -476,7 +696,7 @@ const TrackPracticePage = () => {
             </Box>
 
             <AnimatePresence>
-              {showTranscript && (
+              {showTranscript && hasScored && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -484,19 +704,27 @@ const TrackPracticePage = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <Paper
-                    sx={{ p: 2, bgcolor: "rgba(0,0,0,0.03)", borderRadius: 2 }}
+                    sx={{
+                      p: 2,
+                      bgcolor: "rgba(0,0,0,0.03)",
+                      borderRadius: 2,
+                      mb: 3,
+                    }}
                   >
-                    <Typography variant="body2" fontWeight={500}>
-                      Transcript:
+                    <Typography variant="body2" fontWeight={500} gutterBottom>
+                      Correct Transcript:
                     </Typography>
-                    <Typography variant="body1">{track.transcript}</Typography>
+                    <Typography variant="body1" sx={{ fontStyle: "italic" }}>
+                      {scoreResult?.correctTranscript ||
+                        track.fullAudioTranscript}
+                    </Typography>
                   </Paper>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <AnimatePresence>
-              {submitted && score !== null && (
+              {hasScored && scoreResult && (
                 <motion.div
                   variants={fadeIn}
                   initial="hidden"
@@ -509,63 +737,142 @@ const TrackPracticePage = () => {
                       Your Score
                     </Typography>
 
-                    <Box
-                      sx={{
-                        width: 120,
-                        height: 120,
-                        borderRadius: "50%",
-                        border: "8px solid",
-                        borderColor:
-                          score >= 80
-                            ? "success.main"
-                            : score >= 50
-                            ? "warning.main"
-                            : "error.main",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        mx: "auto",
-                        mb: 2,
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 260,
+                        damping: 20,
+                        delay: 0.2,
                       }}
                     >
-                      <Typography variant="h4" fontWeight="bold">
-                        {score}%
-                      </Typography>
-                    </Box>
+                      <Box
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          borderRadius: "50%",
+                          border: "8px solid",
+                          borderColor:
+                            score! >= 80
+                              ? "success.main"
+                              : score! >= 50
+                              ? "warning.main"
+                              : "error.main",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mx: "auto",
+                          mb: 2,
+                          position: "relative",
+                        }}
+                      >
+                        <Typography variant="h4" fontWeight="bold">
+                          {score}%
+                        </Typography>
+                      </Box>
+                    </motion.div>
 
                     <Typography
                       variant="body1"
                       color={
-                        score >= 80
+                        score! >= 80
                           ? "success.main"
-                          : score >= 50
+                          : score! >= 50
                           ? "warning.main"
                           : "error.main"
                       }
                       fontWeight={500}
                       gutterBottom
                     >
-                      {score >= 80
+                      {score! >= 80
                         ? "Excellent!"
-                        : score >= 50
+                        : score! >= 50
                         ? "Good effort!"
                         : "Keep practicing!"}
                     </Typography>
 
+                    {/* Word-by-word comparison */}
+                    <Paper
+                      elevation={2}
+                      sx={{
+                        p: 3,
+                        mt: 3,
+                        borderRadius: 2,
+                        bgcolor: "background.paper",
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        gutterBottom
+                        fontWeight={500}
+                      >
+                        Word-by-word Analysis
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 1,
+                          justifyContent: "center",
+                        }}
+                      >
+                        {scoreResult.checkedWords.map((word, index) => (
+                          <motion.div
+                            key={`${word.word}-${index}`}
+                            custom={index}
+                            variants={wordAnimation}
+                            initial="hidden"
+                            animate="show"
+                          >
+                            <Tooltip
+                              title={word.resultType}
+                              arrow
+                              TransitionComponent={Zoom}
+                            >
+                              <Chip
+                                label={word.word}
+                                icon={getResultIcon(word.resultType)}
+                                sx={{
+                                  bgcolor:
+                                    word.resultType === "Correct"
+                                      ? "rgba(46, 125, 50, 0.1)"
+                                      : "rgba(211, 47, 47, 0.1)",
+                                  color: getResultColor(word.resultType),
+                                  fontWeight: 500,
+                                  border: 1,
+                                  borderColor:
+                                    word.resultType === "Correct"
+                                      ? "success.light"
+                                      : "error.light",
+                                }}
+                              />
+                            </Tooltip>
+                          </motion.div>
+                        ))}
+                      </Box>
+                    </Paper>
+
                     <Box
                       sx={{
-                        mt: 2,
+                        mt: 4,
                         display: "flex",
                         justifyContent: "center",
                         gap: 2,
                       }}
                     >
-                      <Button variant="outlined" onClick={handleTryAgain}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleTryAgain}
+                        startIcon={<Replay />}
+                      >
                         Try Again
                       </Button>
                       <Button
                         variant="contained"
-                        onClick={() => navigate(`/session/${track.sessionId}`)}
+                        onClick={() =>
+                          navigate(`/topic/${topic?.id}/session/${session?.id}`)
+                        }
                       >
                         Next Exercise
                       </Button>
@@ -578,12 +885,25 @@ const TrackPracticePage = () => {
         </Card>
 
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Button variant="outlined" startIcon={<Mic />}>
+          <Button
+            variant="outlined"
+            startIcon={<Mic />}
+            sx={{
+              transition: "all 0.2s ease",
+              "&:hover": { transform: "translateY(-2px)" },
+            }}
+          >
             Practice Speaking
           </Button>
           <Button
             variant="outlined"
-            onClick={() => navigate(`/session/${track.sessionId}`)}
+            onClick={() =>
+              navigate(`/topic/${topic?.id}/session/${session?.id}`)
+            }
+            sx={{
+              transition: "all 0.2s ease",
+              "&:hover": { transform: "translateY(-2px)" },
+            }}
           >
             Back to Session
           </Button>
@@ -602,7 +922,13 @@ const TrackPracticePage = () => {
         }}
       >
         <DialogTitle sx={{ textAlign: "center", pb: 1 }}>
-          <EmojiEvents sx={{ fontSize: 60, color: "gold", mb: 1 }} />
+          <motion.div
+            initial={{ scale: 0, rotate: 0 }}
+            animate={{ scale: 1, rotate: 360 }}
+            transition={{ duration: 0.5 }}
+          >
+            <EmojiEvents sx={{ fontSize: 60, color: "gold", mb: 1 }} />
+          </motion.div>
           <Typography variant="h5" fontWeight="bold">
             Congratulations!
           </Typography>
@@ -613,16 +939,34 @@ const TrackPracticePage = () => {
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Keep up the good work and continue practicing to improve your
-            English speaking skills.
+            English listening skills.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            pb: 3,
+            gap: 2,
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setShowSuccessDialog(false);
+            }}
+            startIcon={<GradingOutlined />}
+            fullWidth
+          >
+            Xem Kết Quả
+          </Button>
           <Button
             variant="contained"
             onClick={() => {
               setShowSuccessDialog(false);
-              navigate(`/session/${track.sessionId}`);
+              navigate(`/topic/${topic?.id}/session/${session?.id}`);
             }}
+            fullWidth
           >
             Continue Learning
           </Button>

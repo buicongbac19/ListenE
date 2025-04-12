@@ -22,124 +22,61 @@ import {
 } from "@mui/material";
 import { ArrowBack, Home, PlayArrow, CheckCircle } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { ITrackItem } from "../types/track";
-import { ISegmentItem } from "../types/segment";
+import { ISegmentResponseItem } from "../types/segment";
+import { getDetailsTrack } from "../api/track";
+import { ITrackReponseItem } from "../types/track";
+import { ISessionItem } from "../types/session";
+import { getDetailsSession } from "../api/session";
+import { getDetailsTopic } from "../api/topic";
+import { ITopicItem } from "../types/topic";
+import { formatTime } from "../utils/formats";
 
-const mockTracks: ITrackItem[] = [
-  {
-    id: 1,
-    name: "Introducing Yourself",
-    sessionId: 1,
-    duration: "0:45",
-    difficulty: "Easy",
-    completed: true,
-  },
-  {
-    id: 2,
-    name: "Greeting Someone New",
-    sessionId: 1,
-    duration: "1:12",
-    difficulty: "Easy",
-    completed: true,
-  },
-  // Add other tracks as needed
-];
-
-const mockSegments: ISegmentItem[] = [
-  {
-    id: 1,
-    trackId: 1,
-    name: "Segment 1: Basic Introduction",
-    duration: "0:15",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",
-    transcript: "Hi, my name is Sarah.",
-    completed: true,
-  },
-  {
-    id: 2,
-    trackId: 1,
-    name: "Segment 2: Where You're From",
-    duration: "0:12",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",
-    transcript: "I'm from Canada.",
-    completed: false,
-  },
-  {
-    id: 3,
-    trackId: 1,
-    name: "Segment 3: Greeting",
-    duration: "0:18",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",
-    transcript: "It's nice to meet you. What's your name?",
-    completed: false,
-  },
-  {
-    id: 4,
-    trackId: 2,
-    name: "Segment 1: Initial Greeting",
-    duration: "0:20",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-614.mp3",
-    transcript: "Hello there! I don't think we've met before.",
-    completed: false,
-  },
-  {
-    id: 5,
-    trackId: 2,
-    name: "Segment 2: Self Introduction",
-    duration: "0:15",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-614.mp3",
-    transcript: "I'm John.",
-    completed: false,
-  },
-  {
-    id: 6,
-    trackId: 2,
-    name: "Segment 3: Asking Name",
-    duration: "0:10",
-    audioUrl:
-      "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-614.mp3",
-    transcript: "What's your name?",
-    completed: false,
-  },
-];
-
-const TrackSegmentsPage = () => {
-  const { trackId } = useParams();
+export default function TrackSegmentsPage() {
+  const { topicId, sessionId, trackId } = useParams();
   const navigate = useNavigate();
-  const [track, setTrack] = useState<ITrackItem | null>(null);
-  const [segments, setSegments] = useState<ISegmentItem[]>([]);
+  const [topic, setTopic] = useState<ITopicItem | null>(null);
+  const [session, setSession] = useState<ISessionItem | null>(null);
+  const [track, setTrack] = useState<ITrackReponseItem | null>(null);
+  const [segments, setSegments] = useState<ISegmentResponseItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate API call
-    const fetchTrackAndSegments = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+  const handelGetDetailsData = async (
+    topicId: number,
+    sessionId: number,
+    trackId: number
+  ) => {
+    setLoading(true);
+    try {
+      const [topicRes, sessionsRes, trackRes] = await Promise.all([
+        getDetailsTopic(topicId),
+        getDetailsSession(sessionId),
+        getDetailsTrack(trackId),
+      ]);
 
-      const foundTrack =
-        mockTracks.find((t) => t.id === Number(trackId)) || null;
-      const trackSegments = mockSegments.filter(
-        (s) => s.trackId === Number(trackId)
-      );
-
-      setTrack(foundTrack);
-      setSegments(trackSegments);
+      setTopic(topicRes?.data?.data);
+      setSession(sessionsRes?.data?.data);
+      setTrack(trackRes?.data?.data);
+      setSegments(trackRes?.data?.data?.segments);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchTrackAndSegments();
-  }, [trackId]);
+  useEffect(() => {
+    if (topicId && sessionId && trackId)
+      handelGetDetailsData(Number(topicId), Number(sessionId), Number(trackId));
+  }, [topicId, sessionId, trackId]);
 
   const handleSegmentClick = (segmentId: number) => {
-    navigate(`/track/${trackId}/segment/${segmentId}`);
+    navigate(
+      `/topic/${topicId}/session/${sessionId}/track/${trackId}/segment/${segmentId}`
+    );
   };
 
   const handlePracticeAll = () => {
-    navigate(`/track/${trackId}`);
+    navigate(`/topic/${topicId}/session/${sessionId}/track/${trackId}`);
   };
 
   // Animation variants
@@ -215,7 +152,9 @@ const TrackSegmentsPage = () => {
           <Link
             underline="hover"
             color="inherit"
-            onClick={() => navigate(`/session/${track.sessionId}`)}
+            onClick={() =>
+              navigate(`topic/${topic?.id}/session/${session?.id}`)
+            }
             style={{ cursor: "pointer" }}
           >
             Back to Session
@@ -226,7 +165,9 @@ const TrackSegmentsPage = () => {
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() => navigate(`/session/${track.sessionId}`)}
+            onClick={() =>
+              navigate(`topic/${topic?.id}/session/${session?.id}`)
+            }
             sx={{ mr: 2 }}
           >
             Back
@@ -249,7 +190,7 @@ const TrackSegmentsPage = () => {
                 sx={{ fontWeight: 500, mr: 2 }}
               />
               <Typography variant="body2" color="text.secondary">
-                Duration: {track.duration}
+                Duration: {formatTime(track.fullAudioDuration)}
               </Typography>
             </Box>
           </Box>
@@ -360,7 +301,7 @@ const TrackSegmentsPage = () => {
                       }
                       secondary={
                         <Typography variant="body2" color="text.secondary">
-                          Duration: {segment.duration}
+                          Duration: {formatTime(segment.segmentDuration)}
                         </Typography>
                       }
                     />
@@ -386,6 +327,4 @@ const TrackSegmentsPage = () => {
       </motion.div>
     </Container>
   );
-};
-
-export default TrackSegmentsPage;
+}

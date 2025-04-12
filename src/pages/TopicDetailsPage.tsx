@@ -25,167 +25,40 @@ import {
   CheckCircle,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-
-// Mock data
-interface Topic {
-  id: number;
-  name: string;
-  description: string;
-  thumbnail: string;
-  level: "Beginner" | "Intermediate" | "Advanced";
-}
-
-interface Session {
-  id: number;
-  name: string;
-  orderInTopic: number;
-  trackCount: number;
-  topicId: number;
-  completed?: boolean;
-  progress?: number;
-}
-
-const mockTopics: Topic[] = [
-  {
-    id: 1,
-    name: "Daily Conversations",
-    description:
-      "Master everyday English conversations with our comprehensive lessons. From greeting people to ordering food, making small talk, and discussing common topics, this course covers all the essential phrases and vocabulary you need for daily interactions. Perfect for beginners who want to gain confidence in speaking English in everyday situations.",
-    thumbnail: "https://source.unsplash.com/random/300x200/?conversation",
-    level: "Beginner",
-  },
-  {
-    id: 2,
-    name: "Business English",
-    description:
-      "Enhance your professional communication skills with our Business English course. Learn vocabulary and expressions for meetings, negotiations, presentations, and workplace interactions. This course is designed for intermediate learners who want to advance their career by improving their business English proficiency.",
-    thumbnail: "https://source.unsplash.com/random/300x200/?business",
-    level: "Intermediate",
-  },
-];
-
-const mockSessions: Session[] = [
-  {
-    id: 1,
-    name: "Greetings and Introductions",
-    orderInTopic: 1,
-    trackCount: 8,
-    topicId: 1,
-    completed: true,
-    progress: 100,
-  },
-  {
-    id: 2,
-    name: "Small Talk",
-    orderInTopic: 2,
-    trackCount: 6,
-    topicId: 1,
-    completed: false,
-    progress: 67,
-  },
-  {
-    id: 3,
-    name: "Asking for Directions",
-    orderInTopic: 3,
-    trackCount: 7,
-    topicId: 1,
-    completed: false,
-    progress: 43,
-  },
-  {
-    id: 4,
-    name: "Ordering Food and Drinks",
-    orderInTopic: 4,
-    trackCount: 5,
-    topicId: 1,
-    completed: false,
-    progress: 20,
-  },
-  {
-    id: 5,
-    name: "Shopping Conversations",
-    orderInTopic: 5,
-    trackCount: 6,
-    topicId: 1,
-    completed: false,
-    progress: 0,
-  },
-  {
-    id: 6,
-    name: "Making Plans",
-    orderInTopic: 6,
-    trackCount: 7,
-    topicId: 1,
-    completed: false,
-    progress: 0,
-  },
-  {
-    id: 7,
-    name: "Talking About Hobbies",
-    orderInTopic: 7,
-    trackCount: 5,
-    topicId: 1,
-    completed: false,
-    progress: 0,
-  },
-  {
-    id: 8,
-    name: "Weather and Seasons",
-    orderInTopic: 8,
-    trackCount: 6,
-    topicId: 1,
-    completed: false,
-    progress: 0,
-  },
-
-  {
-    id: 9,
-    name: "Meeting Etiquette",
-    orderInTopic: 1,
-    trackCount: 7,
-    topicId: 2,
-    completed: false,
-    progress: 0,
-  },
-  {
-    id: 10,
-    name: "Presentations",
-    orderInTopic: 2,
-    trackCount: 8,
-    topicId: 2,
-    completed: false,
-    progress: 0,
-  },
-];
+import { ITopicItem } from "../types/topic";
+import { ISessionItem } from "../types/session";
+import { getAllTopicSessions, getDetailsTopic } from "../api/topic";
 
 export default function TopicDetailsPage() {
   const { topicId } = useParams();
   const navigate = useNavigate();
-  const [topic, setTopic] = useState<Topic | null>(null);
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [topic, setTopic] = useState<ITopicItem | null>(null);
+  const [sessions, setSessions] = useState<ISessionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate API call
-    const fetchTopicDetails = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+  const handleGetDetailsTopic = async (topicId: number) => {
+    setLoading(true);
+    try {
+      const [detailsRes, sessionsRes] = await Promise.all([
+        getDetailsTopic(topicId),
+        getAllTopicSessions(topicId),
+      ]);
 
-      const foundTopic =
-        mockTopics.find((t) => t.id === Number(topicId)) || null;
-      const topicSessions = mockSessions.filter(
-        (s) => s.topicId === Number(topicId)
-      );
-
-      setTopic(foundTopic);
-      setSessions(topicSessions);
+      setTopic(detailsRes?.data?.data);
+      setSessions(sessionsRes?.data?.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchTopicDetails();
+  useEffect(() => {
+    if (topicId) handleGetDetailsTopic(Number(topicId));
   }, [topicId]);
 
   const handleSessionClick = (sessionId: number) => {
-    navigate(`/session/${sessionId}`);
+    navigate(`/topic/${topicId}/session/${sessionId}`);
   };
 
   const calculateOverallProgress = () => {

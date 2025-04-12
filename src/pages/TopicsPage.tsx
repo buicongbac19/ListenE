@@ -1,12 +1,10 @@
-"use client";
-
 import { Container, Typography, Box, Breadcrumbs, Link } from "@mui/material";
 import { Home } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import TopicList from "../components/TopicList";
 
-const TopicsPage = () => {
+export default function TopicsPage() {
   const navigate = useNavigate();
 
   return (
@@ -38,11 +36,7 @@ const TopicsPage = () => {
           >
             Explore Topics
           </Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ maxWidth: 800, mb: 4 }}
-          >
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
             Choose from a variety of topics designed to improve your English
             speaking skills. Each topic contains multiple sessions with
             interactive exercises to help you practice and perfect your
@@ -55,6 +49,4 @@ const TopicsPage = () => {
       </motion.div>
     </Container>
   );
-};
-
-export default TopicsPage;
+}

@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { useState, useEffect } from "react";
 import {
@@ -19,63 +17,7 @@ import { ArrowForward, Bookmark, BookmarkBorder } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { ITopicItem } from "../types/topic";
 import IconButton from "./IconButton";
-
-export const mockTopics: ITopicItem[] = [
-  {
-    id: 1,
-    name: "Daily Conversations",
-    description: "Learn common phrases and vocabulary for everyday situations",
-    thumbnail:
-      "https://cdn.mobilecity.vn/mobilecity-vn/images/2024/11/top-meme-meo-cuc-dang-yeu-74.png.webp",
-    sessionCount: 8,
-    level: "Beginner",
-  },
-  {
-    id: 2,
-    name: "Business English",
-    description: "Professional vocabulary and expressions for the workplace",
-    thumbnail:
-      "https://cdn11.dienmaycholon.vn/filewebdmclnew/public/userupload/files/Image%20FP_2024/anh-meo-13.png",
-    sessionCount: 6,
-    level: "Intermediate",
-  },
-  {
-    id: 3,
-    name: "Travel & Tourism",
-    description:
-      "Essential phrases for traveling abroad and tourist situations",
-    thumbnail: "https://dongvat.edu.vn/upload/2025/01/meo-cute-meme-50.webp",
-    sessionCount: 5,
-    level: "Beginner",
-  },
-  {
-    id: 4,
-    name: "Academic Discussions",
-    description: "Vocabulary and expressions for academic contexts and debates",
-    thumbnail:
-      "https://app.gak.vn/storage/uploads/p2UlVPyiP3GjRIZEJi11mqrhOtoNkHNxrx04ztSM.jpg",
-    sessionCount: 7,
-    level: "Advanced",
-  },
-  {
-    id: 5,
-    name: "Social Media & Technology",
-    description: "Modern terms related to technology and online communication",
-    thumbnail: "https://devo.vn/wp-content/uploads/2023/01/meo-cam-dao.jpg",
-    sessionCount: 4,
-    level: "Intermediate",
-  },
-  {
-    id: 6,
-    name: "Health & Wellness",
-    description:
-      "Vocabulary related to health, fitness, and medical situations",
-    thumbnail:
-      "https://anhnail.com/wp-content/uploads/2024/11/meo-con-anh-meo-cute.jpg",
-    sessionCount: 6,
-    level: "Intermediate",
-  },
-];
+import { getAllTopics } from "../api/topic";
 
 export type Props = {
   title?: string;
@@ -90,15 +32,20 @@ export default function TopicList({
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Simulate API call
-    const fetchTopics = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setTopics(mockTopics);
+  const handleGetAllTopics = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllTopics();
+      setTopics(response?.data?.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchTopics();
+  useEffect(() => {
+    handleGetAllTopics();
   }, []);
 
   const handleTopicClick = (topicId: number) => {
@@ -146,8 +93,7 @@ export default function TopicList({
       <motion.div variants={container} initial="hidden" animate="show">
         <Grid container spacing={3}>
           {loading
-            ? // Loading skeletons
-              Array.from(new Array(6)).map((_, index) => (
+            ? Array.from(new Array(6)).map((_, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Card sx={{ height: "100%" }}>
                     <Skeleton variant="rectangular" height={200} />
@@ -176,7 +122,7 @@ export default function TopicList({
                         <CardMedia
                           component="img"
                           height="200"
-                          image={topic.thumbnail}
+                          image={topic.thumbnailUrl}
                           alt={topic.name}
                         />
                         <Box

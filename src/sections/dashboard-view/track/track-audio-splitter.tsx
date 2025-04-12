@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -15,8 +17,16 @@ import {
   Alert,
   Backdrop,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
-import { CloudUpload, ContentCut, PlayArrow, Stop } from "@mui/icons-material";
+import {
+  CloudUpload,
+  ContentCut,
+  PlayArrow,
+  Stop,
+  PlayCircleOutline,
+  PauseCircleOutline,
+} from "@mui/icons-material";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 
@@ -25,7 +35,6 @@ type SentenceItem = {
   content: string;
   startTime?: number;
   endTime?: number;
-  audioUrl?: string;
 };
 
 interface RegionOptions {
@@ -46,7 +55,6 @@ export default function TrackAudioSplitter({
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<{
     start: number;
     end: number;
@@ -61,22 +69,20 @@ export default function TrackAudioSplitter({
   const [lastAssignedSentenceId, setLastAssignedSentenceId] = useState<
     number | null
   >(null);
+  const [playingSentenceId, setPlayingSentenceId] = useState<number | null>(
+    null
+  );
+  const [apiLoading, setApiLoading] = useState(false);
 
   const waveformRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     return () => {
-      sentences.forEach((sentence) => {
-        if (sentence.audioUrl) URL.revokeObjectURL(sentence.audioUrl);
-      });
       if (audioUrl) URL.revokeObjectURL(audioUrl);
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
     };
-  }, [sentences, audioUrl]);
+  }, [audioUrl]);
 
   useEffect(() => {
     if (waveformRef.current && !wavesurfer) {
@@ -159,25 +165,6 @@ export default function TrackAudioSplitter({
       setAudioFile(file);
       setAudioUrl(url);
 
-      if (audioContextRef.current) {
-        await audioContextRef.current.close();
-      }
-
-      // Create new AudioContext
-      const AudioContext =
-        window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) {
-        throw new Error("AudioContext is not supported in this browser");
-      }
-
-      audioContextRef.current = new AudioContext();
-
-      const arrayBuffer = await file.arrayBuffer();
-      const audioBuffer = await audioContextRef.current.decodeAudioData(
-        arrayBuffer
-      );
-      setAudioBuffer(audioBuffer);
-
       if (wavesurfer) {
         wavesurfer.load(url);
       } else {
@@ -213,9 +200,9 @@ export default function TrackAudioSplitter({
     }
   };
 
-  const cutSelectedRegion = async () => {
-    if (!audioBuffer || !selectedRegion || !selectedSentenceId) {
-      setError("Vui lòng chọn vùng và câu trước khi cắt.");
+  const assignRegionToSentence = () => {
+    if (!selectedRegion || !selectedSentenceId) {
+      setError("Vui lòng chọn vùng và câu trước khi gán.");
       return;
     }
 
@@ -225,19 +212,13 @@ export default function TrackAudioSplitter({
     try {
       const { start, end } = selectedRegion;
 
-      const extractedBuffer = extractAudioRegion(audioBuffer, start, end);
-      const extractedBlob = await audioBufferToBlob(extractedBuffer);
-      const extractedUrl = URL.createObjectURL(extractedBlob);
-
       setSentences((prev) =>
         prev.map((s) => {
           if (s.id === selectedSentenceId) {
-            if (s.audioUrl) URL.revokeObjectURL(s.audioUrl);
             return {
               ...s,
               startTime: start,
               endTime: end,
-              audioUrl: extractedUrl,
             };
           }
           return s;
@@ -248,7 +229,7 @@ export default function TrackAudioSplitter({
         regionsPlugin.clearRegions();
         const region = regionsPlugin.addRegion({
           start: end,
-          end: Math.min(end + (end - start), audioBuffer.duration),
+          end: Math.min(end + (end - start), wavesurfer?.getDuration() || 0),
           color: "rgba(74, 131, 255, 0.2)",
           drag: true,
           resize: true,
@@ -258,90 +239,65 @@ export default function TrackAudioSplitter({
       }
 
       setLastAssignedSentenceId(selectedSentenceId);
-
       setLoading(false);
     } catch (err) {
-      console.error("Cut error:", err);
-      setError("Không thể cắt âm thanh. Vui lòng thử lại.");
+      console.error("Assignment error:", err);
+      setError("Không thể gán thời gian cho câu. Vui lòng thử lại.");
       setLoading(false);
     }
   };
 
-  const extractAudioRegion = (
-    buffer: AudioBuffer,
-    start: number,
-    end: number
-  ): AudioBuffer => {
-    const ctx = new (window.AudioContext ||
-      (window as any).webkitAudioContext)();
-    const duration = end - start;
-    const sampleRate = buffer.sampleRate;
-    const numberOfChannels = buffer.numberOfChannels;
-    const extractedBuffer = ctx.createBuffer(
-      numberOfChannels,
-      Math.ceil(duration * sampleRate),
-      sampleRate
-    );
+  const playSentenceAudio = (sentenceId: number) => {
+    if (!audioUrl) return;
 
-    for (let channel = 0; channel < numberOfChannels; channel++) {
-      const channelData = buffer.getChannelData(channel);
-      const extractedData = extractedBuffer.getChannelData(channel);
-
-      const startOffset = Math.floor(start * sampleRate);
-
-      for (let i = 0; i < extractedData.length; i++) {
-        extractedData[i] = channelData[startOffset + i];
-      }
+    const sentence = sentences.find((s) => s.id === sentenceId);
+    if (
+      !sentence ||
+      sentence.startTime === undefined ||
+      sentence.endTime === undefined
+    ) {
+      setError("Câu này chưa được gán thời gian.");
+      return;
     }
 
-    return extractedBuffer;
-  };
+    // If we're already playing this sentence, pause it
+    if (playingSentenceId === sentenceId) {
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+      }
+      setPlayingSentenceId(null);
+      return;
+    }
 
-  const audioBufferToBlob = async (buffer: AudioBuffer): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const ctx = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
-      const offlineCtx = new OfflineAudioContext(
-        buffer.numberOfChannels,
-        buffer.length,
-        buffer.sampleRate
-      );
+    // Create or get audio element
+    if (!audioElementRef.current) {
+      audioElementRef.current = new Audio(audioUrl);
+    } else {
+      audioElementRef.current.src = audioUrl;
+    }
 
-      const source = offlineCtx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(offlineCtx.destination);
-      source.start();
+    // Set up event listeners
+    audioElementRef.current.onended = () => {
+      setPlayingSentenceId(null);
+    };
 
-      offlineCtx
-        .startRendering()
-        .then((renderedBuffer) => {
-          const dest = ctx.createMediaStreamDestination();
-          const mediaRecorder = new MediaRecorder(dest.stream);
-          const chunks: BlobPart[] = [];
+    // Set the current time to the start time of the sentence
+    audioElementRef.current.currentTime = sentence.startTime;
 
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) chunks.push(e.data);
-          };
+    // Play the audio
+    audioElementRef.current.play();
 
-          mediaRecorder.onstop = () => {
-            const blob = new Blob(chunks, { type: "audio/webm" });
-            resolve(blob);
-          };
+    // Set the playing sentence ID
+    setPlayingSentenceId(sentenceId);
 
-          const source = ctx.createBufferSource();
-          source.buffer = renderedBuffer;
-          source.connect(dest);
-
-          mediaRecorder.start();
-          source.start();
-
-          setTimeout(() => {
-            mediaRecorder.stop();
-            source.stop();
-          }, renderedBuffer.duration * 1000 + 100);
-        })
-        .catch(reject);
-    });
+    // Set a timeout to pause the audio when it reaches the end time
+    const duration = sentence.endTime - sentence.startTime;
+    setTimeout(() => {
+      if (audioElementRef.current && playingSentenceId === sentenceId) {
+        audioElementRef.current.pause();
+        setPlayingSentenceId(null);
+      }
+    }, duration * 1000 + 50);
   };
 
   const formatTime = (time: number): string => {
@@ -355,6 +311,42 @@ export default function TrackAudioSplitter({
       .toString()
       .padStart(3, "0");
     return `${m}:${s}.${ms}`;
+  };
+
+  const handleCreateNew = async () => {
+    // Check if all sentences have been assigned times
+    const unassignedSentences = sentences.filter(
+      (s) => s.startTime === undefined || s.endTime === undefined
+    );
+
+    if (unassignedSentences.length > 0) {
+      setError(
+        `Còn ${unassignedSentences.length} câu chưa được gán thời gian.`
+      );
+      return;
+    }
+
+    setApiLoading(true);
+    setError(null);
+
+    try {
+      // Here you would call your API with the sentences data
+      // Example:
+      // const response = await axios.post('/api/your-endpoint', { sentences });
+
+      // Simulate API call with a delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Handle success
+      console.log("API call would be made with data:", sentences);
+
+      // You can add success message or redirect here
+    } catch (err) {
+      console.error("API error:", err);
+      setError("Không thể tạo mới. Vui lòng thử lại sau.");
+    } finally {
+      setApiLoading(false);
+    }
   };
 
   return (
@@ -409,7 +401,7 @@ export default function TrackAudioSplitter({
             variant="contained"
             color="secondary"
             startIcon={<ContentCut />}
-            onClick={cutSelectedRegion}
+            onClick={assignRegionToSentence}
             disabled={
               !audioFile ||
               !selectedRegion ||
@@ -422,7 +414,7 @@ export default function TrackAudioSplitter({
               },
             }}
           >
-            Cắt
+            Gán thời gian
           </Button>
         </Stack>
 
@@ -450,7 +442,7 @@ export default function TrackAudioSplitter({
                 <TableCell>Nội dung câu</TableCell>
                 <TableCell>Thời gian bắt đầu</TableCell>
                 <TableCell>Thời gian kết thúc</TableCell>
-                <TableCell>Audio Preview</TableCell>
+                <TableCell>Phát</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -475,12 +467,21 @@ export default function TrackAudioSplitter({
                       : "-"}
                   </TableCell>
                   <TableCell>
-                    {sentence.audioUrl ? (
-                      <audio
-                        src={sentence.audioUrl}
-                        controls
-                        style={{ width: "100%" }}
-                      />
+                    {sentence.startTime !== undefined &&
+                    sentence.endTime !== undefined ? (
+                      <IconButton
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playSentenceAudio(sentence.id);
+                        }}
+                      >
+                        {playingSentenceId === sentence.id ? (
+                          <PauseCircleOutline />
+                        ) : (
+                          <PlayCircleOutline />
+                        )}
+                      </IconButton>
                     ) : (
                       "-"
                     )}
@@ -492,9 +493,35 @@ export default function TrackAudioSplitter({
         </TableContainer>
       )}
 
+      {sentences.length > 0 && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleCreateNew}
+            disabled={apiLoading}
+            sx={{
+              minWidth: 120,
+              "&:focus": {
+                outline: "none",
+              },
+            }}
+          >
+            {apiLoading ? (
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+                Đang xử lý...
+              </Box>
+            ) : (
+              "Tạo mới"
+            )}
+          </Button>
+        </Box>
+      )}
+
       <Backdrop
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={loading}
+        open={loading || apiLoading}
       >
         <Box
           sx={{
@@ -505,7 +532,9 @@ export default function TrackAudioSplitter({
           }}
         >
           <CircularProgress color="inherit" />
-          <Typography>Đang xử lý audio...</Typography>
+          <Typography>
+            {loading ? "Đang xử lý audio..." : "Đang tạo mới..."}
+          </Typography>
         </Box>
       </Backdrop>
     </Box>

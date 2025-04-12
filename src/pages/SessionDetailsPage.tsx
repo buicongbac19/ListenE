@@ -32,138 +32,57 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import type { ISessionItem } from "../types/session";
-import type { ITrackItem } from "../types/track";
+import type { ITrackReponseItem } from "../types/track";
+import { getDetailsTopic } from "../api/topic";
+import { getListSessionTracks, getDetailsSession } from "../api/session";
+import { ITopicItem } from "../types/topic";
 
-const mockSessions: ISessionItem[] = [
-  {
-    id: 1,
-    name: "Greetings and Introductions",
-    topicId: 1,
-    topicName: "Daily Conversations",
-  },
-  { id: 2, name: "Small Talk", topicId: 1, topicName: "Daily Conversations" },
-];
-
-const mockTracks: ITrackItem[] = [
-  {
-    id: 1,
-    name: "Introducing Yourself",
-    sessionId: 1,
-    duration: "0:45",
-    difficulty: "Easy",
-    completed: true,
-  },
-  {
-    id: 2,
-    name: "Greeting Someone New",
-    sessionId: 1,
-    duration: "1:12",
-    difficulty: "Easy",
-    completed: true,
-  },
-  {
-    id: 3,
-    name: "Asking About Someone's Day",
-    sessionId: 1,
-    duration: "0:58",
-    difficulty: "Easy",
-    completed: false,
-  },
-  {
-    id: 4,
-    name: "Formal Introductions",
-    sessionId: 1,
-    duration: "1:24",
-    difficulty: "Medium",
-    completed: false,
-  },
-  {
-    id: 5,
-    name: "Introducing a Friend",
-    sessionId: 1,
-    duration: "1:05",
-    difficulty: "Medium",
-    completed: false,
-  },
-  {
-    id: 6,
-    name: "Remembering Names",
-    sessionId: 1,
-    duration: "1:18",
-    difficulty: "Medium",
-    completed: false,
-  },
-  {
-    id: 7,
-    name: "Business Introductions",
-    sessionId: 1,
-    duration: "1:32",
-    difficulty: "Hard",
-    completed: false,
-  },
-  {
-    id: 8,
-    name: "Cultural Greetings",
-    sessionId: 1,
-    duration: "1:45",
-    difficulty: "Hard",
-    completed: false,
-  },
-
-  {
-    id: 9,
-    name: "Weather Talk",
-    sessionId: 2,
-    duration: "0:52",
-    difficulty: "Easy",
-  },
-  {
-    id: 10,
-    name: "Weekend Plans",
-    sessionId: 2,
-    duration: "1:08",
-    difficulty: "Medium",
-  },
-];
-
-const SessionDetailsPage = () => {
-  const { sessionId } = useParams();
+export default function SessionDetailsPage() {
+  const { topicId, sessionId } = useParams();
   const navigate = useNavigate();
+  const [topic, setTopic] = useState<ITopicItem | null>(null);
   const [session, setSession] = useState<ISessionItem | null>(null);
-  const [tracks, setTracks] = useState<ITrackItem[]>([]);
+  const [tracks, setTracks] = useState<ITrackReponseItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate API call
-    const fetchSessionDetails = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+  const handelGetDetailsData = async (topicId: number, sessionId: number) => {
+    setLoading(true);
+    try {
+      const [detailsRes, sessionsRes, tracksRes] = await Promise.all([
+        getDetailsTopic(topicId),
+        getDetailsSession(sessionId),
+        getListSessionTracks(sessionId),
+      ]);
 
-      const foundSession =
-        mockSessions.find((s) => s.id === Number(sessionId)) || null;
-      const sessionTracks = mockTracks.filter(
-        (t) => t.sessionId === Number(sessionId)
-      );
-
-      setSession(foundSession);
-      setTracks(sessionTracks);
+      setTopic(detailsRes?.data?.data);
+      setSession(sessionsRes?.data?.data);
+      setTracks(tracksRes?.data?.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchSessionDetails();
-  }, [sessionId]);
+  useEffect(() => {
+    if (topicId && sessionId)
+      handelGetDetailsData(Number(topicId), Number(sessionId));
+  }, [topicId, sessionId]);
 
   const handleTrackClick = (trackId: number) => {
-    navigate(`/track/${trackId}`);
+    navigate(`/topic${topicId}/session/${sessionId}/track/${trackId}`);
   };
 
   const handlePracticeAll = (trackId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/track/${trackId}`);
+    navigate(`/topic/${topicId}/session/${sessionId}/track/${trackId}`);
   };
 
   const handlePracticeParts = (trackId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/track/${trackId}/segments`);
+    navigate(
+      `/topic/${topicId}/session/${sessionId}/track/${trackId}/segments`
+    );
   };
 
   const calculateProgress = () => {
@@ -249,7 +168,7 @@ const SessionDetailsPage = () => {
             onClick={() => navigate(`/topic/${session.topicId}`)}
             style={{ cursor: "pointer" }}
           >
-            {session.topicName}
+            {topic?.name}
           </Link>
           <Typography color="text.primary">{session.name}</Typography>
         </Breadcrumbs>
@@ -388,7 +307,7 @@ const SessionDetailsPage = () => {
                             {track.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Duration: {track.duration}
+                            Duration: {track.fullAudioDuration}
                           </Typography>
                         </Box>
                       </Box>
@@ -446,6 +365,4 @@ const SessionDetailsPage = () => {
       </motion.div>
     </Container>
   );
-};
-
-export default SessionDetailsPage;
+}
