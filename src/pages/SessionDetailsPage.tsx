@@ -262,7 +262,7 @@ export default function SessionDetailsPage() {
                           mb: 2,
                         }}
                       >
-                        <Chip
+                        {/* <Chip
                           label={track.difficulty}
                           size="small"
                           color={
@@ -273,7 +273,7 @@ export default function SessionDetailsPage() {
                               : "error"
                           }
                           sx={{ fontWeight: 500 }}
-                        />
+                        /> */}
                         {track.completed && (
                           <Chip
                             icon={<CheckCircle fontSize="small" />}
@@ -306,9 +306,9 @@ export default function SessionDetailsPage() {
                           >
                             {track.name}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
+                          {/* <Typography variant="body2" color="text.secondary">
                             Duration: {track.fullAudioDuration}
-                          </Typography>
+                          </Typography> */}
                         </Box>
                       </Box>
 
@@ -320,14 +320,14 @@ export default function SessionDetailsPage() {
                           gap: 2,
                         }}
                       >
-                        <Button
+                        {/* <Button
                           startIcon={<VolumeUp />}
                           size="small"
                           variant="text"
                           sx={{ alignSelf: "flex-start" }}
                         >
                           Preview
-                        </Button>
+                        </Button> */}
 
                         <ButtonGroup
                           variant="contained"

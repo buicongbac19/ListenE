@@ -177,7 +177,7 @@ export default function TrackSegmentsPage() {
               {track.name}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-              <Chip
+              {/* <Chip
                 label={track.difficulty}
                 size="small"
                 color={
@@ -188,7 +188,7 @@ export default function TrackSegmentsPage() {
                     : "error"
                 }
                 sx={{ fontWeight: 500, mr: 2 }}
-              />
+              /> */}
               <Typography variant="body2" color="text.secondary">
                 Duration: {formatTime(track.fullAudioDuration)}
               </Typography>
@@ -286,7 +286,9 @@ export default function TrackSegmentsPage() {
                       primary={
                         <Box sx={{ display: "flex", alignItems: "center" }}>
                           <Typography variant="subtitle1" fontWeight={600}>
-                            {segment.name}
+                            {segment.name
+                              ? segment.name
+                              : `Segment ${segment.id}`}
                           </Typography>
                           {segment.completed && (
                             <Chip

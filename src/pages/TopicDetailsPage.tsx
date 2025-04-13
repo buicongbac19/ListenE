@@ -269,6 +269,7 @@ export default function TopicDetailsPage() {
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
+                                sx={{ textAlign: "left" }}
                               >
                                 {session.trackCount} tracks
                               </Typography>

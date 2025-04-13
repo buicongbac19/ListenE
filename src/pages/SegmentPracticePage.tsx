@@ -934,7 +934,7 @@ export default function SegmentPracticePage() {
             </span>
           </Tooltip>
 
-          <Button
+          {/* <Button
             variant="outlined"
             startIcon={<Mic />}
             sx={{
@@ -943,7 +943,7 @@ export default function SegmentPracticePage() {
             }}
           >
             Practice Listening
-          </Button>
+          </Button> */}
 
           <Tooltip
             title={
