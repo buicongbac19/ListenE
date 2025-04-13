@@ -225,7 +225,7 @@ const HomePage = () => {
               >
                 <Box
                   component="img"
-                  src="https://res.cloudinary.com/dvk5yt0oi/image/upload/v1744554468/avatar_tmmlz2.pn"
+                  src="https://res.cloudinary.com/dvk5yt0oi/image/upload/v1744554468/avatar_tmmlz2.png"
                   alt="Language Learning"
                   sx={{
                     width: "100%",
