@@ -51,7 +51,6 @@ import type { ISegmentItem } from "../types/segment";
 import { getDetailsTrack } from "../api/track";
 import { checkingSegment } from "../api/segment";
 
-// Define interfaces for the API response
 interface CheckedWord {
   word: string;
   resultType: "Correct" | "MissingOrWrong" | "Wrong";
@@ -132,7 +131,6 @@ export default function SegmentPracticePage() {
   }, [isPlaying, isMuted]);
 
   useEffect(() => {
-    // Reset all states when navigating to a different segment
     setUserInput("");
     setSubmitted(false);
     setScore(null);
@@ -142,7 +140,6 @@ export default function SegmentPracticePage() {
     setCurrentTime(0);
     setIsPlaying(false);
 
-    // Reset audio if it exists
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.pause();
@@ -204,7 +201,6 @@ export default function SegmentPracticePage() {
 
     setIsScoring(true);
     try {
-      // Call the API to check the user's input
       const response = await checkingSegment(Number(segmentId), userInput);
 
       const result = response.data.data as ScoreResponse;
@@ -213,12 +209,10 @@ export default function SegmentPracticePage() {
       setScore(result.score);
       setHasScored(true);
 
-      // Show success dialog if score is high
       if (result.score >= 80) {
         setShowSuccessDialog(true);
       }
 
-      // Show transcript after scoring
       setShowTranscript(true);
     } catch (error) {
       console.error("Error scoring submission:", error);
@@ -235,7 +229,6 @@ export default function SegmentPracticePage() {
     setScoreResult(null);
     setHasScored(false);
 
-    // Focus on input
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -285,7 +278,6 @@ export default function SegmentPracticePage() {
     return false;
   };
 
-  // Get the result type color
   const getResultColor = (resultType: string) => {
     switch (resultType) {
       case "Correct":
@@ -299,7 +291,6 @@ export default function SegmentPracticePage() {
     }
   };
 
-  // Get the result type icon
   const getResultIcon = (resultType: string) => {
     switch (resultType) {
       case "Correct":
@@ -313,7 +304,6 @@ export default function SegmentPracticePage() {
     }
   };
 
-  // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
@@ -612,7 +602,6 @@ export default function SegmentPracticePage() {
                 </Box>
               </Box>
 
-              {/* Hidden audio element */}
               <audio
                 ref={audioRef}
                 src={segment.audioUrl}
@@ -806,7 +795,6 @@ export default function SegmentPracticePage() {
                       </Paper>
                     )}
 
-                    {/* Word-by-word comparison */}
                     <Paper
                       elevation={2}
                       sx={{

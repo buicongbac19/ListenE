@@ -47,9 +47,8 @@ export default function DashboardLayout() {
     setAnchorEl(null);
   };
   const handleLogout = () => {
-    // Handle logout logic here
     handleMenuClose();
-    navigate("/login");
+    navigate("/auth");
   };
 
   const menuItems = [

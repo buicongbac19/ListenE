@@ -79,7 +79,6 @@ export default function TrackSegmentsPage() {
     navigate(`/topic/${topicId}/session/${sessionId}/track/${trackId}`);
   };
 
-  // Animation variants
   const container = {
     hidden: { opacity: 0 },
     show: {

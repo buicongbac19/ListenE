@@ -61,7 +61,6 @@ const HomePage = () => {
     },
   ];
 
-  // Auto-rotate testimonials
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -69,7 +68,6 @@ const HomePage = () => {
     return () => clearInterval(interval);
   }, [testimonials.length]);
 
-  // Features data
   const features = [
     {
       icon: <Headphones sx={{ fontSize: 40, color: "primary.main" }} />,
@@ -126,7 +124,6 @@ const HomePage = () => {
 
   return (
     <>
-      {/* Hero Section */}
       <Box
         sx={{
           width: "100vw",

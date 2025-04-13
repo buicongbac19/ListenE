@@ -31,7 +31,6 @@ import {
   Login,
 } from "@mui/icons-material";
 
-// Scroll trigger for navbar transparency
 function ElevationScroll(props: { children: React.ReactElement<any> }) {
   const { children } = props;
   const trigger = useScrollTrigger({
@@ -233,7 +232,6 @@ const HomeNavbar = () => {
           {drawer}
         </Drawer>
 
-        {/* Add toolbar spacing to prevent content from hiding under the AppBar */}
         <Toolbar />
       </div>
     </Fade>

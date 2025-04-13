@@ -50,7 +50,6 @@ import { getDetailsSession } from "../api/session";
 import type { ITopicItem } from "../types/topic";
 import type { ISessionItem } from "../types/session";
 
-// Define interfaces for the API response
 interface CheckedWord {
   word: string;
   resultType: "Correct" | "MissingOrWrong" | "Wrong";
@@ -80,15 +79,12 @@ const mockTracks: ITrackReponseItem = {
   segments: [],
 };
 
-// Mock API function for checking user input
 const checkUserInput = async (
   segmentId: number,
   content: string
 ): Promise<ScoreResponse> => {
-  // In a real app, this would be an API call
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Simulate API response
       const userWords = content.toLowerCase().split(/\s+/);
       const correctWords = mockTracks.fullAudioTranscript
         .toLowerCase()
@@ -129,7 +125,7 @@ const checkUserInput = async (
         maxScore: 100,
         correctTranscript: mockTracks.fullAudioTranscript,
       });
-    }, 1500); // Simulate network delay
+    }, 1500);
   });
 };
 
@@ -258,18 +254,15 @@ const TrackPracticePage = () => {
 
     setIsScoring(true);
     try {
-      // Call the API to check the user's input
       const result = await checkUserInput(track.id, userInput);
       setScoreResult(result);
       setScore(result.score);
       setHasScored(true);
 
-      // Show success dialog if score is high
       if (result.score >= 80) {
         setShowSuccessDialog(true);
       }
 
-      // Show transcript after scoring
       setShowTranscript(true);
     } catch (error) {
       console.error("Error scoring submission:", error);
@@ -286,7 +279,6 @@ const TrackPracticePage = () => {
     setScoreResult(null);
     setHasScored(false);
 
-    // Focus on input
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -294,7 +286,6 @@ const TrackPracticePage = () => {
     }, 100);
   };
 
-  // Get the result type color
   const getResultColor = (resultType: string) => {
     switch (resultType) {
       case "Correct":
@@ -308,7 +299,6 @@ const TrackPracticePage = () => {
     }
   };
 
-  // Get the result type icon
   const getResultIcon = (resultType: string) => {
     switch (resultType) {
       case "Correct":
@@ -322,7 +312,6 @@ const TrackPracticePage = () => {
     }
   };
 
-  // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.5 } },

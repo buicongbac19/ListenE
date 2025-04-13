@@ -44,7 +44,6 @@ export default function TopicsPage() {
           </Typography>
         </Box>
 
-        {/* Using the TopicList component */}
         <TopicList title="Available Topics" showDivider={true} />
       </motion.div>
     </Container>

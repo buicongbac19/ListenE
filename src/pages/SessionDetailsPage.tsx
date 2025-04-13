@@ -92,7 +92,6 @@ export default function SessionDetailsPage() {
     return Math.round((completedTracks / tracks.length) * 100);
   };
 
-  // Animation variants
   const container = {
     hidden: { opacity: 0 },
     show: {
