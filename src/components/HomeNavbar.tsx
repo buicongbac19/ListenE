@@ -25,7 +25,6 @@ import {
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  Home,
   School,
   Settings,
   Person,
