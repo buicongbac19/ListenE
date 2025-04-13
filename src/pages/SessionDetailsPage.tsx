@@ -27,7 +27,7 @@ import {
   PlayArrow,
   CheckCircle,
   Headphones,
-  VolumeUp,
+  // VolumeUp,
   FormatListBulleted,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
