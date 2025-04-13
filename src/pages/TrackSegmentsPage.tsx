@@ -166,7 +166,7 @@ export default function TrackSegmentsPage() {
           <Button
             startIcon={<ArrowBack />}
             onClick={() =>
-              navigate(`topic/${topic?.id}/session/${session?.id}`)
+              navigate(`/topic/${topic?.id}/session/${session?.id}`)
             }
             sx={{ mr: 2 }}
           >

@@ -107,8 +107,7 @@ export default function TopicList({
                   </Card>
                 </Grid>
               ))
-            : // Actual content
-              topics.map((topic) => (
+            : topics.map((topic) => (
                 <Grid item xs={12} sm={6} md={4} key={topic.id}>
                   <motion.div variants={item}>
                     <Card
@@ -142,6 +141,9 @@ export default function TopicList({
                             sx={{
                               bgcolor: "white",
                               "&:hover": { bgcolor: "white" },
+                              "&:focus": {
+                                outline: "none",
+                              },
                             }}
                           >
                             {topic.isFavorite ? (
@@ -183,7 +185,7 @@ export default function TopicList({
                           gutterBottom
                           sx={{
                             fontWeight: 600,
-                            height: "2.6em", // Approximately 2 lines for the title
+                            height: "2.6em",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             display: "-webkit-box",
@@ -198,7 +200,7 @@ export default function TopicList({
                           color="text.secondary"
                           sx={{
                             mb: 2,
-                            height: "4.5em", // Approximately 3 lines of text
+                            height: "4.5em",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             display: "-webkit-box",
@@ -213,7 +215,7 @@ export default function TopicList({
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            mt: "auto", // Push to bottom of card
+                            mt: "auto",
                           }}
                         >
                           <Typography variant="body2" color="text.secondary">
@@ -222,7 +224,10 @@ export default function TopicList({
                           <Button
                             size="small"
                             endIcon={<ArrowForward />}
-                            sx={{ fontWeight: 600 }}
+                            sx={{
+                              fontWeight: 600,
+                              "&:focus": { outline: "none" },
+                            }}
                           >
                             Explore
                           </Button>

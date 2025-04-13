@@ -147,7 +147,7 @@ export default function SessionListView() {
   };
 
   const handleEditSession = (sessionId: number) => {
-    navigate(`/admin/sessions/${sessionId}/edit`);
+    navigate(`/dashboard/sessions/${sessionId}/edit`);
   };
 
   const handleDeleteClick = (sessionId: number) => {
@@ -233,11 +233,11 @@ export default function SessionListView() {
                 underline="hover"
                 color="inherit"
                 sx={{ display: "flex", alignItems: "center" }}
-                onClick={() => navigate("/admin")}
+                onClick={() => navigate("/dashboard")}
                 style={{ cursor: "pointer" }}
               >
                 <Dashboard sx={{ mr: 0.5 }} fontSize="inherit" />
-                Admin
+                Dashboard
               </Link>
               <Typography
                 color="text.primary"
@@ -252,6 +252,7 @@ export default function SessionListView() {
               component="h1"
               fontWeight="bold"
               gutterBottom
+              sx={{ textAlign: "left" }}
             >
               List Session
             </Typography>
@@ -385,7 +386,7 @@ export default function SessionListView() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => navigate("/admin/sessions/create")}
+              onClick={() => navigate("/dashboard/sessions/create")}
             >
               Create New Session
             </Button>

@@ -57,7 +57,7 @@ const HomeNavbar = () => {
   const isHomePage = location.pathname === "/";
 
   const navItems = [
-    { text: "Home", icon: <Home />, path: "/home" },
+    { text: "Home", icon: <Home />, path: "/" },
     { text: "Topics", icon: <School />, path: "/topics" },
   ];
 

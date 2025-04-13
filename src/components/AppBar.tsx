@@ -13,11 +13,16 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import { logout } from "../api/auth";
 import { useNotification } from "../provider/NotificationProvider";
+import { useNavigate } from "react-router-dom";
 
-const pages = ["Home", "Topics"];
+const pages = [
+  { name: "Home", path: "/" },
+  { name: "Topics", path: "/topics" },
+];
 const settings = ["Hồ sơ", "Tài khoản", "Cài đặt", "Đăng xuất"];
 
 export default function ResponsiveAppBar() {
+  const navigate = useNavigate();
   const { showError } = useNotification();
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
@@ -105,8 +110,10 @@ export default function ResponsiveAppBar() {
               sx={{ display: { xs: "block", md: "none" } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography sx={{ textAlign: "center" }}>{page}</Typography>
+                <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                  <Typography sx={{ textAlign: "center" }}>
+                    {page.name}
+                  </Typography>
                 </MenuItem>
               ))}
             </Menu>
@@ -114,22 +121,32 @@ export default function ResponsiveAppBar() {
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
               <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
+                key={page.name}
+                onClick={() => navigate(page.path)}
+                sx={{
+                  my: 2,
+                  color: "white",
+                  display: "block",
+                  "&:focus": {
+                    outline: "none !important",
+                  },
+                }}
               >
-                {page}
+                {page.name}
               </Button>
             ))}
           </Box>
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+              <IconButton
+                onClick={handleOpenUserMenu}
+                sx={{ p: 0, "&:focus": { outline: "none" } }}
+              >
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
             </Tooltip>
             <Menu
-              sx={{ mt: "45px" }}
+              sx={{ mt: "45px", zIndex: 10000 }}
               id="menu-appbar"
               anchorEl={anchorElUser}
               anchorOrigin={{

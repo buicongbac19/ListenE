@@ -66,6 +66,24 @@ const theme = createTheme({
           borderRadius: 8,
           textTransform: "none",
           fontWeight: 600,
+          "&:focus": {
+            outline: "none",
+          },
+          "&:focus-visible": {
+            outline: "none",
+          },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          "&:focus": {
+            outline: "none",
+          },
+          "&:focus-visible": {
+            outline: "none",
+          },
         },
       },
     },

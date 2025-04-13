@@ -148,7 +148,7 @@ export default function TopicDetailsPage() {
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() => navigate("/")}
+            onClick={() => window.history.back()}
             sx={{ mr: 2 }}
           >
             Back
