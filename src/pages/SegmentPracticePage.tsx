@@ -942,7 +942,7 @@ export default function SegmentPracticePage() {
               "&:hover": { transform: "translateY(-2px)" },
             }}
           >
-            Practice Speaking
+            Practice Listening
           </Button>
 
           <Tooltip

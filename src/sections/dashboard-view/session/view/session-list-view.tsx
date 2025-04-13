@@ -335,7 +335,7 @@ export default function SessionListView() {
                   <MenuItem value={2}>Professional English</MenuItem>
                   <MenuItem value={3}>Travel & Tourism</MenuItem>
                   <MenuItem value={4}>Grammar Mastery</MenuItem>
-                  <MenuItem value={5}>Pronunciation & Speaking</MenuItem>
+                  <MenuItem value={5}>Pronunciation & Listening</MenuItem>
                 </Select>
               </FormControl>
 

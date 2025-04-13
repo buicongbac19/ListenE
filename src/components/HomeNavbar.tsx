@@ -29,6 +29,7 @@ import {
   School,
   Settings,
   Person,
+  Login,
 } from "@mui/icons-material";
 
 // Scroll trigger for navbar transparency
@@ -56,10 +57,7 @@ const HomeNavbar = () => {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
-  const navItems = [
-    { text: "Home", icon: <Home />, path: "/" },
-    { text: "Topics", icon: <School />, path: "/topics" },
-  ];
+  const navItems = [{ text: "Login/Signup", icon: <Login />, path: "/auth" }];
 
   const toggleDrawer =
     (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -184,6 +182,7 @@ const HomeNavbar = () => {
                           fontWeight: 500,
                           color: "inherit",
                           "&:hover": {
+                            color: "#fff",
                             bgcolor: isHomePage
                               ? "rgba(255, 255, 255, 0.1)"
                               : "rgba(63, 81, 181, 0.08)",
@@ -198,7 +197,19 @@ const HomeNavbar = () => {
 
                 <Box sx={{ ml: 2 }}>
                   <IconButton color="inherit">
-                    <Settings />
+                    <Settings
+                      sx={{
+                        animation: "spin 3s linear infinite",
+                        "@keyframes spin": {
+                          "0%": {
+                            transform: "rotate(0deg)",
+                          },
+                          "100%": {
+                            transform: "rotate(360deg)",
+                          },
+                        },
+                      }}
+                    />
                   </IconButton>
                   <IconButton color="inherit">
                     <Avatar

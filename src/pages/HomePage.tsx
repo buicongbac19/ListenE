@@ -47,7 +47,7 @@ const HomePage = () => {
       role: "Software Engineer",
       avatar: "https://source.unsplash.com/random/100x100/?man",
       content:
-        "I've tried many language apps, but this one stands out. The listening exercises are particularly helpful for improving my pronunciation.",
+        "I've tried many language website, but this one stands out. The listening exercises are particularly helpful for improving my pronunciation.",
       rating: 4.5,
     },
     {
@@ -56,7 +56,7 @@ const HomePage = () => {
       role: "University Student",
       avatar: "https://source.unsplash.com/random/100x100/?student",
       content:
-        "As an international student, I needed to improve my English quickly. This app made learning fun and effective!",
+        "As an international student, I needed to improve my English quickly. This website made learning fun and effective!",
       rating: 5,
     },
   ];
@@ -183,7 +183,7 @@ const HomePage = () => {
                     textShadow: "0 2px 10px rgba(0,0,0,0.1)",
                   }}
                 >
-                  Master English Speaking with Confidence
+                  Master English Listening with Confidence
                 </Typography>
                 <Typography
                   variant="h6"
@@ -225,7 +225,7 @@ const HomePage = () => {
               >
                 <Box
                   component="img"
-                  src="https://res.cloudinary.com/dvk5yt0oi/image/upload/v1744288383/488853516_1039026811419837_2527203561768815018_n_y1fahn.png"
+                  src="https://res.cloudinary.com/dvk5yt0oi/image/upload/v1744554468/avatar_tmmlz2.pn"
                   alt="Language Learning"
                   sx={{
                     width: "100%",
