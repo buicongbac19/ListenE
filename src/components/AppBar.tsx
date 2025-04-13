@@ -72,7 +72,7 @@ export default function ResponsiveAppBar() {
         <Toolbar disableGutters>
           <Box
             component="img"
-            src="https://res.cloudinary.com/dvk5yt0oi/image/upload/v1744288383/488853516_1039026811419837_2527203561768815018_n_y1fahn.png"
+            src="https://res.cloudinary.com/dvk5yt0oi/image/upload/v1744554468/avatar_tmmlz2.png"
             alt="Language Learning"
             sx={{
               width: "65px",
