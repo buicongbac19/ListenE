@@ -38,7 +38,7 @@ const HomePage = () => {
       role: "Marketing Professional",
       avatar: "https://source.unsplash.com/random/100x100/?woman",
       content:
-        "ListenE has transformed my English speaking skills! The interactive exercises and real-time feedback helped me gain confidence in business meetings.",
+        "ListenE has transformed my English listening skills! The interactive exercises and real-time feedback helped me gain confidence in business meetings.",
       rating: 5,
     },
     {
@@ -81,7 +81,7 @@ const HomePage = () => {
       icon: <RecordVoiceOver sx={{ fontSize: 40, color: "primary.main" }} />,
       title: "Speech Recognition",
       description:
-        "Get instant feedback on your pronunciation and speaking clarity",
+        "Get instant feedback on your pronunciation and listening clarity",
     },
     {
       icon: <Translate sx={{ fontSize: 40, color: "primary.main" }} />,
@@ -378,7 +378,7 @@ const HomePage = () => {
               sx={{ maxWidth: 700, mx: "auto" }}
             >
               Join thousands of satisfied learners who have improved their
-              English speaking skills with ListenE
+              English listening skills with ListenE
             </Typography>
           </Box>
 
@@ -504,7 +504,7 @@ const HomePage = () => {
                 mx: "auto",
               }}
             >
-              Start your journey to fluent English speaking today with our
+              Start your journey to fluent English listening today with our
               interactive lessons and personalized feedback
             </Typography>
             <Button

@@ -38,7 +38,7 @@ export default function TopicsPage() {
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
             Choose from a variety of topics designed to improve your English
-            speaking skills. Each topic contains multiple sessions with
+            listening skills. Each topic contains multiple sessions with
             interactive exercises to help you practice and perfect your
             pronunciation.
           </Typography>

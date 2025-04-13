@@ -188,8 +188,8 @@ export default function SessionDetailsPage() {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="body1" color="text.secondary" paragraph>
-            Practice your listening and speaking skills with these audio tracks.
-            Listen carefully and try to repeat what you hear.
+            Practice your listening and listening skills with these audio
+            tracks. Listen carefully and try to repeat what you hear.
           </Typography>
 
           <Box sx={{ mt: 3, mb: 4 }}>
