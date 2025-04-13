@@ -43,6 +43,7 @@ import {
   Cancel,
   QuestionMark,
   GradingOutlined,
+  Lightbulb,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ITrackItem } from "../types/track";
@@ -207,6 +208,7 @@ export default function SegmentPracticePage() {
       const response = await checkingSegment(Number(segmentId), userInput);
 
       const result = response.data.data as ScoreResponse;
+      console.log(result);
       setScoreResult(result);
       setScore(result.score);
       setHasScored(true);
@@ -736,8 +738,8 @@ export default function SegmentPracticePage() {
                     >
                       <Box
                         sx={{
-                          width: 120,
-                          height: 120,
+                          width: 150,
+                          height: 150,
                           borderRadius: "50%",
                           border: "8px solid",
                           borderColor:
@@ -755,7 +757,7 @@ export default function SegmentPracticePage() {
                         }}
                       >
                         <Typography variant="h4" fontWeight="bold">
-                          {score}%
+                          {score}/100
                         </Typography>
                       </Box>
                     </motion.div>
@@ -779,6 +781,31 @@ export default function SegmentPracticePage() {
                         : "Keep practicing!"}
                     </Typography>
 
+                    {scoreResult.redundancy !== 0 && (
+                      <Paper
+                        elevation={1}
+                        sx={{
+                          p: 2,
+                          mb: 3,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "60%",
+                          marginLeft: "auto",
+                          marginRight: "auto",
+                          bgcolor: "error.light",
+                          color: "error.contrastText",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Lightbulb sx={{ mr: 1 }} />
+                        <Typography variant="body2">
+                          Bạn đã bị -{100 - scoreResult.score} điểm do viết thừa{" "}
+                          {scoreResult.redundancy} từ
+                        </Typography>
+                      </Paper>
+                    )}
+
                     {/* Word-by-word comparison */}
                     <Paper
                       elevation={2}
@@ -794,7 +821,7 @@ export default function SegmentPracticePage() {
                         gutterBottom
                         fontWeight={500}
                       >
-                        Word-by-word Analysis
+                        Grading Assistant
                       </Typography>
                       <Box
                         sx={{

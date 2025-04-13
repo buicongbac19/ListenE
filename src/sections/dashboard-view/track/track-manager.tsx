@@ -5,6 +5,7 @@ import { Box, Container, Paper, Tab, Tabs, Typography } from "@mui/material";
 import { TextFields, AudioFile } from "@mui/icons-material";
 import TrackContentSplitter from "./track-content-splitter";
 import TrackAudioSplitter from "./track-audio-splitter";
+import { IPostSegmentItem } from "../../../types/segment";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -35,23 +36,15 @@ function a11yProps(index: number) {
   };
 }
 
-export interface SentenceItem {
-  id: number;
-  content: string;
-  startTime?: number;
-  endTime?: number;
-  audioUrl?: string;
-}
-
 export default function TrackManager() {
   const [tabValue, setTabValue] = useState(0);
-  const [sentences, setSentences] = useState<SentenceItem[]>([]);
+  const [sentences, setSentences] = useState<IPostSegmentItem[]>([]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleSentencesCreated = (newSentences: SentenceItem[]) => {
+  const handleSentencesCreated = (newSentences: IPostSegmentItem[]) => {
     setSentences(newSentences);
     setTabValue(1);
   };

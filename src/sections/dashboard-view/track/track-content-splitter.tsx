@@ -26,17 +26,10 @@ import {
   TableRows,
   Lightbulb,
 } from "@mui/icons-material";
-
-type SentenceItem = {
-  id: number;
-  content: string;
-  startTime?: number;
-  endTime?: number;
-  audioUrl?: string;
-};
+import { IPostSegmentItem } from "../../../types/segment";
 
 interface TrackContentSplitterProps {
-  onSentencesCreated: (sentences: SentenceItem[]) => void;
+  onSentencesCreated: (sentences: IPostSegmentItem[]) => void;
 }
 
 export default function TrackContentSplitter({
@@ -44,7 +37,7 @@ export default function TrackContentSplitter({
 }: TrackContentSplitterProps) {
   const theme = useTheme();
   const [text, setText] = useState<string>("");
-  const [sentences, setSentences] = useState<SentenceItem[]>([]);
+  const [sentences, setSentences] = useState<IPostSegmentItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,7 +77,8 @@ export default function TrackContentSplitter({
     const sentenceLines = text.split("\n").filter((line) => line.trim() !== "");
     const sentenceItems = sentenceLines.map((content, index) => ({
       id: index + 1,
-      content: content.trim(),
+      order: index + 1,
+      transcript: content.trim(),
     }));
     setSentences(sentenceItems);
 
@@ -251,7 +245,7 @@ export default function TrackContentSplitter({
                       }}
                     >
                       <TableCell>{sentence.id}</TableCell>
-                      <TableCell>{sentence.content}</TableCell>
+                      <TableCell>{sentence.transcript}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

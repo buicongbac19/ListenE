@@ -20,7 +20,6 @@ import { useGetUsers, updateOrCreateUser } from "../../../api/user";
 
 import Iconify from "../../../components/iconify";
 import Scrollbar from "../../../components/scrollbar";
-import { useSnackbar } from "../../../components/snackbar";
 import { ConfirmDialog } from "../../../components/custom-dialog";
 import CustomBreadcrumbs from "../../../components/custom-breadcrumbs";
 import {
@@ -65,7 +64,7 @@ const defaultFilters: IUserTableFilters = {
 // ----------------------------------------------------------------------
 
 export default function UserListView() {
-  const { enqueueSnackbar } = useSnackbar();
+  // const { enqueueSnackbar } = useSnackbar();
 
   const table = useTable({
     defaultFilters,
@@ -112,7 +111,7 @@ export default function UserListView() {
       // Xử lý bất đồng bộ bên ngoài context return
       deleteRow.forEach((e) => {
         updateOrCreateUser(e, true).then(() => {
-          enqueueSnackbar(`Delete ${e.firstName} ${e.lastName} success!`);
+          // enqueueSnackbar(`Delete ${e.firstName} ${e.lastName} success!`);
         });
       });
 
@@ -120,7 +119,7 @@ export default function UserListView() {
 
       table.onUpdatePageDeleteRow(tableData.length);
     },
-    [enqueueSnackbar, table, tableData]
+    [table, tableData]
   );
 
   const handleDeleteRows = useCallback(() => {
@@ -133,7 +132,7 @@ export default function UserListView() {
 
     deleteRow.forEach((e) => {
       updateOrCreateUser(e, true).then(() => {
-        enqueueSnackbar(`Delete ${e.firstName} ${e.lastName} success!`);
+        // enqueueSnackbar(`Delete ${e.firstName} ${e.lastName} success!`);
       });
     });
 
@@ -143,7 +142,7 @@ export default function UserListView() {
       totalRowsInPage: tableData.length,
       totalRowsFiltered: tableData.length,
     });
-  }, [enqueueSnackbar, table, tableData]);
+  }, [table, tableData]);
 
   const handleEditRow = useCallback(
     (id: string) => {

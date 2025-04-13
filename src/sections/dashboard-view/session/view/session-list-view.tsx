@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 
 import { useState, useEffect } from "react";
@@ -8,237 +6,188 @@ import {
   Container,
   Typography,
   Box,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
   Button,
   IconButton,
-  Divider,
   TextField,
   InputAdornment,
-  Chip,
   CircularProgress,
   Paper,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
   Breadcrumbs,
   Link,
-  useMediaQuery,
   useTheme,
+  Pagination,
+  FormControl,
+  InputLabel,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Tooltip,
+  TableSortLabel,
+  type SelectChangeEvent,
+  alpha,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  MenuItem, // Import MenuItem
 } from "@mui/material";
 import {
   Add,
   Search,
-  MoreVert,
   Edit,
   Delete,
   Dashboard,
   Home,
   Refresh,
-  Sort,
-  FilterList,
-  MusicNote,
   Headphones,
-  AccessTime,
   School,
+  ArrowUpward,
+  ArrowDownward,
+  FilterList,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-// Define interfaces
-interface ISession {
-  id: number;
-  name: string;
-  description: string;
-  imageUrl: string;
-  trackCount: number;
-  difficulty: "Easy" | "Medium" | "Hard";
-  createdAt: string;
-  updatedAt: string;
-  topicId: number;
-  topicName: string;
-}
+import type { ISessionItem } from "../../../../types/session";
+import { getAllSessions } from "../../../../api/session";
+import { useNotification } from "../../../../provider/NotificationProvider";
+
+// Define sort direction type
+type SortDirection = "asc" | "desc";
 
 export default function SessionListView() {
+  const { showSuccess } = useNotification();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  //   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [sessions, setSessions] = useState<ISession[]>([]);
+  const [sessions, setSessions] = useState<ISessionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(
     null
   );
+  console.log(selectedSessionId);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Mock data for demonstration
-  const mockSessions: ISession[] = [
-    {
-      id: 1,
-      name: "Basic Conversations",
-      description: "Learn everyday English conversations for beginners",
-      imageUrl: "https://source.unsplash.com/random/300x200/?conversation",
-      trackCount: 5,
-      difficulty: "Easy",
-      createdAt: "2023-05-15T10:30:00Z",
-      updatedAt: "2023-06-20T14:45:00Z",
-      topicId: 1,
-      topicName: "Everyday English",
-    },
-    {
-      id: 2,
-      name: "Business English",
-      description: "Professional English for workplace communication",
-      imageUrl: "https://source.unsplash.com/random/300x200/?business",
-      trackCount: 8,
-      difficulty: "Medium",
-      createdAt: "2023-04-10T09:15:00Z",
-      updatedAt: "2023-06-18T11:20:00Z",
-      topicId: 2,
-      topicName: "Professional English",
-    },
-    {
-      id: 3,
-      name: "Travel English",
-      description: "Essential phrases for traveling abroad",
-      imageUrl: "https://source.unsplash.com/random/300x200/?travel",
-      trackCount: 6,
-      difficulty: "Easy",
-      createdAt: "2023-03-22T08:45:00Z",
-      updatedAt: "2023-06-15T16:30:00Z",
-      topicId: 3,
-      topicName: "Travel & Tourism",
-    },
-    {
-      id: 4,
-      name: "Advanced Grammar",
-      description: "Complex grammar structures for advanced learners",
-      imageUrl: "https://source.unsplash.com/random/300x200/?books",
-      trackCount: 10,
-      difficulty: "Hard",
-      createdAt: "2023-02-18T14:20:00Z",
-      updatedAt: "2023-06-10T09:50:00Z",
-      topicId: 4,
-      topicName: "Grammar Mastery",
-    },
-    {
-      id: 5,
-      name: "Pronunciation Practice",
-      description: "Improve your English pronunciation and accent",
-      imageUrl: "https://source.unsplash.com/random/300x200/?speaking",
-      trackCount: 7,
-      difficulty: "Medium",
-      createdAt: "2023-01-30T11:10:00Z",
-      updatedAt: "2023-06-05T13:25:00Z",
-      topicId: 5,
-      topicName: "Pronunciation & Speaking",
-    },
-    {
-      id: 6,
-      name: "Idioms and Expressions",
-      description: "Common English idioms and everyday expressions",
-      imageUrl: "https://source.unsplash.com/random/300x200/?language",
-      trackCount: 9,
-      difficulty: "Medium",
-      createdAt: "2022-12-15T16:40:00Z",
-      updatedAt: "2023-05-28T10:15:00Z",
-      topicId: 6,
-      topicName: "Idiomatic English",
-    },
-  ];
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [topicId, setTopicId] = useState<number | "">("");
 
-  // Fetch sessions data
-  const fetchSessions = async () => {
+  // Sorting state
+  const [sortField, setSortField] = useState<string>("id");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const handleGetAllSessions = async () => {
     setLoading(true);
     try {
-      // In a real app, you would fetch from your API
-      // const response = await axios.get('/api/admin/sessions');
-      // setSessions(response.data);
+      const response = await getAllSessions({
+        page,
+        size,
+        key: searchTerm,
+        topicId,
+        sortField,
+        sortDirection,
+      });
 
-      // Using mock data for demonstration
-      setTimeout(() => {
-        setSessions(mockSessions);
-        setLoading(false);
-      }, 800);
+      setSessions(response.items);
+      setTotalPages(response.totalPages);
+      setTotalItems(response.totalItems);
     } catch (error) {
       console.error("Error fetching sessions:", error);
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    handleGetAllSessions();
+  }, [page, size, topicId, sortField, sortDirection]); // Refetch when these parameters change
+
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (page !== 1) {
+        setPage(1); // Reset to page 1 when search changes
+      } else {
+        handleGetAllSessions();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
+  };
+
+  const handleSizeChange = (event: SelectChangeEvent<number>) => {
+    setSize(event.target.value as number);
+    setPage(1); // Reset to page 1 when size changes
+  };
+
+  const handleSort = (field: string) => {
+    const isAsc = sortField === field && sortDirection === "asc";
+    setSortDirection(isAsc ? "desc" : "asc");
+    setSortField(field);
+  };
 
   const handleCreateTrack = (sessionId: number) => {
-    // Navigate to the track creation component
     navigate(`/dashboard/sessions/${sessionId}/create-track`);
   };
 
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    sessionId: number
-  ) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedSessionId(sessionId);
+  const handleEditSession = (sessionId: number) => {
+    navigate(`/admin/sessions/${sessionId}/edit`);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+  const handleDeleteClick = (sessionId: number) => {
+    setSelectedSessionId(sessionId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
     setSelectedSessionId(null);
   };
 
-  const handleEditSession = () => {
-    if (selectedSessionId) {
-      navigate(`/admin/sessions/${selectedSessionId}/edit`);
-    }
-    handleMenuClose();
-  };
+  const handleDeleteConfirm = async () => {
+    // if (selectedSessionId) {
+    //   try {
+    //     // Sử dụng hàm deleteSession từ api/session.ts
+    //     await deleteSession(selectedSessionId);
 
-  const handleDeleteSession = () => {
-    // In a real app, you would call your API to delete the session
-    if (selectedSessionId) {
-      setSessions(
-        sessions.filter((session) => session.id !== selectedSessionId)
-      );
-    }
-    handleMenuClose();
+    //     // Cập nhật UI sau khi xóa
+    //     setSessions(
+    //       sessions.filter((session) => session.id !== selectedSessionId)
+    //     );
+
+    //     // Refetch if this was the last item on the page
+    //     if (sessions.length === 1 && page > 1) {
+    //       setPage(page - 1);
+    //     } else {
+    //       fetchSessions();
+    //     }
+    //   } catch (error) {
+    //     console.error("Error deleting session:", error);
+    //   }
+    // }
+    // setDeleteDialogOpen(false);
+    // setSelectedSessionId(null);
+    console.log("Hello World");
   };
 
   const handleRefresh = () => {
-    fetchSessions();
-  };
-
-  const filteredSessions = sessions.filter(
-    (session) =>
-      session.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.topicName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "success";
-      case "Medium":
-        return "primary";
-      case "Hard":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(date);
+    handleGetAllSessions();
   };
 
   // Animation variants
@@ -247,20 +196,7 @@ export default function SessionListView() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12,
+        duration: 0.5,
       },
     },
   };
@@ -328,7 +264,8 @@ export default function SessionListView() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => navigate("/admin/sessions/create")}
+              // onClick={() => navigate("/admin/sessions/create")}
+              onClick={() => showSuccess("Hello World")}
               sx={{
                 mr: 1,
                 background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
@@ -383,20 +320,23 @@ export default function SessionListView() {
             <Box
               sx={{ display: "flex", gap: 1, ml: "auto", mt: { xs: 1, sm: 0 } }}
             >
-              <Button
-                startIcon={<Sort />}
-                variant="outlined"
-                size="small"
-                sx={{ display: { xs: "none", md: "flex" } }}
-              >
-                Sort
-              </Button>
-              <IconButton
-                size="small"
-                sx={{ display: { xs: "flex", md: "none" } }}
-              >
-                <Sort />
-              </IconButton>
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel id="topic-filter-label">Topic</InputLabel>
+                <Select
+                  labelId="topic-filter-label"
+                  id="topic-filter"
+                  value={topicId}
+                  label="Topic"
+                  onChange={(e) => setTopicId(e.target.value as number | "")}
+                >
+                  <MenuItem value="">All Topics</MenuItem>
+                  <MenuItem value={1}>Everyday English</MenuItem>
+                  <MenuItem value={2}>Professional English</MenuItem>
+                  <MenuItem value={3}>Travel & Tourism</MenuItem>
+                  <MenuItem value={4}>Grammar Mastery</MenuItem>
+                  <MenuItem value={5}>Pronunciation & Speaking</MenuItem>
+                </Select>
+              </FormControl>
 
               <Button
                 startIcon={<FilterList />}
@@ -427,7 +367,7 @@ export default function SessionListView() {
           >
             <CircularProgress />
           </Box>
-        ) : filteredSessions.length === 0 ? (
+        ) : sessions.length === 0 ? (
           <Paper
             sx={{
               p: 4,
@@ -456,212 +396,261 @@ export default function SessionListView() {
             initial="hidden"
             animate="visible"
           >
-            <Grid container spacing={3}>
-              {filteredSessions.map((session) => (
-                <Grid item xs={12} sm={6} md={4} key={session.id}>
-                  <motion.div variants={itemVariants}>
-                    <Card
+            <TableContainer
+              component={Paper}
+              sx={{
+                borderRadius: 2,
+                overflow: "hidden",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              }}
+            >
+              <Table sx={{ minWidth: 650 }} aria-label="sessions table">
+                <TableHead>
+                  <TableRow
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      "& th": {
+                        fontWeight: "bold",
+                        color: theme.palette.primary.main,
+                      },
+                    }}
+                  >
+                    <TableCell>
+                      <TableSortLabel
+                        active={sortField === "id"}
+                        direction={sortField === "id" ? sortDirection : "asc"}
+                        onClick={() => handleSort("id")}
+                        IconComponent={
+                          sortField === "id" && sortDirection === "asc"
+                            ? ArrowUpward
+                            : ArrowDownward
+                        }
+                      >
+                        ID
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                      <TableSortLabel
+                        active={sortField === "name"}
+                        direction={sortField === "name" ? sortDirection : "asc"}
+                        onClick={() => handleSort("name")}
+                        IconComponent={
+                          sortField === "name" && sortDirection === "asc"
+                            ? ArrowUpward
+                            : ArrowDownward
+                        }
+                      >
+                        Name
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={sortField === "trackCount"}
+                        direction={
+                          sortField === "trackCount" ? sortDirection : "asc"
+                        }
+                        onClick={() => handleSort("trackCount")}
+                        IconComponent={
+                          sortField === "trackCount" && sortDirection === "asc"
+                            ? ArrowUpward
+                            : ArrowDownward
+                        }
+                      >
+                        Tracks
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {sessions.map((session, index) => (
+                    <TableRow
+                      key={session.id}
                       sx={{
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        borderRadius: 2,
-                        transition: "transform 0.3s, box-shadow 0.3s",
+                        "&:nth-of-type(odd)": {
+                          bgcolor: alpha(theme.palette.primary.main, 0.02),
+                        },
                         "&:hover": {
-                          transform: "translateY(-5px)",
-                          boxShadow: "0 12px 20px -10px rgba(0,0,0,0.2)",
+                          bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        },
+                        transition: "background-color 0.2s",
+                        // Thêm animation với CSS thay vì Framer Motion
+                        animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
+                        "@keyframes fadeIn": {
+                          from: { opacity: 0, transform: "translateY(20px)" },
+                          to: { opacity: 1, transform: "translateY(0)" },
                         },
                       }}
                     >
-                      <Box
+                      <TableCell component="th" scope="row">
+                        {session.id}
+                      </TableCell>
+                      <TableCell
                         sx={{
-                          position: "relative",
-                          paddingTop: "56.25%", // 16:9 aspect ratio
+                          fontWeight: 500,
+                          color: theme.palette.text.primary,
+                          maxWidth: { xs: "120px", sm: "200px", md: "300px" },
                           overflow: "hidden",
-                          borderTopLeftRadius: 8,
-                          borderTopRightRadius: 8,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        <Box
-                          component="img"
-                          src={session.imageUrl}
-                          alt={session.name}
+                        {session.name}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={session.trackCount}
+                          color={session.trackCount > 0 ? "primary" : "default"}
+                          size="small"
                           sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            transition: "transform 0.5s",
-                            "&:hover": {
-                              transform: "scale(1.05)",
-                            },
+                            minWidth: "60px",
+                            fontWeight: "bold",
                           }}
                         />
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            background:
-                              "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)",
-                          }}
-                        />
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            bottom: 0,
-                            left: 0,
-                            width: "100%",
-                            p: 2,
-                            color: "white",
-                          }}
-                        >
-                          <Typography variant="h6" fontWeight="bold" noWrap>
-                            {session.name}
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              mt: 0.5,
-                            }}
-                          >
-                            <Chip
-                              label={session.difficulty}
-                              size="small"
-                              color={
-                                getDifficultyColor(session.difficulty) as any
-                              }
-                              sx={{ mr: 1, fontWeight: 500 }}
-                            />
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                fontSize: "0.75rem",
-                              }}
-                            >
-                              <MusicNote sx={{ fontSize: 16, mr: 0.5 }} />
-                              {session.trackCount} tracks
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Box>
-
-                      <CardContent sx={{ flexGrow: 1, pt: 2 }}>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", mb: 1 }}
-                        >
-                          <School
-                            fontSize="small"
-                            color="primary"
-                            sx={{ mr: 1 }}
-                          />
-                          <Typography variant="body2" color="text.secondary">
-                            {session.topicName}
-                          </Typography>
-                        </Box>
-
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            mb: 2,
-                            height: "40px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                          }}
-                        >
-                          {session.description}
-                        </Typography>
-
+                      </TableCell>
+                      <TableCell align="center">
                         <Box
                           sx={{
                             display: "flex",
-                            alignItems: "center",
-                            color: "text.secondary",
-                            fontSize: "0.75rem",
+                            justifyContent: "center",
+                            gap: 1,
                           }}
                         >
-                          <AccessTime
-                            fontSize="small"
-                            sx={{ mr: 0.5, fontSize: 16 }}
-                          />
-                          <Typography variant="caption">
-                            Updated: {formatDate(session.updatedAt)}
-                          </Typography>
+                          <Tooltip title="Create Track">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleCreateTrack(session.id)}
+                              sx={{
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                "&:hover": {
+                                  bgcolor: alpha(
+                                    theme.palette.primary.main,
+                                    0.2
+                                  ),
+                                },
+                              }}
+                            >
+                              <Headphones fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Edit Session">
+                            <IconButton
+                              size="small"
+                              color="info"
+                              onClick={() => handleEditSession(session.id)}
+                              sx={{
+                                bgcolor: alpha(theme.palette.info.main, 0.1),
+                                "&:hover": {
+                                  bgcolor: alpha(theme.palette.info.main, 0.2),
+                                },
+                              }}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Session">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteClick(session.id)}
+                              sx={{
+                                bgcolor: alpha(theme.palette.error.main, 0.1),
+                                "&:hover": {
+                                  bgcolor: alpha(theme.palette.error.main, 0.2),
+                                },
+                              }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </Box>
-                      </CardContent>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-                      <Divider />
+            {/* Pagination controls */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mt: 4,
+                flexWrap: "wrap",
+                gap: 2,
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Showing {sessions.length} of {totalItems} sessions
+              </Typography>
 
-                      <CardActions
-                        sx={{ justifyContent: "space-between", p: 2 }}
-                      >
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<Headphones />}
-                          onClick={() => handleCreateTrack(session.id)}
-                          size={isMobile ? "small" : "medium"}
-                          sx={{
-                            borderRadius: 6,
-                            transition: "all 0.2s",
-                            "&:hover": {
-                              transform: "scale(1.05)",
-                            },
-                          }}
-                        >
-                          Create Track
-                        </Button>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <FormControl size="small" sx={{ minWidth: 80 }}>
+                  <InputLabel id="page-size-label">Per Page</InputLabel>
+                  <Select
+                    labelId="page-size-label"
+                    id="page-size"
+                    value={size}
+                    label="Per Page"
+                    onChange={handleSizeChange}
+                  >
+                    <MenuItem value={5}>5</MenuItem>
+                    <MenuItem value={10}>10</MenuItem>
+                    <MenuItem value={20}>20</MenuItem>
+                    <MenuItem value={50}>50</MenuItem>
+                  </Select>
+                </FormControl>
 
-                        <IconButton
-                          onClick={(e) => handleMenuOpen(e, session.id)}
-                          size="small"
-                          sx={{ ml: 1 }}
-                        >
-                          <MoreVert />
-                        </IconButton>
-                      </CardActions>
-                    </Card>
-                  </motion.div>
-                </Grid>
-              ))}
-            </Grid>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      borderRadius: 1,
+                    },
+                  }}
+                />
+              </Box>
+            </Box>
           </motion.div>
         )}
       </motion.div>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
       >
-        <MenuItem onClick={handleEditSession}>
-          <ListItemIcon>
-            <Edit fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Edit Session</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleDeleteSession}>
-          <ListItemIcon>
-            <Delete fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText
-            primary="Delete Session"
-            primaryTypographyProps={{ color: "error" }}
-          />
-        </MenuItem>
-      </Menu>
+        <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this session? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+            autoFocus
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

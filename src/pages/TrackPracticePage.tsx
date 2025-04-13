@@ -41,6 +41,7 @@ import {
   Cancel,
   QuestionMark,
   GradingOutlined,
+  Lightbulb,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ITrackReponseItem } from "../types/track";
@@ -739,8 +740,8 @@ const TrackPracticePage = () => {
                     >
                       <Box
                         sx={{
-                          width: 120,
-                          height: 120,
+                          width: 150,
+                          height: 150,
                           borderRadius: "50%",
                           border: "8px solid",
                           borderColor:
@@ -758,7 +759,7 @@ const TrackPracticePage = () => {
                         }}
                       >
                         <Typography variant="h4" fontWeight="bold">
-                          {score}%
+                          {score}/100
                         </Typography>
                       </Box>
                     </motion.div>
@@ -782,6 +783,25 @@ const TrackPracticePage = () => {
                         : "Keep practicing!"}
                     </Typography>
 
+                    <Paper
+                      elevation={1}
+                      sx={{
+                        p: 2,
+                        mb: 3,
+                        display: "flex",
+                        alignItems: "center",
+                        bgcolor: "info.light",
+                        color: "info.contrastText",
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Lightbulb sx={{ mr: 1 }} />
+                      <Typography variant="body2">
+                        Mẹo: Nhập văn bản hoặc tải lên file, sau đó tách thành
+                        các câu và điền vào bảng để tiếp tục.
+                      </Typography>
+                    </Paper>
+
                     {/* Word-by-word comparison */}
                     <Paper
                       elevation={2}
@@ -797,7 +817,7 @@ const TrackPracticePage = () => {
                         gutterBottom
                         fontWeight={500}
                       >
-                        Word-by-word Analysis
+                        Grading Assistant
                       </Typography>
                       <Box
                         sx={{

@@ -12,11 +12,14 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import { logout } from "../api/auth";
+import { useNotification } from "../provider/NotificationProvider";
 
 const pages = ["Home", "Topics"];
 const settings = ["Hồ sơ", "Tài khoản", "Cài đặt", "Đăng xuất"];
 
 export default function ResponsiveAppBar() {
+  const { showError } = useNotification();
+
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null
   );
@@ -42,6 +45,7 @@ export default function ResponsiveAppBar() {
         await logout();
         window.location.href = "/auth";
       } catch (error) {
+        showError(error instanceof Error ? error.message : String(error));
         console.error(error);
       }
     }

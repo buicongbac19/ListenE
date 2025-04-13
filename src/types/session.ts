@@ -7,3 +7,12 @@ export type ISessionItem = {
   trackCount: number;
   topicId?: number;
 };
+
+export type FetchSessionsParams = {
+  page?: number;
+  size?: number;
+  key?: string;
+  topicId?: number | string;
+  sortField?: string;
+  sortDirection?: "asc" | "desc";
+};

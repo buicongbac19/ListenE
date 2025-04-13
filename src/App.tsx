@@ -7,7 +7,7 @@ import HomePage from "./pages/HomePage";
 import { NavBarProvider } from "./provider/NavBarProvider";
 import DashboardLayout from "./layouts/DashBoardLayout";
 import AppLayout from "./layouts/AppLayout";
-import { SnackbarProvider } from "./components/snackbar";
+import { NotificationProvider } from "./provider/NotificationProvider";
 
 import { UserListView } from "./sections/user/view";
 
@@ -88,7 +88,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <SnackbarProvider>
+      <NotificationProvider>
         <NavBarProvider>
           <Router>
             <AnimatePresence mode="wait">
@@ -142,7 +142,7 @@ function App() {
             </AnimatePresence>
           </Router>
         </NavBarProvider>
-      </SnackbarProvider>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }
