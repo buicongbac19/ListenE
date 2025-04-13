@@ -166,7 +166,7 @@ const HomeNavbar = () => {
                   }}
                 >
                   <School sx={{ mr: 1 }} />
-                  SpeakEasy
+                  ListenE
                 </Typography>
 
                 <Box sx={{ flexGrow: 1 }} />

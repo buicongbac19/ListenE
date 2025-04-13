@@ -38,7 +38,7 @@ const HomePage = () => {
       role: "Marketing Professional",
       avatar: "https://source.unsplash.com/random/100x100/?woman",
       content:
-        "SpeakEasy has transformed my English speaking skills! The interactive exercises and real-time feedback helped me gain confidence in business meetings.",
+        "ListenE has transformed my English speaking skills! The interactive exercises and real-time feedback helped me gain confidence in business meetings.",
       rating: 5,
     },
     {
@@ -312,7 +312,7 @@ const HomePage = () => {
             component="h2"
             sx={{ fontWeight: 700, mb: 2 }}
           >
-            Why Choose SpeakEasy
+            Why Choose ListenE
           </Typography>
           <Typography
             variant="body1"
@@ -378,7 +378,7 @@ const HomePage = () => {
               sx={{ maxWidth: 700, mx: "auto" }}
             >
               Join thousands of satisfied learners who have improved their
-              English speaking skills with SpeakEasy
+              English speaking skills with ListenE
             </Typography>
           </Box>
 
