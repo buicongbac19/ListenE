@@ -20,6 +20,18 @@ export async function getListSessionTracks(sessonId: number) {
   return response;
 }
 
+export async function deleteSession(sessionId: number) {
+  const URL = `${endpoints.session.root}/${sessionId}`;
+  const response = await axios.delete(URL);
+  return response;
+}
+
+export async function updateSession(sesisonId: number, name: string) {
+  const URL = `${endpoints.session.root}/${sesisonId}`;
+  const response = await axios.put(URL, { name });
+  return response;
+}
+
 export async function getDetailsSession(sessionId: number) {
   const URL = `${endpoints.session.root}/${sessionId}`;
   const response = await axios.get(URL);

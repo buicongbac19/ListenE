@@ -1,6 +1,8 @@
+"use client";
+
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -35,7 +37,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  MenuItem, // Import MenuItem
+  MenuItem,
 } from "@mui/material";
 import {
   Add,
@@ -45,83 +47,102 @@ import {
   Dashboard,
   Home,
   Refresh,
-  Headphones,
-  School,
   ArrowUpward,
   ArrowDownward,
   FilterList,
+  Topic as TopicIcon,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import type { ISessionItem } from "../../../../types/session";
-import { getAllSessions, deleteSession } from "../../../../api/session";
 import { useNotification } from "../../../../provider/NotificationProvider";
+import { getAllTopics, deleteTopic } from "../../../../api/topic";
+import type { ITopicItem } from "../../../../types/topic";
 
-// Define sort direction type
 type SortDirection = "asc" | "desc";
 
-export default function SessionListView() {
+export default function TopicListView() {
   const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();
   const theme = useTheme();
-  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [sessions, setSessions] = useState<ISessionItem[]>([]);
+  // State for all topics (unfiltered)
+  const [allTopics, setAllTopics] = useState<ITopicItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(
-    null
-  );
-  console.log(selectedSessionId);
+  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Pagination state
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [topicId, setTopicId] = useState<number | "">("");
 
   // Sorting state
   const [sortField, setSortField] = useState<string>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const handleGetAllSessions = async () => {
+  // Fetch all topics
+  const fetchTopics = async () => {
     setLoading(true);
     try {
-      const response = await getAllSessions({
-        page,
-        size,
-        key: searchTerm,
-        topicId,
-        sortField,
-        sortDirection,
-      });
-
-      setSessions(response.items);
-      setTotalPages(response.totalPages);
-      setTotalItems(response.totalItems);
+      const response = await getAllTopics();
+      setAllTopics(response?.data?.data);
     } catch (error) {
-      console.error("Error fetching sessions:", error);
+      console.error("Error fetching topics:", error);
+      showError("Failed to load topics. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    handleGetAllSessions();
-  }, [page, size, topicId, sortField, sortDirection]); // Refetch when these parameters change
+    fetchTopics();
+  }, []);
 
-  // Debounce search to avoid too many API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (page !== 1) {
-        setPage(1); // Reset to page 1 when search changes
-      } else {
-        handleGetAllSessions();
+  // Filter, sort, and paginate topics on the client side
+  const filteredAndSortedTopics = useMemo(() => {
+    // First, filter by search term
+    let result = [...allTopics];
+
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      result = result.filter(
+        (topic) =>
+          topic.name.toLowerCase().includes(lowerSearchTerm) ||
+          (topic.description &&
+            topic.description.toLowerCase().includes(lowerSearchTerm))
+      );
+    }
+
+    // Then sort
+    result.sort((a, b) => {
+      let comparison = 0;
+
+      if (sortField === "id") {
+        comparison = a.id - b.id;
+      } else if (sortField === "name") {
+        comparison = a.name.localeCompare(b.name);
+      } else if (sortField === "sessionCount") {
+        comparison = a.sessionCount - b.sessionCount;
       }
-    }, 500);
 
-    return () => clearTimeout(timer);
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return result;
+  }, [allTopics, searchTerm, sortField, sortDirection]);
+
+  // Calculate pagination
+  const totalItems = filteredAndSortedTopics.length;
+  const totalPages = Math.ceil(totalItems / size);
+
+  // Get current page items
+  const currentTopics = useMemo(() => {
+    const startIndex = (page - 1) * size;
+    return filteredAndSortedTopics.slice(startIndex, startIndex + size);
+  }, [filteredAndSortedTopics, page, size]);
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setPage(1);
   }, [searchTerm]);
 
   const handlePageChange = (
@@ -142,48 +163,38 @@ export default function SessionListView() {
     setSortField(field);
   };
 
-  const handleCreateTrack = (sessionId: number) => {
-    navigate(`/dashboard/sessions/${sessionId}/create-track`);
+  const handleEditTopic = (topicId: number) => {
+    navigate(`/dashboard/topics/${topicId}/edit`);
   };
 
-  const handleEditSession = (sessionId: number) => {
-    navigate(`/dashboard/sessions/${sessionId}/edit`);
-  };
-
-  const handleDeleteClick = (sessionId: number) => {
-    setSelectedSessionId(sessionId);
+  const handleDeleteClick = (topicId: number) => {
+    setSelectedTopicId(topicId);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setSelectedSessionId(null);
+    setSelectedTopicId(null);
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedSessionId) {
+    if (selectedTopicId) {
       try {
-        await deleteSession(selectedSessionId);
-        setSessions(
-          sessions.filter((session) => session.id !== selectedSessionId)
-        );
-        if (sessions.length === 1 && page > 1) {
-          setPage(page - 1);
-        } else {
-          handleGetAllSessions();
-        }
-        showSuccess("Delete session successfully!");
+        await deleteTopic(selectedTopicId);
+        // Update local state after successful deletion
+        setAllTopics(allTopics.filter((topic) => topic.id !== selectedTopicId));
+        showSuccess("Topic deleted successfully!");
       } catch (error) {
-        console.error("Error deleting session:", error);
-        showError(`Failed to delete session!: ${error}`);
+        console.error("Error deleting topic:", error);
+        showError(`Failed to delete topic: ${error}`);
       }
     }
     setDeleteDialogOpen(false);
-    setSelectedSessionId(null);
+    setSelectedTopicId(null);
   };
 
   const handleRefresh = () => {
-    handleGetAllSessions();
+    fetchTopics();
   };
 
   // Animation variants
@@ -239,8 +250,8 @@ export default function SessionListView() {
                 color="text.primary"
                 sx={{ display: "flex", alignItems: "center" }}
               >
-                <School sx={{ mr: 0.5 }} fontSize="inherit" />
-                Sessions
+                <TopicIcon sx={{ mr: 0.5 }} fontSize="inherit" />
+                Topics
               </Typography>
             </Breadcrumbs>
             <Typography
@@ -250,10 +261,10 @@ export default function SessionListView() {
               gutterBottom
               sx={{ textAlign: "left" }}
             >
-              List Session
+              Topics
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Manage your learning sessions and create new tracks
+              Manage your learning topics and create new content
             </Typography>
           </Box>
 
@@ -261,7 +272,7 @@ export default function SessionListView() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => navigate("/dashboard/sessions/create")}
+              onClick={() => navigate("/dashboard/topics/create")}
               sx={{
                 mr: 1,
                 background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
@@ -272,7 +283,7 @@ export default function SessionListView() {
                 },
               }}
             >
-              New Session
+              New Topic
             </Button>
             <IconButton onClick={handleRefresh} color="primary">
               <Refresh />
@@ -298,7 +309,7 @@ export default function SessionListView() {
             }}
           >
             <TextField
-              placeholder="Search sessions..."
+              placeholder="Search topics..."
               variant="outlined"
               size="small"
               value={searchTerm}
@@ -316,24 +327,6 @@ export default function SessionListView() {
             <Box
               sx={{ display: "flex", gap: 1, ml: "auto", mt: { xs: 1, sm: 0 } }}
             >
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="topic-filter-label">Topic</InputLabel>
-                <Select
-                  labelId="topic-filter-label"
-                  id="topic-filter"
-                  value={topicId}
-                  label="Topic"
-                  onChange={(e) => setTopicId(e.target.value as number | "")}
-                >
-                  <MenuItem value="">All Topics</MenuItem>
-                  <MenuItem value={1}>Everyday English</MenuItem>
-                  <MenuItem value={2}>Professional English</MenuItem>
-                  <MenuItem value={3}>Travel & Tourism</MenuItem>
-                  <MenuItem value={4}>Grammar Mastery</MenuItem>
-                  <MenuItem value={5}>Pronunciation & Listening</MenuItem>
-                </Select>
-              </FormControl>
-
               <Button
                 startIcon={<FilterList />}
                 variant="outlined"
@@ -363,7 +356,7 @@ export default function SessionListView() {
           >
             <CircularProgress />
           </Box>
-        ) : sessions.length === 0 ? (
+        ) : currentTopics.length === 0 ? (
           <Paper
             sx={{
               p: 4,
@@ -373,17 +366,17 @@ export default function SessionListView() {
             }}
           >
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No sessions found
+              No topics found
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Try adjusting your search or create a new session.
+              Try adjusting your search or create a new topic.
             </Typography>
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => navigate("/dashboard/sessions/create")}
+              onClick={() => navigate("/dashboard/topics/create")}
             >
-              Create New Session
+              Create New Topic
             </Button>
           </Paper>
         ) : (
@@ -400,7 +393,7 @@ export default function SessionListView() {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
               }}
             >
-              <Table sx={{ minWidth: 650 }} aria-label="sessions table">
+              <Table sx={{ minWidth: 650 }} aria-label="topics table">
                 <TableHead>
                   <TableRow
                     sx={{
@@ -425,6 +418,7 @@ export default function SessionListView() {
                         ID
                       </TableSortLabel>
                     </TableCell>
+                    <TableCell>Thumbnail</TableCell>
                     <TableCell>
                       <TableSortLabel
                         active={sortField === "name"}
@@ -439,29 +433,31 @@ export default function SessionListView() {
                         Name
                       </TableSortLabel>
                     </TableCell>
+                    <TableCell>Description</TableCell>
                     <TableCell align="center">
                       <TableSortLabel
-                        active={sortField === "trackCount"}
+                        active={sortField === "sessionCount"}
                         direction={
-                          sortField === "trackCount" ? sortDirection : "asc"
+                          sortField === "sessionCount" ? sortDirection : "asc"
                         }
-                        onClick={() => handleSort("trackCount")}
+                        onClick={() => handleSort("sessionCount")}
                         IconComponent={
-                          sortField === "trackCount" && sortDirection === "asc"
+                          sortField === "sessionCount" &&
+                          sortDirection === "asc"
                             ? ArrowUpward
                             : ArrowDownward
                         }
                       >
-                        Tracks
+                        Sessions
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sessions.map((session, index) => (
+                  {currentTopics.map((topic, index) => (
                     <TableRow
-                      key={session.id}
+                      key={topic.id}
                       sx={{
                         "&:nth-of-type(odd)": {
                           bgcolor: alpha(theme.palette.primary.main, 0.02),
@@ -470,7 +466,6 @@ export default function SessionListView() {
                           bgcolor: alpha(theme.palette.primary.main, 0.05),
                         },
                         transition: "background-color 0.2s",
-                        // Thêm animation với CSS thay vì Framer Motion
                         animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
                         "@keyframes fadeIn": {
                           from: { opacity: 0, transform: "translateY(20px)" },
@@ -479,7 +474,21 @@ export default function SessionListView() {
                       }}
                     >
                       <TableCell component="th" scope="row">
-                        {session.id}
+                        {topic.id}
+                      </TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{
+                            backgroundImage: topic.thumbnailUrl
+                              ? `url(${topic.thumbnailUrl})`
+                              : 'url("/placeholder.svg?height=40&width=40")',
+                            backgroundPosition: "center center",
+                            backgroundRepeat: "no-repeat",
+                            backgroundSize: "contain",
+                            width: "60px",
+                            height: "60px",
+                          }}
+                        />
                       </TableCell>
                       <TableCell
                         sx={{
@@ -491,12 +500,22 @@ export default function SessionListView() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {session.name}
+                        {topic.name}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          maxWidth: { xs: "120px", sm: "200px", md: "300px" },
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {topic.description || "-"}
                       </TableCell>
                       <TableCell align="center">
                         <Chip
-                          label={session.trackCount}
-                          color={session.trackCount > 0 ? "primary" : "default"}
+                          label={topic.sessionCount}
+                          color={topic.sessionCount > 0 ? "primary" : "default"}
                           size="small"
                           sx={{
                             minWidth: "60px",
@@ -512,29 +531,11 @@ export default function SessionListView() {
                             gap: 1,
                           }}
                         >
-                          <Tooltip title="Create Track">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleCreateTrack(session.id)}
-                              sx={{
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                "&:hover": {
-                                  bgcolor: alpha(
-                                    theme.palette.primary.main,
-                                    0.2
-                                  ),
-                                },
-                              }}
-                            >
-                              <Headphones fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Edit Session">
+                          <Tooltip title="Edit Topic">
                             <IconButton
                               size="small"
                               color="info"
-                              onClick={() => handleEditSession(session.id)}
+                              onClick={() => handleEditTopic(topic.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.info.main, 0.1),
                                 "&:hover": {
@@ -545,11 +546,11 @@ export default function SessionListView() {
                               <Edit fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Delete Session">
+                          <Tooltip title="Delete Topic">
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => handleDeleteClick(session.id)}
+                              onClick={() => handleDeleteClick(topic.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.error.main, 0.1),
                                 "&:hover": {
@@ -580,7 +581,7 @@ export default function SessionListView() {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                Showing {sessions.length} of {totalItems} sessions
+                Showing {currentTopics.length} of {totalItems} topics
               </Typography>
 
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -629,8 +630,8 @@ export default function SessionListView() {
         <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete this session? This action cannot be
-            undone.
+            Are you sure you want to delete this topic? This action cannot be
+            undone and will also delete all associated sessions.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -13,7 +13,11 @@ import { UserListView } from "./sections/user/view";
 
 import TrackManager from "./sections/dashboard-view/track/track-manager";
 
+import { TopicListView } from "./sections/dashboard-view/topic/view";
+import TopicCreateEditForm from "./sections/dashboard-view/topic/topic-create-edit-form";
+
 import { SessionListView } from "./sections/dashboard-view/session/view";
+import SessionCreateEditForm from "./sections/dashboard-view/session/session-create-edit-form";
 
 import TopicDetailsPage from "./pages/TopicDetailsPage";
 import SessionDetailsPage from "./pages/SessionDetailsPage";
@@ -142,10 +146,30 @@ function App() {
                     />
 
                     {/* Topics route */}
+                    <Route path="manage-topics" element={<TopicListView />} />
+                    <Route
+                      path="topics/create"
+                      element={<TopicCreateEditForm />}
+                    />
+                    <Route
+                      path="topics/:topicId/edit"
+                      element={<TopicCreateEditForm />}
+                    />
 
+                    {/* Sessions route */}
                     <Route
                       path="manage-sessions"
                       element={<SessionListView />}
+                    />
+
+                    <Route
+                      path="sessions/create"
+                      element={<SessionCreateEditForm />}
+                    />
+
+                    <Route
+                      path="sessions/:sessionId/edit"
+                      element={<SessionCreateEditForm />}
                     />
                   </Route>
 

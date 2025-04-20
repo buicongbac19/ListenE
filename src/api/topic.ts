@@ -44,3 +44,35 @@ export async function getDetailsTopic(topicId: number) {
   const response = await axios.get(URL);
   return response;
 }
+
+export async function deleteTopic(topicId: number) {
+  const URL = `${endpoints.topic.root}/${topicId}`;
+  const response = await axios.delete(URL);
+  return response;
+}
+
+export async function updateTopic(topicId: number, data: FormData) {
+  const URL = `${endpoints.topic.root}/${topicId}`;
+  const response = await axios.put(URL, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response;
+}
+
+export async function createTopic(data: FormData) {
+  const URL = `${endpoints.topic.root}`;
+  const response = await axios.post(URL, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response;
+}
+export async function createSessionInTopic(topicId: number, name: string) {
+  const URL = `${endpoints.topic.createSession(topicId)}`;
+  const response = await axios.post(URL, { name });
+  return response;
+}

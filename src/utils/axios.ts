@@ -74,6 +74,7 @@ export const endpoints = {
   topic: {
     root: "/topics",
     listSession: (topicId: number) => `/topics/${topicId}/sessions`,
+    createSession: (topicId: number) => `topics/${topicId}/sessions`,
   },
   session: {
     root: "/sessions",

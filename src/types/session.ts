@@ -16,3 +16,8 @@ export type FetchSessionsParams = {
   sortField?: string;
   sortDirection?: "asc" | "desc";
 };
+
+export type ISessionCreateEditItem = {
+  name: string;
+  topicId: number | null;
+};
