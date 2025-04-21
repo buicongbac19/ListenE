@@ -1,7 +1,3 @@
-"use client";
-
-import type React from "react";
-
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,17 +6,11 @@ import {
   Box,
   Button,
   IconButton,
-  TextField,
-  InputAdornment,
   CircularProgress,
   Paper,
   Breadcrumbs,
   Link,
   useTheme,
-  Pagination,
-  FormControl,
-  InputLabel,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -29,35 +19,26 @@ import {
   TableRow,
   Chip,
   Tooltip,
-  TableSortLabel,
-  type SelectChangeEvent,
   alpha,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  MenuItem,
 } from "@mui/material";
 import {
   Add,
-  Search,
   Edit,
   Delete,
   Dashboard,
   Home,
   Refresh,
-  ArrowUpward,
-  ArrowDownward,
-  FilterList,
   Topic as TopicIcon,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useNotification } from "../../../../provider/NotificationProvider";
 import { getAllTopics, deleteTopic } from "../../../../api/topic";
 import type { ITopicItem } from "../../../../types/topic";
-
-type SortDirection = "asc" | "desc";
 
 export default function TopicListView() {
   const { showSuccess, showError } = useNotification();
@@ -67,20 +48,10 @@ export default function TopicListView() {
   // State for all topics (unfiltered)
   const [allTopics, setAllTopics] = useState<ITopicItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Pagination state
-  const [page, setPage] = useState(1);
-  const [size, setSize] = useState(10);
-
-  // Sorting state
-  const [sortField, setSortField] = useState<string>("id");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-
-  // Fetch all topics
-  const fetchTopics = async () => {
+  const handleGetAllTopics = async () => {
     setLoading(true);
     try {
       const response = await getAllTopics();
@@ -94,74 +65,14 @@ export default function TopicListView() {
   };
 
   useEffect(() => {
-    fetchTopics();
+    handleGetAllTopics();
   }, []);
 
-  // Filter, sort, and paginate topics on the client side
-  const filteredAndSortedTopics = useMemo(() => {
-    // First, filter by search term
-    let result = [...allTopics];
+  const displayTopics = useMemo(() => {
+    return [...allTopics];
+  }, [allTopics]);
 
-    if (searchTerm) {
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      result = result.filter(
-        (topic) =>
-          topic.name.toLowerCase().includes(lowerSearchTerm) ||
-          (topic.description &&
-            topic.description.toLowerCase().includes(lowerSearchTerm))
-      );
-    }
-
-    // Then sort
-    result.sort((a, b) => {
-      let comparison = 0;
-
-      if (sortField === "id") {
-        comparison = a.id - b.id;
-      } else if (sortField === "name") {
-        comparison = a.name.localeCompare(b.name);
-      } else if (sortField === "sessionCount") {
-        comparison = a.sessionCount - b.sessionCount;
-      }
-
-      return sortDirection === "asc" ? comparison : -comparison;
-    });
-
-    return result;
-  }, [allTopics, searchTerm, sortField, sortDirection]);
-
-  // Calculate pagination
-  const totalItems = filteredAndSortedTopics.length;
-  const totalPages = Math.ceil(totalItems / size);
-
-  // Get current page items
-  const currentTopics = useMemo(() => {
-    const startIndex = (page - 1) * size;
-    return filteredAndSortedTopics.slice(startIndex, startIndex + size);
-  }, [filteredAndSortedTopics, page, size]);
-
-  // Reset to page 1 when search term changes
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm]);
-
-  const handlePageChange = (
-    _event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setPage(value);
-  };
-
-  const handleSizeChange = (event: SelectChangeEvent<number>) => {
-    setSize(event.target.value as number);
-    setPage(1);
-  };
-
-  const handleSort = (field: string) => {
-    const isAsc = sortField === field && sortDirection === "asc";
-    setSortDirection(isAsc ? "desc" : "asc");
-    setSortField(field);
-  };
+  const currentTopics = displayTopics;
 
   const handleEditTopic = (topicId: number) => {
     navigate(`/dashboard/topics/${topicId}/edit`);
@@ -181,7 +92,6 @@ export default function TopicListView() {
     if (selectedTopicId) {
       try {
         await deleteTopic(selectedTopicId);
-        // Update local state after successful deletion
         setAllTopics(allTopics.filter((topic) => topic.id !== selectedTopicId));
         showSuccess("Topic deleted successfully!");
       } catch (error) {
@@ -194,10 +104,9 @@ export default function TopicListView() {
   };
 
   const handleRefresh = () => {
-    fetchTopics();
+    handleGetAllTopics();
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -291,60 +200,6 @@ export default function TopicListView() {
           </Box>
         </Box>
 
-        <Paper
-          elevation={2}
-          sx={{
-            p: 2,
-            mb: 4,
-            borderRadius: 2,
-            background: "linear-gradient(to right, #f5f7fa, #e4e7eb)",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 2,
-              alignItems: "center",
-            }}
-          >
-            <TextField
-              placeholder="Search topics..."
-              variant="outlined"
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ flexGrow: 1, minWidth: { xs: "100%", sm: "auto" } }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <Box
-              sx={{ display: "flex", gap: 1, ml: "auto", mt: { xs: 1, sm: 0 } }}
-            >
-              <Button
-                startIcon={<FilterList />}
-                variant="outlined"
-                size="small"
-                sx={{ display: { xs: "none", md: "flex" } }}
-              >
-                Filter
-              </Button>
-              <IconButton
-                size="small"
-                sx={{ display: { xs: "flex", md: "none" } }}
-              >
-                <FilterList />
-              </IconButton>
-            </Box>
-          </Box>
-        </Paper>
-
         {loading ? (
           <Box
             sx={{
@@ -404,53 +259,11 @@ export default function TopicListView() {
                       },
                     }}
                   >
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortField === "id"}
-                        direction={sortField === "id" ? sortDirection : "asc"}
-                        onClick={() => handleSort("id")}
-                        IconComponent={
-                          sortField === "id" && sortDirection === "asc"
-                            ? ArrowUpward
-                            : ArrowDownward
-                        }
-                      >
-                        ID
-                      </TableSortLabel>
-                    </TableCell>
+                    <TableCell>ID</TableCell>
                     <TableCell>Thumbnail</TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortField === "name"}
-                        direction={sortField === "name" ? sortDirection : "asc"}
-                        onClick={() => handleSort("name")}
-                        IconComponent={
-                          sortField === "name" && sortDirection === "asc"
-                            ? ArrowUpward
-                            : ArrowDownward
-                        }
-                      >
-                        Name
-                      </TableSortLabel>
-                    </TableCell>
+                    <TableCell>Name</TableCell>
                     <TableCell>Description</TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortField === "sessionCount"}
-                        direction={
-                          sortField === "sessionCount" ? sortDirection : "asc"
-                        }
-                        onClick={() => handleSort("sessionCount")}
-                        IconComponent={
-                          sortField === "sessionCount" &&
-                          sortDirection === "asc"
-                            ? ArrowUpward
-                            : ArrowDownward
-                        }
-                      >
-                        Sessions
-                      </TableSortLabel>
-                    </TableCell>
+                    <TableCell align="center">Sessions</TableCell>
                     <TableCell align="center">Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -568,54 +381,6 @@ export default function TopicListView() {
                 </TableBody>
               </Table>
             </TableContainer>
-
-            {/* Pagination controls */}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mt: 4,
-                flexWrap: "wrap",
-                gap: 2,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Showing {currentTopics.length} of {totalItems} topics
-              </Typography>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <FormControl size="small" sx={{ minWidth: 80 }}>
-                  <InputLabel id="page-size-label">Per Page</InputLabel>
-                  <Select
-                    labelId="page-size-label"
-                    id="page-size"
-                    value={size}
-                    label="Per Page"
-                    onChange={handleSizeChange}
-                  >
-                    <MenuItem value={5}>5</MenuItem>
-                    <MenuItem value={10}>10</MenuItem>
-                    <MenuItem value={20}>20</MenuItem>
-                    <MenuItem value={50}>50</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  showFirstButton
-                  showLastButton
-                  sx={{
-                    "& .MuiPaginationItem-root": {
-                      borderRadius: 1,
-                    },
-                  }}
-                />
-              </Box>
-            </Box>
           </motion.div>
         )}
       </motion.div>

@@ -2,6 +2,7 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Authentication from "./pages/Auththentication";
+import GoogleCallback from "./components/GooleAuthCallBack";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
 import { NavBarProvider } from "./provider/NavBarProvider";
@@ -179,6 +180,10 @@ function App() {
                 <Route
                   path="/auth/forgot-password"
                   element={<ForgotPassword />}
+                />
+                <Route
+                  path="/auth/google-login-callback"
+                  element={<GoogleCallback />}
                 />
               </Routes>
             </AnimatePresence>

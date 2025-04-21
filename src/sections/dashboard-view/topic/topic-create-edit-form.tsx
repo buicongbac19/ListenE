@@ -101,6 +101,7 @@ export default function TopicCreateEditForm() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      console.log(file);
       const reader = new FileReader();
 
       reader.onload = (event) => {
@@ -163,6 +164,8 @@ export default function TopicCreateEditForm() {
       if (formData.thumbnail) {
         data.append("thumbnail", formData.thumbnail);
       }
+
+      console.log(formData.thumbnailPreview);
 
       if (isEditMode && topicId) {
         await updateTopic(Number.parseInt(topicId), data);
