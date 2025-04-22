@@ -55,9 +55,9 @@ export default function DashboardLayout() {
     { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
     { text: "Topics", icon: <Topic />, path: "/dashboard/manage-topics" },
     { text: "Sessions", icon: <School />, path: "/dashboard/manage-sessions" },
-    { text: "Tracks", icon: <Headphones />, path: "/dashboard/manage-tracks" },
+    // { text: "Tracks", icon: <Headphones />, path: "/dashboard/manage-tracks" },
     { text: "Users", icon: <People />, path: "/dashboard/manage-users" },
-    { text: "Analytics", icon: <BarChart />, path: "/dashboard/analytics" },
+    // { text: "Analytics", icon: <BarChart />, path: "/dashboard/analytics" },
     { text: "Settings", icon: <Settings />, path: "/dashboard/settings" },
   ];
 
@@ -138,8 +138,8 @@ export default function DashboardLayout() {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton onClick={handleLogout}>
-              <ListItemIcon>
+            <ListItemButton sx={{ color: "red" }} onClick={handleLogout}>
+              <ListItemIcon sx={{ color: "red" }}>
                 <Logout />
               </ListItemIcon>
               <ListItemText primary="Logout" />

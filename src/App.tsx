@@ -13,12 +13,14 @@ import { NotificationProvider } from "./provider/NotificationProvider";
 import { UserListView } from "./sections/user/view";
 
 import TrackManager from "./sections/dashboard-view/track/track-manager";
+import { TrackEditView } from "./sections/dashboard-view/track/view";
 
 import { TopicListView } from "./sections/dashboard-view/topic/view";
 import TopicCreateEditForm from "./sections/dashboard-view/topic/topic-create-edit-form";
 
 import { SessionListView } from "./sections/dashboard-view/session/view";
 import SessionCreateEditForm from "./sections/dashboard-view/session/session-create-edit-form";
+import SessionTrackListView from "./sections/dashboard-view/session/session-track-list-view";
 
 import TopicDetailsPage from "./pages/TopicDetailsPage";
 import SessionDetailsPage from "./pages/SessionDetailsPage";
@@ -171,6 +173,14 @@ function App() {
                     <Route
                       path="sessions/:sessionId/edit"
                       element={<SessionCreateEditForm />}
+                    />
+                    <Route
+                      path="sessions/:sessionId/tracks"
+                      element={<SessionTrackListView />}
+                    />
+                    <Route
+                      path="sessions/:sessionId/tracks/:trackId/edit"
+                      element={<TrackEditView />}
                     />
                   </Route>
 

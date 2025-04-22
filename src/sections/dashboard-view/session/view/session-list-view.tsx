@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 
 import { useState, useEffect } from "react";
@@ -35,7 +37,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  MenuItem, // Import MenuItem
+  MenuItem,
 } from "@mui/material";
 import {
   Add,
@@ -51,6 +53,7 @@ import {
   ArrowDownward,
   FilterList,
 } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
 import { motion } from "framer-motion";
 import type { ISessionItem } from "../../../../types/session";
 import { getAllSessions, deleteSession } from "../../../../api/session";
@@ -67,11 +70,11 @@ export default function SessionListView() {
 
   const [sessions, setSessions] = useState<ISessionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(
     null
   );
-  console.log(selectedSessionId);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Pagination state
@@ -142,10 +145,6 @@ export default function SessionListView() {
     setSortField(field);
   };
 
-  const handleCreateTrack = (sessionId: number) => {
-    navigate(`/dashboard/sessions/${sessionId}/create-track`);
-  };
-
   const handleEditSession = (sessionId: number) => {
     navigate(`/dashboard/sessions/${sessionId}/edit`);
   };
@@ -162,6 +161,7 @@ export default function SessionListView() {
 
   const handleDeleteConfirm = async () => {
     if (selectedSessionId) {
+      setDeleteLoading(true);
       try {
         await deleteSession(selectedSessionId);
         setSessions(
@@ -176,6 +176,8 @@ export default function SessionListView() {
       } catch (error) {
         console.error("Error deleting session:", error);
         showError(`Failed to delete session!: ${error}`);
+      } finally {
+        setDeleteLoading(false);
       }
     }
     setDeleteDialogOpen(false);
@@ -184,6 +186,11 @@ export default function SessionListView() {
 
   const handleRefresh = () => {
     handleGetAllSessions();
+  };
+
+  // New function to navigate to tracks page
+  const handleViewTracks = (sessionId: number) => {
+    navigate(`/dashboard/sessions/${sessionId}/tracks`);
   };
 
   // Animation variants
@@ -512,11 +519,11 @@ export default function SessionListView() {
                             gap: 1,
                           }}
                         >
-                          <Tooltip title="Create Track">
+                          <Tooltip title="View Tracks">
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => handleCreateTrack(session.id)}
+                              onClick={() => handleViewTracks(session.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.primary.main, 0.1),
                                 "&:hover": {
@@ -524,6 +531,8 @@ export default function SessionListView() {
                                     theme.palette.primary.main,
                                     0.2
                                   ),
+                                  transform: "scale(1.1)",
+                                  transition: "all 0.2s",
                                 },
                               }}
                             >
@@ -637,14 +646,15 @@ export default function SessionListView() {
           <Button onClick={handleDeleteCancel} color="primary">
             Cancel
           </Button>
-          <Button
+          <LoadingButton
+            loading={deleteLoading}
             onClick={handleDeleteConfirm}
             color="error"
             variant="contained"
             autoFocus
           >
             Delete
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </Container>

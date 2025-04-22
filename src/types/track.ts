@@ -4,7 +4,7 @@ export type ITrackItem = {
   id: number;
   name: string;
   fullTranscript: string;
-  fullAudio: File;
+  fullAudio?: File;
   segments: ISegmentItem[];
   difficulty?: string;
   completed?: boolean;

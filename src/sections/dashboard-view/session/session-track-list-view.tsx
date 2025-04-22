@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -17,7 +19,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
   Tooltip,
   alpha,
   Dialog,
@@ -26,7 +27,6 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
 import {
   Add,
   Edit,
@@ -34,90 +34,111 @@ import {
   Dashboard,
   Home,
   Refresh,
-  Topic as TopicIcon,
+  School,
+  LibraryMusic,
 } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
 import { motion } from "framer-motion";
-import { useNotification } from "../../../../provider/NotificationProvider";
-import { getAllTopics, deleteTopic } from "../../../../api/topic";
-import type { ITopicItem } from "../../../../types/topic";
+import type { ITrackReponseItem } from "../../../types/track";
+import { useNotification } from "../../../provider/NotificationProvider";
+import { getListSessionTracks } from "../../../api/session";
+import { deleteTrack } from "../../../api/track";
 
-export default function TopicListView() {
+export default function SessionTrackListView() {
   const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();
   const theme = useTheme();
+  const { sessionId } = useParams<{ sessionId: string }>();
 
-  // State for all topics (unfiltered)
-  const [allTopics, setAllTopics] = useState<ITopicItem[]>([]);
+  const [tracks, setTracks] = useState<ITrackReponseItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
-  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
+  const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 
-  const handleGetAllTopics = async () => {
+  const getAllSessionTracks = async (sessionId: number) => {
+    if (!sessionId) return;
+
     setLoading(true);
     try {
-      const response = await getAllTopics();
-      setAllTopics(response?.data?.data);
+      const response = await getListSessionTracks(sessionId);
+      setTracks(response?.data?.data);
     } catch (error) {
-      console.error("Error fetching topics:", error);
-      showError("Failed to load topics. Please try again.");
+      console.error("Error fetching tracks:", error);
+      showError("Failed to load tracks. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    handleGetAllTopics();
-  }, []);
+    if (sessionId) getAllSessionTracks(Number(sessionId));
+  }, [sessionId]);
 
-  const displayTopics = useMemo(() => {
-    return [...allTopics];
-  }, [allTopics]);
-
-  const currentTopics = displayTopics;
-
-  const handleEditTopic = (topicId: number) => {
-    navigate(`/dashboard/topics/${topicId}/edit`);
+  const handleCreateTrack = () => {
+    if (sessionId) {
+      navigate(`/dashboard/sessions/${sessionId}/create-track`);
+    }
   };
 
-  const handleDeleteClick = (topicId: number) => {
-    setSelectedTopicId(topicId);
+  const handleEditTrack = (trackId: number) => {
+    if (sessionId) {
+      navigate(`/dashboard/sessions/${sessionId}/tracks/${trackId}/edit`);
+    }
+  };
+
+  const handleDeleteClick = (trackId: number) => {
+    setSelectedTrackId(trackId);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setSelectedTopicId(null);
+    setSelectedTrackId(null);
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedTopicId) {
+    if (selectedTrackId) {
       setDeleteLoading(true);
       try {
-        await deleteTopic(selectedTopicId);
-        setAllTopics(allTopics.filter((topic) => topic.id !== selectedTopicId));
-        showSuccess("Topic deleted successfully!");
+        await deleteTrack(selectedTrackId);
+        setTracks(tracks.filter((track) => track.id !== selectedTrackId));
+        showSuccess("Track deleted successfully!");
       } catch (error) {
-        console.error("Error deleting topic:", error);
-        showError(`Failed to delete topic: ${error}`);
+        console.error("Error deleting track:", error);
+        showError(`Failed to delete track: ${error}`);
       } finally {
         setDeleteLoading(false);
       }
     }
     setDeleteDialogOpen(false);
-    setSelectedTopicId(null);
+    setSelectedTrackId(null);
   };
 
   const handleRefresh = () => {
-    handleGetAllTopics();
+    getAllSessionTracks(Number(sessionId));
   };
 
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         duration: 0.5,
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
       },
     },
   };
@@ -160,12 +181,22 @@ export default function TopicListView() {
                 <Dashboard sx={{ mr: 0.5 }} fontSize="inherit" />
                 Dashboard
               </Link>
+              <Link
+                underline="hover"
+                color="inherit"
+                sx={{ display: "flex", alignItems: "center" }}
+                onClick={() => navigate("/dashboard/sessions")}
+                style={{ cursor: "pointer" }}
+              >
+                <School sx={{ mr: 0.5 }} fontSize="inherit" />
+                Sessions
+              </Link>
               <Typography
                 color="text.primary"
                 sx={{ display: "flex", alignItems: "center" }}
               >
-                <TopicIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-                Topics
+                <LibraryMusic sx={{ mr: 0.5 }} fontSize="inherit" />
+                Tracks
               </Typography>
             </Breadcrumbs>
             <Typography
@@ -175,10 +206,10 @@ export default function TopicListView() {
               gutterBottom
               sx={{ textAlign: "left" }}
             >
-              Topics
+              List Tracks of Session {sessionId}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Manage your learning topics and create new content
+              Manage your learning tracks and create new segments
             </Typography>
           </Box>
 
@@ -186,7 +217,7 @@ export default function TopicListView() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => navigate("/dashboard/topics/create")}
+              onClick={handleCreateTrack}
               sx={{
                 mr: 1,
                 background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
@@ -197,7 +228,7 @@ export default function TopicListView() {
                 },
               }}
             >
-              New Topic
+              New Track
             </Button>
             <IconButton onClick={handleRefresh} color="primary">
               <Refresh />
@@ -216,7 +247,7 @@ export default function TopicListView() {
           >
             <CircularProgress />
           </Box>
-        ) : currentTopics.length === 0 ? (
+        ) : tracks.length === 0 ? (
           <Paper
             sx={{
               p: 4,
@@ -226,17 +257,17 @@ export default function TopicListView() {
             }}
           >
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No topics found
+              No tracks found
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Try adjusting your search or create a new topic.
+              Try adjusting your search or create a new track.
             </Typography>
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => navigate("/dashboard/topics/create")}
+              onClick={handleCreateTrack}
             >
-              Create New Topic
+              Create New Track
             </Button>
           </Paper>
         ) : (
@@ -253,7 +284,7 @@ export default function TopicListView() {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
               }}
             >
-              <Table sx={{ minWidth: 650 }} aria-label="topics table">
+              <Table sx={{ minWidth: 650 }} aria-label="tracks table">
                 <TableHead>
                   <TableRow
                     sx={{
@@ -265,48 +296,25 @@ export default function TopicListView() {
                     }}
                   >
                     <TableCell>ID</TableCell>
-                    <TableCell>Thumbnail</TableCell>
                     <TableCell>Name</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell align="center">Sessions</TableCell>
                     <TableCell align="center">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {currentTopics.map((topic, index) => (
-                    <TableRow
-                      key={topic.id}
-                      sx={{
-                        "&:nth-of-type(odd)": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.02),
-                        },
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.05),
-                        },
-                        transition: "background-color 0.2s",
-                        animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
-                        "@keyframes fadeIn": {
-                          from: { opacity: 0, transform: "translateY(20px)" },
-                          to: { opacity: 1, transform: "translateY(0)" },
-                        },
+                  {tracks?.map((track, index) => (
+                    <motion.tr
+                      key={track.id}
+                      variants={itemVariants}
+                      custom={index}
+                      style={{
+                        backgroundColor:
+                          index % 2 === 0
+                            ? alpha(theme.palette.primary.main, 0.02)
+                            : "transparent",
                       }}
                     >
                       <TableCell component="th" scope="row">
-                        {topic.id}
-                      </TableCell>
-                      <TableCell>
-                        <Box
-                          sx={{
-                            backgroundImage: topic.thumbnailUrl
-                              ? `url(${topic.thumbnailUrl})`
-                              : 'url("/placeholder.svg?height=40&width=40")',
-                            backgroundPosition: "center center",
-                            backgroundRepeat: "no-repeat",
-                            backgroundSize: "contain",
-                            width: "60px",
-                            height: "60px",
-                          }}
-                        />
+                        {track.id}
                       </TableCell>
                       <TableCell
                         sx={{
@@ -318,28 +326,7 @@ export default function TopicListView() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {topic.name}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          maxWidth: { xs: "120px", sm: "200px", md: "300px" },
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {topic.description || "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={topic.sessionCount}
-                          color={topic.sessionCount > 0 ? "primary" : "default"}
-                          size="small"
-                          sx={{
-                            minWidth: "60px",
-                            fontWeight: "bold",
-                          }}
-                        />
+                        {track.name}
                       </TableCell>
                       <TableCell align="center">
                         <Box
@@ -349,11 +336,11 @@ export default function TopicListView() {
                             gap: 1,
                           }}
                         >
-                          <Tooltip title="Edit Topic">
+                          <Tooltip title="Edit Track">
                             <IconButton
                               size="small"
                               color="info"
-                              onClick={() => handleEditTopic(topic.id)}
+                              onClick={() => handleEditTrack(track.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.info.main, 0.1),
                                 "&:hover": {
@@ -364,11 +351,11 @@ export default function TopicListView() {
                               <Edit fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Delete Topic">
+                          <Tooltip title="Delete Track">
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => handleDeleteClick(topic.id)}
+                              onClick={() => handleDeleteClick(track.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.error.main, 0.1),
                                 "&:hover": {
@@ -381,7 +368,7 @@ export default function TopicListView() {
                           </Tooltip>
                         </Box>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>
@@ -400,8 +387,8 @@ export default function TopicListView() {
         <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete this topic? This action cannot be
-            undone and will also delete all associated sessions.
+            Are you sure you want to delete this track? This action cannot be
+            undone and will also delete all associated segments.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
