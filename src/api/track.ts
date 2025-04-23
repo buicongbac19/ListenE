@@ -1,4 +1,4 @@
-import { ITrackItem } from "../types/track";
+import { IPostUpdateTrackItem } from "./../types/track";
 import axios from "../utils/axios";
 import { endpoints } from "../utils/axios";
 
@@ -14,7 +14,7 @@ export async function getDetailsTrack(trackId: number) {
   return response;
 }
 
-export async function updateTrack(trackId: number, data: ITrackItem) {
+export async function updateTrack(trackId: number, data: IPostUpdateTrackItem) {
   const URL = `${endpoints.track.root}/${trackId}`;
   const response = await axios.put(URL, data);
   return response;

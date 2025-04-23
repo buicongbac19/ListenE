@@ -70,7 +70,7 @@ export default function SessionDetailsPage() {
   }, [topicId, sessionId]);
 
   const handleTrackClick = (trackId: number) => {
-    navigate(`/topic${topicId}/session/${sessionId}/track/${trackId}`);
+    navigate(`/topic/${topicId}/session/${sessionId}/track/${trackId}`);
   };
 
   const handlePracticeAll = (trackId: number, e: React.MouseEvent) => {

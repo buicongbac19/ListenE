@@ -18,13 +18,13 @@ import {
 import {
   Dashboard,
   School,
-  Headphones,
+  // Headphones,
   People,
   Settings,
   Logout,
   AccountCircle,
   Topic,
-  BarChart,
+  // BarChart,
   Help,
 } from "@mui/icons-material";
 

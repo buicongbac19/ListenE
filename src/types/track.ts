@@ -1,4 +1,4 @@
-import { ISegmentItem } from "./segment";
+import { IPostUpdateSegmentItem, ISegmentItem } from "./segment";
 
 export type ITrackItem = {
   id: number;
@@ -19,4 +19,10 @@ export type ITrackReponseItem = {
   segments: ISegmentItem[];
   difficulty?: string;
   completed?: boolean;
+};
+
+export type IPostUpdateTrackItem = {
+  name: string;
+  fullTranscript: string;
+  segments: IPostUpdateSegmentItem[];
 };
