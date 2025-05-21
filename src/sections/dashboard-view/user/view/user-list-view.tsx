@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -38,94 +37,97 @@ import {
   DialogContentText,
   DialogTitle,
   MenuItem,
+  Avatar,
 } from "@mui/material";
 import {
-  Add,
   Search,
   Edit,
   Delete,
   Dashboard,
   Home,
   Refresh,
-  Headphones,
-  School,
+  FilterList,
   ArrowUpward,
   ArrowDownward,
-  FilterList,
+  Person,
+  PersonAdd,
+  VerifiedUser,
+  Block,
 } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import { motion } from "framer-motion";
-import type { ISessionItem } from "../../../../types/session";
-import { getAllSessions, deleteSession } from "../../../../api/session";
-import { useNotification } from "../../../../provider/NotificationProvider";
 
-// Define sort direction type
+import { IUserResponseItem } from "../../../../types/user";
+import { getAllUsers, deleteUser } from "../../../../api/user";
 type SortDirection = "asc" | "desc";
 
-export default function SessionListView() {
-  const { showSuccess, showError } = useNotification();
+export default function UserListView() {
   const navigate = useNavigate();
   const theme = useTheme();
-  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [sessions, setSessions] = useState<ISessionItem[]>([]);
+  const [users, setUsers] = useState<IUserResponseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(
-    null
-  );
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Pagination state
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [topicId, setTopicId] = useState<number | "">("");
+  const [roleFilter, setRoleFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
 
-  // Sorting state
-  const [sortField, setSortField] = useState<string>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const handleGetAllSessions = async () => {
+  const showSuccess = (message: string) => console.log(message);
+  const showError = (message: string) => console.error(message);
+
+  const handleGetAllUsers = async () => {
     setLoading(true);
     try {
-      const response = await getAllSessions({
+      const response = await getAllUsers({
         page,
         size,
-        key: searchTerm,
-        topicId,
-        sortField,
+        email: searchTerm,
         sortDirection,
       });
 
-      setSessions(response.items);
+      console.log(response.items);
+      setUsers(response.items);
       setTotalPages(response.totalPages);
       setTotalItems(response.totalItems);
     } catch (error) {
-      console.error("Error fetching sessions:", error);
+      console.error("Error fetching users:", error);
+      showError("Failed to load users. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    handleGetAllSessions();
-  }, [page, size, topicId, sortField, sortDirection]); // Refetch when these parameters change
+    handleGetAllUsers();
+  }, [page, size, sortDirection]);
 
-  // Debounce search to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
       if (page !== 1) {
-        setPage(1); // Reset to page 1 when search changes
+        setPage(1);
       } else {
-        handleGetAllSessions();
+        handleGetAllUsers();
       }
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (roleFilter || statusFilter) {
+      setPage(1);
+      handleGetAllUsers();
+    }
+  }, [roleFilter, statusFilter]);
 
   const handlePageChange = (
     _event: React.ChangeEvent<unknown>,
@@ -139,61 +141,101 @@ export default function SessionListView() {
     setPage(1);
   };
 
-  const handleSort = (field: string) => {
-    const isAsc = sortField === field && sortDirection === "asc";
-    setSortDirection(isAsc ? "desc" : "asc");
-    setSortField(field);
+  const handleSort = () => {
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
   };
 
-  const handleEditSession = (sessionId: number) => {
-    navigate(`/dashboard/sessions/${sessionId}/edit`);
+  const handleEditUser = (userId: number) => {
+    navigate(`/dashboard/users/${userId}/edit`);
   };
 
-  const handleDeleteClick = (sessionId: number) => {
-    setSelectedSessionId(sessionId);
+  const handleViewUserDetails = (userId: number) => {
+    navigate(`/dashboard/users/${userId}`);
+  };
+
+  const handleDeleteClick = (userId: number) => {
+    setSelectedUserId(userId);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setSelectedSessionId(null);
+    setSelectedUserId(null);
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedSessionId) {
+    if (selectedUserId) {
       setDeleteLoading(true);
       try {
-        await deleteSession(selectedSessionId);
-        setSessions(
-          sessions.filter((session) => session.id !== selectedSessionId)
-        );
-        if (sessions.length === 1 && page > 1) {
+        await deleteUser();
+        setUsers(users.filter((user) => user.id !== selectedUserId));
+        if (users.length === 1 && page > 1) {
           setPage(page - 1);
         } else {
-          handleGetAllSessions();
+          handleGetAllUsers();
         }
-        showSuccess("Delete session successfully!");
+        showSuccess("User deleted successfully!");
       } catch (error) {
-        console.error("Error deleting session:", error);
-        showError(`Failed to delete session!: ${error}`);
+        console.error("Error deleting user:", error);
+        showError(`Failed to delete user: ${error}`);
       } finally {
         setDeleteLoading(false);
       }
     }
     setDeleteDialogOpen(false);
-    setSelectedSessionId(null);
+    setSelectedUserId(null);
   };
 
   const handleRefresh = () => {
-    handleGetAllSessions();
+    handleGetAllUsers();
   };
 
-  // New function to navigate to tracks page
-  const handleViewTracks = (sessionId: number) => {
-    navigate(`/dashboard/sessions/${sessionId}/tracks`);
+  const handleRoleFilterChange = (event: SelectChangeEvent<string>) => {
+    setRoleFilter(event.target.value);
+    setPage(1);
   };
 
-  // Animation variants
+  const handleStatusFilterChange = (event: SelectChangeEvent<string>) => {
+    setStatusFilter(event.target.value);
+    setPage(1);
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Never";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
+
+  const getStatusColor = (isActivated: boolean, isEmailConfirmed: boolean) => {
+    if (!isActivated) {
+      return "error";
+    }
+    if (!isEmailConfirmed) {
+      return "warning";
+    }
+    return "success";
+  };
+
+  const getRoleColor = (roles: string[]) => {
+    const primaryRole = roles[0] || "";
+    switch (primaryRole) {
+      case "Admin":
+        return "error";
+      case "User":
+        return "info";
+      case "student":
+        return "success";
+      default:
+        return "default";
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -203,6 +245,77 @@ export default function SessionListView() {
       },
     },
   };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return (
+      firstName.charAt(0) + (lastName ? lastName.charAt(0) : "")
+    ).toUpperCase();
+  };
+
+  const getAvatarColor = (firstName: string, lastName: string) => {
+    const name = `${firstName} ${lastName}`;
+    const colors = [
+      "#1E88E5", // Blue
+      "#43A047", // Green
+      "#E53935", // Red
+      "#FB8C00", // Orange
+      "#8E24AA", // Purple
+      "#00ACC1", // Cyan
+      "#3949AB", // Indigo
+      "#00897B", // Teal
+      "#7CB342", // Light Green
+      "#C0CA33", // Lime
+    ];
+
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  };
+
+  const getStatusLabel = (isActivated: boolean, isEmailConfirmed: boolean) => {
+    if (!isActivated) {
+      return "Blocked";
+    }
+    if (!isEmailConfirmed) {
+      return "Pending";
+    }
+    return "Active";
+  };
+
+  const filteredUsers = users.filter((user) => {
+    if (roleFilter && !user.roles.includes(roleFilter)) {
+      return false;
+    }
+
+    if (statusFilter) {
+      if (
+        statusFilter === "active" &&
+        user.isActivated &&
+        user.isEmailConfirmed
+      ) {
+        return true;
+      }
+      if (
+        statusFilter === "pending" &&
+        user.isActivated &&
+        !user.isEmailConfirmed
+      ) {
+        return true;
+      }
+      if (statusFilter === "blocked" && !user.isActivated) {
+        return true;
+      }
+      if (statusFilter) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -246,8 +359,8 @@ export default function SessionListView() {
                 color="text.primary"
                 sx={{ display: "flex", alignItems: "center" }}
               >
-                <School sx={{ mr: 0.5 }} fontSize="inherit" />
-                Sessions
+                <Person sx={{ mr: 0.5 }} fontSize="inherit" />
+                Users
               </Typography>
             </Breadcrumbs>
             <Typography
@@ -257,18 +370,18 @@ export default function SessionListView() {
               gutterBottom
               sx={{ textAlign: "left" }}
             >
-              List Session
+              User Management
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Manage your learning sessions and create new tracks
+              Manage your application users and their permissions
             </Typography>
           </Box>
 
           <Box sx={{ mt: { xs: 2, md: 0 } }}>
             <Button
               variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate("/dashboard/sessions/create")}
+              startIcon={<PersonAdd />}
+              onClick={() => navigate("/dashboard/users/create")}
               sx={{
                 mr: 1,
                 background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
@@ -279,7 +392,7 @@ export default function SessionListView() {
                 },
               }}
             >
-              New Session
+              New User
             </Button>
             <IconButton onClick={handleRefresh} color="primary">
               <Refresh />
@@ -305,7 +418,7 @@ export default function SessionListView() {
             }}
           >
             <TextField
-              placeholder="Search sessions..."
+              placeholder="Search by email..."
               variant="outlined"
               size="small"
               value={searchTerm}
@@ -324,20 +437,34 @@ export default function SessionListView() {
               sx={{ display: "flex", gap: 1, ml: "auto", mt: { xs: 1, sm: 0 } }}
             >
               <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="topic-filter-label">Topic</InputLabel>
+                <InputLabel id="role-filter-label">Role</InputLabel>
                 <Select
-                  labelId="topic-filter-label"
-                  id="topic-filter"
-                  value={topicId}
-                  label="Topic"
-                  onChange={(e) => setTopicId(e.target.value as number | "")}
+                  labelId="role-filter-label"
+                  id="role-filter"
+                  value={roleFilter}
+                  label="Role"
+                  onChange={handleRoleFilterChange}
                 >
-                  <MenuItem value="">All Topics</MenuItem>
-                  <MenuItem value={1}>Everyday English</MenuItem>
-                  <MenuItem value={2}>Professional English</MenuItem>
-                  <MenuItem value={3}>Travel & Tourism</MenuItem>
-                  <MenuItem value={4}>Grammar Mastery</MenuItem>
-                  <MenuItem value={5}>Pronunciation & Listening</MenuItem>
+                  <MenuItem value="">All Roles</MenuItem>
+                  <MenuItem value="Admin">Admin</MenuItem>
+                  <MenuItem value="teacher">Teacher</MenuItem>
+                  <MenuItem value="student">Student</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel id="status-filter-label">Status</InputLabel>
+                <Select
+                  labelId="status-filter-label"
+                  id="status-filter"
+                  value={statusFilter}
+                  label="Status"
+                  onChange={handleStatusFilterChange}
+                >
+                  <MenuItem value="">All Statuses</MenuItem>
+                  <MenuItem value="active">Active</MenuItem>
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="blocked">Blocked</MenuItem>
                 </Select>
               </FormControl>
 
@@ -370,7 +497,7 @@ export default function SessionListView() {
           >
             <CircularProgress />
           </Box>
-        ) : sessions.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <Paper
             sx={{
               p: 4,
@@ -380,17 +507,17 @@ export default function SessionListView() {
             }}
           >
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No sessions found
+              No users found
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Try adjusting your search or create a new session.
+              Try adjusting your search or create a new user.
             </Typography>
             <Button
               variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate("/dashboard/sessions/create")}
+              startIcon={<PersonAdd />}
+              onClick={() => navigate("/dashboard/users/create")}
             >
-              Create New Session
+              Create New User
             </Button>
           </Paper>
         ) : (
@@ -407,7 +534,7 @@ export default function SessionListView() {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
               }}
             >
-              <Table sx={{ minWidth: 650 }} aria-label="sessions table">
+              <Table sx={{ minWidth: 650 }} aria-label="users table">
                 <TableHead>
                   <TableRow
                     sx={{
@@ -420,55 +547,60 @@ export default function SessionListView() {
                   >
                     <TableCell>
                       <TableSortLabel
-                        active={sortField === "id"}
-                        direction={sortField === "id" ? sortDirection : "asc"}
-                        onClick={() => handleSort("id")}
+                        active={true}
+                        direction={sortDirection}
+                        onClick={() => handleSort()}
                         IconComponent={
-                          sortField === "id" && sortDirection === "asc"
-                            ? ArrowUpward
-                            : ArrowDownward
+                          sortDirection === "asc" ? ArrowUpward : ArrowDownward
                         }
                       >
                         ID
                       </TableSortLabel>
                     </TableCell>
+                    <TableCell>User</TableCell>
                     <TableCell>
                       <TableSortLabel
-                        active={sortField === "name"}
-                        direction={sortField === "name" ? sortDirection : "asc"}
-                        onClick={() => handleSort("name")}
-                        IconComponent={
-                          sortField === "name" && sortDirection === "asc"
-                            ? ArrowUpward
-                            : ArrowDownward
-                        }
+                        active={false}
+                        direction={sortDirection}
+                        onClick={() => handleSort()}
                       >
-                        Name
+                        Email
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">
                       <TableSortLabel
-                        active={sortField === "trackCount"}
-                        direction={
-                          sortField === "trackCount" ? sortDirection : "asc"
-                        }
-                        onClick={() => handleSort("trackCount")}
-                        IconComponent={
-                          sortField === "trackCount" && sortDirection === "asc"
-                            ? ArrowUpward
-                            : ArrowDownward
-                        }
+                        active={false}
+                        direction={sortDirection}
+                        onClick={() => handleSort()}
                       >
-                        Tracks
+                        Role
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={false}
+                        direction={sortDirection}
+                        onClick={() => handleSort()}
+                      >
+                        Status
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={false}
+                        direction={sortDirection}
+                        onClick={() => handleSort()}
+                      >
+                        Last Login
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sessions.map((session, index) => (
+                  {filteredUsers.map((user, index) => (
                     <TableRow
-                      key={session.id}
+                      key={user.id}
                       sx={{
                         "&:nth-of-type(odd)": {
                           bgcolor: alpha(theme.palette.primary.main, 0.02),
@@ -477,7 +609,6 @@ export default function SessionListView() {
                           bgcolor: alpha(theme.palette.primary.main, 0.05),
                         },
                         transition: "background-color 0.2s",
-                        // Thêm animation với CSS thay vì Framer Motion
                         animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
                         "@keyframes fadeIn": {
                           from: { opacity: 0, transform: "translateY(20px)" },
@@ -486,30 +617,113 @@ export default function SessionListView() {
                       }}
                     >
                       <TableCell component="th" scope="row">
-                        {session.id}
+                        {user.id}
+                      </TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                        >
+                          {user.imageUrl ? (
+                            <Avatar
+                              src={user.imageUrl}
+                              alt={`${user.firstName} ${user.lastName}`}
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                            />
+                          ) : (
+                            <Avatar
+                              sx={{
+                                bgcolor: getAvatarColor(
+                                  user.firstName,
+                                  user.lastName
+                                ),
+                                width: 40,
+                                height: 40,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                            >
+                              {getInitials(user.firstName, user.lastName)}
+                            </Avatar>
+                          )}
+                          <Box>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {`${user.firstName} ${user.lastName}`}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Joined {formatDate(user.createdAt).split(",")[0]}
+                            </Typography>
+                          </Box>
+                        </Box>
                       </TableCell>
                       <TableCell
                         sx={{
-                          fontWeight: 500,
-                          color: theme.palette.text.primary,
                           maxWidth: { xs: "120px", sm: "200px", md: "300px" },
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {session.name}
+                        {user.email}
                       </TableCell>
                       <TableCell align="center">
                         <Chip
-                          label={session.trackCount}
-                          color={session.trackCount > 0 ? "primary" : "default"}
+                          label={user.roles[0] || "N/A"}
+                          color={getRoleColor(user.roles) as any}
                           size="small"
                           sx={{
-                            minWidth: "60px",
+                            minWidth: "80px",
                             fontWeight: "bold",
+                            textTransform: "capitalize",
                           }}
+                          icon={
+                            user.roles.includes("Admin") ? (
+                              <VerifiedUser
+                                sx={{ fontSize: "0.8rem !important" }}
+                              />
+                            ) : (
+                              <></>
+                            )
+                          }
                         />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={getStatusLabel(
+                            user.isActivated,
+                            user.isEmailConfirmed
+                          )}
+                          color={
+                            getStatusColor(
+                              user.isActivated,
+                              user.isEmailConfirmed
+                            ) as any
+                          }
+                          size="small"
+                          sx={{
+                            minWidth: "80px",
+                            fontWeight: "bold",
+                            textTransform: "capitalize",
+                          }}
+                          icon={
+                            !user.isActivated ? (
+                              <Block sx={{ fontSize: "0.8rem !important" }} />
+                            ) : (
+                              <></>
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
+                        {formatDate(user.lastLogin)}
                       </TableCell>
                       <TableCell align="center">
                         <Box
@@ -519,11 +733,11 @@ export default function SessionListView() {
                             gap: 1,
                           }}
                         >
-                          <Tooltip title="View Tracks">
+                          <Tooltip title="View User Details">
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => handleViewTracks(session.id)}
+                              onClick={() => handleViewUserDetails(user.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.primary.main, 0.1),
                                 "&:hover": {
@@ -536,14 +750,14 @@ export default function SessionListView() {
                                 },
                               }}
                             >
-                              <Headphones fontSize="small" />
+                              <Person fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Edit Session">
+                          <Tooltip title="Edit User">
                             <IconButton
                               size="small"
                               color="info"
-                              onClick={() => handleEditSession(session.id)}
+                              onClick={() => handleEditUser(user.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.info.main, 0.1),
                                 "&:hover": {
@@ -554,11 +768,11 @@ export default function SessionListView() {
                               <Edit fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Delete Session">
+                          <Tooltip title="Delete User">
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => handleDeleteClick(session.id)}
+                              onClick={() => handleDeleteClick(user.id)}
                               sx={{
                                 bgcolor: alpha(theme.palette.error.main, 0.1),
                                 "&:hover": {
@@ -589,7 +803,7 @@ export default function SessionListView() {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                Showing {sessions.length} of {totalItems} sessions
+                Showing {filteredUsers.length} of {totalItems} users
               </Typography>
 
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -634,12 +848,18 @@ export default function SessionListView() {
         onClose={handleDeleteCancel}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+          },
+        }}
       >
         <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete this session? This action cannot be
-            undone.
+            Are you sure you want to delete this user? This action cannot be
+            undone and will remove all user data from the system.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

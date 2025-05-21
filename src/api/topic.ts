@@ -33,12 +33,6 @@ export async function updateOrCreateTopic(
   return res;
 }
 
-export async function getAllTopicSessions(topicId: number) {
-  const URL = `${endpoints.topic.listSession(topicId)}`;
-  const response = await axios.get(URL);
-  return response;
-}
-
 export async function getDetailsTopic(topicId: number) {
   const URL = `${endpoints.topic.root}/${topicId}`;
   const response = await axios.get(URL);
@@ -69,10 +63,5 @@ export async function createTopic(data: FormData) {
     },
   });
 
-  return response;
-}
-export async function createSessionInTopic(topicId: number, name: string) {
-  const URL = `${endpoints.topic.createSession(topicId)}`;
-  const response = await axios.post(URL, { name });
   return response;
 }

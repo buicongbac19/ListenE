@@ -28,7 +28,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     open: false,
     message: "",
     type: "info",
-    autoHideDuration: 5000,
+    autoHideDuration: 3000,
   });
 
   const showNotification = (

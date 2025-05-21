@@ -55,7 +55,7 @@ import {
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 import type { IPostSegmentItem } from "../../../types/segment";
-import { createSessionTrack } from "../../../api/session";
+import { createTrack } from "../../../api/track";
 import { useNotification } from "../../../provider/NotificationProvider";
 
 interface RegionOptions {
@@ -127,12 +127,9 @@ export default function TrackAudioSplitter({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleCreateNewSessionTrack = async (
-    sessionId: number,
-    params: FormData
-  ) => {
+  const handleCreateNewTrack = async (params: FormData) => {
     try {
-      const response = await createSessionTrack(sessionId, params);
+      const response = await createTrack(params);
       return response.data;
     } catch (error) {
       console.error("Error creating track:", error);
@@ -565,10 +562,7 @@ export default function TrackAudioSplitter({
         );
       });
       if (sessionId) {
-        const response = await handleCreateNewSessionTrack(
-          Number(sessionId),
-          formData
-        );
+        const response = await handleCreateNewTrack(formData);
         console.log("Track created successfully:", response);
         showSuccess("Tạo mới track thành công!");
 

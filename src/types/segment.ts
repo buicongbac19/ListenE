@@ -11,7 +11,7 @@ export type ISegmentItem = {
 export type ISegmentResponseItem = {
   id: number;
   name?: string;
-  trancript: string;
+  transcript: string;
   segmentDuration: string;
   orderInTrack: number;
   completed?: boolean;

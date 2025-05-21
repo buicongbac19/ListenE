@@ -3,8 +3,7 @@ export type ITopicItem = {
   name: string;
   thumbnailUrl: string;
   description: string;
-  level?: "Beginner" | "Intermediate" | "Advanced";
-  sessionCount: number;
+  type: string;
   isFavorite?: boolean;
 };
 

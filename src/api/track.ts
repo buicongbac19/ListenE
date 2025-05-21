@@ -19,3 +19,13 @@ export async function updateTrack(trackId: number, data: IPostUpdateTrackItem) {
   const response = await axios.put(URL, data);
   return response;
 }
+
+export async function createTrack(params: FormData) {
+  const URL = `${endpoints.track.root}`;
+  const response = await axios.post(URL, params, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response;
+}

@@ -10,24 +10,34 @@ import DashboardLayout from "./layouts/DashBoardLayout";
 import AppLayout from "./layouts/AppLayout";
 import { NotificationProvider } from "./provider/NotificationProvider";
 
-import { UserListView } from "./sections/user/view";
+import { UserListView } from "./sections/dashboard-view/user/view";
+import UserCreateEditForm from "./sections/dashboard-view/user/user-create-edit-form";
+import UserDetailView from "./sections/dashboard-view/user/view/user-detail-view";
 
 import TrackManager from "./sections/dashboard-view/track/track-manager";
-import { TrackEditView } from "./sections/dashboard-view/track/view";
+// import { TrackEditView } from "./sections/dashboard-view/track/view";
 
 import { TopicListView } from "./sections/dashboard-view/topic/view";
 import TopicCreateEditForm from "./sections/dashboard-view/topic/topic-create-edit-form";
 
-import { SessionListView } from "./sections/dashboard-view/session/view";
-import SessionCreateEditForm from "./sections/dashboard-view/session/session-create-edit-form";
-import SessionTrackListView from "./sections/dashboard-view/session/session-track-list-view";
+import { QuestionListView } from "./sections/dashboard-view/question/view";
+import QuestionCreateEditForm from "./sections/dashboard-view/question/question-create-edit-form";
+
+import { TagListView } from "./sections/dashboard-view/tag/view";
+import TagCreateEditForm from "./sections/dashboard-view/tag/tag-create-edit-form";
+
+import RoleManagementPage from "./sections/dashboard-view/role/role-management-page";
+import UserRoleAssignment from "./sections/dashboard-view/role/user-role-assignment";
 
 import TopicDetailsPage from "./pages/TopicDetailsPage";
-import SessionDetailsPage from "./pages/SessionDetailsPage";
 import TrackPracticePage from "./pages/TrackPracticePage";
 import TrackSegmentsPage from "./pages/TrackSegmentsPage";
 import SegmentPracticePage from "./pages/SegmentPracticePage";
 import TopicsPage from "./pages/TopicsPage";
+import TagQuestionsPage from "./pages/TagQuestionsPage";
+import QuestionPracticePage from "./pages/QuestionPracticePage";
+import ResultsPage from "./pages/ResultsPage";
+import GroupQuestionPracticePage from "./pages/GroupQuestionPracticePage";
 
 import { AnimatePresence } from "framer-motion";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -126,27 +136,52 @@ function App() {
                     element={<TopicDetailsPage />}
                   />
                   <Route
-                    path="/topic/:topicId/session/:sessionId"
-                    element={<SessionDetailsPage />}
-                  />
-                  <Route
-                    path="/topic/:topicId/session/:sessionId/track/:trackId"
+                    path="/topic/:topicId/track/:trackId"
                     element={<TrackPracticePage />}
                   />
                   <Route
-                    path="/topic/:topicId/session/:sessionId/track/:trackId/segments"
+                    path="/topic/:topicId/track/:trackId/segments"
                     element={<TrackSegmentsPage />}
                   />
                   <Route
-                    path="/topic/:topicId/session/:sessionId/track/:trackId/segment/:segmentId"
+                    path="/topic/:topicId/track/:trackId/segment/:segmentId"
                     element={<SegmentPracticePage />}
                   />
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/questions"
+                    element={<TagQuestionsPage />}
+                  />
+
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/question/:questionId/practice"
+                    element={<QuestionPracticePage />}
+                  />
+
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/group/:groupId/practice"
+                    element={<GroupQuestionPracticePage />}
+                  />
+
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/results"
+                    element={<ResultsPage />}
+                  />
+
                   <Route path="/dashboard" element={<DashboardLayout />}>
-                    {/* Tracks route */}
+                    {/* Users route */}
+                    <Route path="manage-users" element={<UserListView />} />
                     <Route
-                      path="sessions/:sessionId/create-track"
-                      element={<TrackManager />}
+                      path="users/create"
+                      element={<UserCreateEditForm />}
                     />
+                    <Route
+                      path="users/:userId/edit"
+                      element={<UserCreateEditForm />}
+                    />
+                    <Route path="users/:userId" element={<UserDetailView />} />
+
+                    {/* Tracks route */}
+                    <Route path="create-track" element={<TrackManager />} />
 
                     {/* Topics route */}
                     <Route path="manage-topics" element={<TopicListView />} />
@@ -159,32 +194,43 @@ function App() {
                       element={<TopicCreateEditForm />}
                     />
 
-                    {/* Sessions route */}
+                    {/* Questions route */}
                     <Route
-                      path="manage-sessions"
-                      element={<SessionListView />}
+                      path="manage-questions"
+                      element={<QuestionListView />}
+                    />
+                    <Route
+                      path="questions/create"
+                      element={<QuestionCreateEditForm />}
                     />
 
                     <Route
-                      path="sessions/create"
-                      element={<SessionCreateEditForm />}
+                      path="quetions/:questionId/edit"
+                      element={<QuestionCreateEditForm />}
                     />
 
+                    {/* Tags Route */}
+                    <Route path="manage-tags" element={<TagListView />} />
+                    <Route path="tags/create" element={<TagCreateEditForm />} />
                     <Route
-                      path="sessions/:sessionId/edit"
-                      element={<SessionCreateEditForm />}
+                      path="tags/:tagId/edit"
+                      element={<TagCreateEditForm />}
+                    />
+
+                    {/* Roles route */}
+                    <Route
+                      path="manage-roles"
+                      element={<RoleManagementPage />}
                     />
                     <Route
-                      path="sessions/:sessionId/tracks"
-                      element={<SessionTrackListView />}
+                      path="asign-roles"
+                      element={<UserRoleAssignment />}
                     />
                     <Route
-                      path="sessions/:sessionId/tracks/:trackId/edit"
-                      element={<TrackEditView />}
+                      path="asign-roles/:userId"
+                      element={<UserRoleAssignment />}
                     />
                   </Route>
-
-                  <Route path="/manage-user" element={<UserListView />} />
                 </Route>
                 <Route path="/auth" element={<Authentication />} />
                 <Route

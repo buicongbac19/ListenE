@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -14,18 +16,23 @@ import {
   MenuItem,
   useMediaQuery,
   useTheme,
+  Collapse,
 } from "@mui/material";
 import {
   Dashboard,
-  School,
-  // Headphones,
   People,
   Settings,
   Logout,
   AccountCircle,
   Topic,
-  // BarChart,
   Help,
+  Security,
+  ExpandLess,
+  ExpandMore,
+  AdminPanelSettings,
+  LockPerson,
+  QuestionAnswer,
+  LocalOffer,
 } from "@mui/icons-material";
 
 const drawerWidth = 240;
@@ -38,6 +45,7 @@ export default function DashboardLayout() {
 
   const [open, setOpen] = useState(!isMobile);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [securityOpen, setSecurityOpen] = useState(false);
 
   const handleDrawerToggle = () => {
     setOpen(!open);
@@ -46,18 +54,36 @@ export default function DashboardLayout() {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
   const handleLogout = () => {
     handleMenuClose();
     navigate("/auth");
   };
 
+  const handleSecurityToggle = () => {
+    setSecurityOpen(!securityOpen);
+  };
+
+  // Check if the current path is under the security section
+  const isSecurityPath =
+    location.pathname.includes("/dashboard/manage-roles") ||
+    location.pathname.includes("/dashboard/asign-roles");
+
+  // If we're on a security path, open the security menu
+  if (isSecurityPath && !securityOpen) {
+    setSecurityOpen(true);
+  }
+
   const menuItems = [
     { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
     { text: "Topics", icon: <Topic />, path: "/dashboard/manage-topics" },
-    { text: "Sessions", icon: <School />, path: "/dashboard/manage-sessions" },
-    // { text: "Tracks", icon: <Headphones />, path: "/dashboard/manage-tracks" },
+    {
+      text: "Questions",
+      icon: <QuestionAnswer />,
+      path: "/dashboard/manage-questions",
+    },
+    { text: "Tags", icon: <LocalOffer />, path: "/dashboard/manage-tags" }, // Add this line
     { text: "Users", icon: <People />, path: "/dashboard/manage-users" },
-    // { text: "Analytics", icon: <BarChart />, path: "/dashboard/analytics" },
     { text: "Settings", icon: <Settings />, path: "/dashboard/settings" },
   ];
 
@@ -126,6 +152,101 @@ export default function DashboardLayout() {
               </ListItemButton>
             </ListItem>
           ))}
+
+          {/* Security Section with Submenu */}
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={handleSecurityToggle}
+              sx={{
+                borderRadius: "0 20px 20px 0",
+                mr: 1,
+                ml: 0.5,
+                mb: 0.5,
+                backgroundColor: isSecurityPath
+                  ? "primary.light"
+                  : "transparent",
+                color: isSecurityPath ? "#fff" : "inherit",
+                "&:hover": {
+                  backgroundColor: isSecurityPath
+                    ? "primary.light"
+                    : "rgba(25, 118, 210, 0.08)",
+                },
+                "& .MuiListItemIcon-root": {
+                  color: isSecurityPath ? "#fff" : "inherit",
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <Security />
+              </ListItemIcon>
+              <ListItemText primary="Security" />
+              {securityOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </ListItem>
+
+          <Collapse in={securityOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <ListItemButton
+                selected={location.pathname.includes("/dashboard/manage-roles")}
+                onClick={() => navigate("/dashboard/manage-roles")}
+                sx={{
+                  pl: 4,
+                  borderRadius: "0 20px 20px 0",
+                  mr: 1,
+                  ml: 2,
+                  mb: 0.5,
+                  "&.Mui-selected": {
+                    backgroundColor: "primary.light",
+                    color: "#fff",
+                    "&:hover": {
+                      backgroundColor: "primary.light",
+                    },
+                    "& .MuiListItemIcon-root": {
+                      color: "#fff",
+                    },
+                  },
+                  "&:hover": {
+                    backgroundColor: "rgba(25, 118, 210, 0.08)",
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <AdminPanelSettings />
+                </ListItemIcon>
+                <ListItemText primary="Roles" />
+              </ListItemButton>
+
+              <ListItemButton
+                selected={location.pathname.includes("/dashboard/asign-roles")}
+                onClick={() => navigate("/dashboard/asign-roles")}
+                sx={{
+                  pl: 4,
+                  borderRadius: "0 20px 20px 0",
+                  mr: 1,
+                  ml: 2,
+                  mb: 0.5,
+                  "&.Mui-selected": {
+                    backgroundColor: "primary.light",
+                    color: "#fff",
+                    "&:hover": {
+                      backgroundColor: "primary.light",
+                    },
+                    "& .MuiListItemIcon-root": {
+                      color: "#fff",
+                    },
+                  },
+                  "&:hover": {
+                    backgroundColor: "rgba(25, 118, 210, 0.08)",
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <LockPerson />
+                </ListItemIcon>
+                <ListItemText primary="User Roles" />
+              </ListItemButton>
+            </List>
+          </Collapse>
         </List>
         <Divider sx={{ mt: "auto" }} />
         <List>

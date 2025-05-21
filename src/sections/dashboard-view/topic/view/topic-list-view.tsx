@@ -17,7 +17,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
   Tooltip,
   alpha,
   Dialog,
@@ -268,7 +267,6 @@ export default function TopicListView() {
                     <TableCell>Thumbnail</TableCell>
                     <TableCell>Name</TableCell>
                     <TableCell>Description</TableCell>
-                    <TableCell align="center">Sessions</TableCell>
                     <TableCell align="center">Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -329,17 +327,6 @@ export default function TopicListView() {
                         }}
                       >
                         {topic.description || "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={topic.sessionCount}
-                          color={topic.sessionCount > 0 ? "primary" : "default"}
-                          size="small"
-                          sx={{
-                            minWidth: "60px",
-                            fontWeight: "bold",
-                          }}
-                        />
                       </TableCell>
                       <TableCell align="center">
                         <Box

@@ -70,16 +70,21 @@ export const endpoints = {
     list: "/api/users/query",
     details: "/api/user",
     search: "/api/product/search",
+    listResponse: "/users",
+    listRoles: "/users/roles",
+    asignRoles: (userId: number) => `/users/${userId}/roles`,
+    profile: "/users/profile",
   },
-  topic: {
-    root: "/topics",
-    listSession: (topicId: number) => `/topics/${topicId}/sessions`,
-    createSession: (topicId: number) => `topics/${topicId}/sessions`,
+  topic: { root: "/topics" },
+  question: {
+    root: "/toeics/questions",
+    part1: "/toeics/part-1/questions",
+    part2: "/toeics/part-2/questions",
+    part34: "toeics/part-34/groups",
   },
-  session: {
-    root: "/sessions",
-    listTrack: (sessionId: number) => `/sessions/${sessionId}/tracks`,
-    createTrack: (sessionId: number) => `/sessions/${sessionId}/tracks`,
+
+  tag: {
+    root: "/toeics/tags",
   },
   track: {
     root: "/tracks",
