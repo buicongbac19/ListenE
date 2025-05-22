@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 
 import { useState, useEffect } from "react";
@@ -38,8 +36,6 @@ import {
   MenuItem,
   Badge,
   Avatar,
-  TextField,
-  InputAdornment,
   Card,
   CardContent,
   Grid,
@@ -57,14 +53,11 @@ import {
   ArrowDownward,
   MenuBook,
   QuestionAnswer,
-  Visibility,
-  Search,
   Image as ImageIcon,
   AudioFile,
   Tag,
   Clear,
   FilterAlt,
-  SortByAlpha,
   PlayArrow,
   Groups,
   FormatListNumbered,
@@ -93,10 +86,10 @@ const QUESTION_TYPE_CONFIG: Record<
   string,
   { label: string; color: string; icon: React.ElementType }
 > = {
-  part1: { label: "Part 1 (Image & Audio)", color: "#4CAF50", icon: ImageIcon }, // Green
-  part2: { label: "Part 2 (Audio Only)", color: "#2196F3", icon: AudioFile }, // Blue
-  part3: { label: "Part 3 (Conversation)", color: "#9C27B0", icon: Groups }, // Purple
-  part4: {
+  Part1: { label: "Part 1 (Image & Audio)", color: "#4CAF50", icon: ImageIcon }, // Green
+  Part2: { label: "Part 2 (Audio Only)", color: "#2196F3", icon: AudioFile }, // Blue
+  Part3: { label: "Part 3 (Conversation)", color: "#9C27B0", icon: Groups }, // Purple
+  Part4: {
     label: "Part 4 (Short Talk)",
     color: "#FF9800",
     icon: FormatListNumbered,
@@ -299,12 +292,12 @@ export default function QuestionListView() {
     }
   };
 
-  const handleEditQuestion = (questionId: number) => {
-    navigate(`/dashboard/manage-questions/${questionId}/edit`);
+  const handleEditQuestion = (questionId: number, questionType: string) => {
+    navigate(`/dashboard/questions/${questionId}/edit?type=${questionType}`);
   };
 
-  const handleEditGroup = (groupId: number) => {
-    navigate(`/dashboard/manage-groups/${groupId}/edit`);
+  const handleEditGroup = (groupId: number, groupType: string) => {
+    navigate(`/dashboard/groups/${groupId}/edit?type=${groupType}`);
   };
 
   const handleDeleteClick = (questionId: number) => {
@@ -385,7 +378,7 @@ export default function QuestionListView() {
 
   const handleViewQuestion = (questionId: number, questionType: string) => {
     // Determine the correct route based on question type
-    if (questionType === "part1" || questionType === "part2") {
+    if (questionType === "Part1" || questionType === "Part2") {
       navigate(`/practice/${questionType}/${questionId}`);
     } else {
       navigate(`/practice/group/${questionType}/${questionId}`);
@@ -423,10 +416,6 @@ export default function QuestionListView() {
     } else {
       setGroupPage(1);
     }
-  };
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
   };
 
   const handleTabChange = (
@@ -515,7 +504,7 @@ export default function QuestionListView() {
   const renderMediaIcons = (type: string) => {
     return (
       <Box sx={{ display: "flex", gap: 0.5 }}>
-        {type === "part1" && (
+        {type === "Part1" && (
           <Tooltip title="Has Image">
             <Avatar
               sx={{
@@ -529,7 +518,7 @@ export default function QuestionListView() {
             </Avatar>
           </Tooltip>
         )}
-        {["part1", "part2", "part3", "part4"].includes(type) && (
+        {["Part1", "Part2", "Part3", "Part4"].includes(type) && (
           <Tooltip title="Has Audio">
             <Avatar
               sx={{
@@ -543,25 +532,25 @@ export default function QuestionListView() {
             </Avatar>
           </Tooltip>
         )}
-        {["part3", "part4"].includes(type) && (
-          <Tooltip title={type === "part3" ? "Conversation" : "Short Talk"}>
+        {["Part3", "Part4"].includes(type) && (
+          <Tooltip title={type === "Part3" ? "Conversation" : "Short Talk"}>
             <Avatar
               sx={{
                 width: 24,
                 height: 24,
                 bgcolor: alpha(
-                  type === "part3"
+                  type === "Part3"
                     ? theme.palette.secondary.main
                     : theme.palette.warning.main,
                   0.1
                 ),
                 color:
-                  type === "part3"
+                  type === "Part3"
                     ? theme.palette.secondary.main
                     : theme.palette.warning.main,
               }}
             >
-              {type === "part3" ? (
+              {type === "Part3" ? (
                 <Groups fontSize="small" />
               ) : (
                 <FormatListNumbered fontSize="small" />
@@ -625,7 +614,6 @@ export default function QuestionListView() {
               </TableCell>
               <TableCell align="center">Type</TableCell>
               <TableCell align="center">Tag</TableCell>
-              <TableCell align="center">Media</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -673,9 +661,6 @@ export default function QuestionListView() {
                   {renderTagChip(question.tagName)}
                 </TableCell>
                 <TableCell align="center">
-                  {renderMediaIcons(question.type)}
-                </TableCell>
-                <TableCell align="center">
                   <Box
                     sx={{
                       display: "flex",
@@ -683,49 +668,13 @@ export default function QuestionListView() {
                       gap: 1,
                     }}
                   >
-                    <Tooltip title="Practice Question">
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() =>
-                          handleViewQuestion(question.id, question.type)
-                        }
-                        sx={{
-                          bgcolor: alpha(theme.palette.success.main, 0.1),
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.success.main, 0.2),
-                            transform: "scale(1.1)",
-                            transition: "all 0.2s",
-                          },
-                        }}
-                      >
-                        <PlayArrow fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="View Details">
-                      <IconButton
-                        size="small"
-                        color="info"
-                        onClick={() =>
-                          handleViewQuestion(question.id, question.type)
-                        }
-                        sx={{
-                          bgcolor: alpha(theme.palette.info.main, 0.1),
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.info.main, 0.2),
-                            transform: "scale(1.1)",
-                            transition: "all 0.2s",
-                          },
-                        }}
-                      >
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Edit Question">
                       <IconButton
                         size="small"
                         color="secondary"
-                        onClick={() => handleEditQuestion(question.id)}
+                        onClick={() =>
+                          handleEditQuestion(question.id, question.type)
+                        }
                         sx={{
                           bgcolor: alpha(theme.palette.secondary.main, 0.1),
                           "&:hover": {
@@ -818,7 +767,6 @@ export default function QuestionListView() {
               </TableCell>
               <TableCell align="center">Type</TableCell>
               <TableCell align="center">Tag</TableCell>
-              <TableCell align="center">Media</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -866,9 +814,6 @@ export default function QuestionListView() {
                   {renderTagChip(group.tagName)}
                 </TableCell>
                 <TableCell align="center">
-                  {renderMediaIcons(group.type)}
-                </TableCell>
-                <TableCell align="center">
                   <Box
                     sx={{
                       display: "flex",
@@ -876,49 +821,13 @@ export default function QuestionListView() {
                       gap: 1,
                     }}
                   >
-                    <Tooltip title="Practice Group">
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() =>
-                          handleViewGroup(group.groupId, group.type)
-                        }
-                        sx={{
-                          bgcolor: alpha(theme.palette.success.main, 0.1),
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.success.main, 0.2),
-                            transform: "scale(1.1)",
-                            transition: "all 0.2s",
-                          },
-                        }}
-                      >
-                        <PlayArrow fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="View Details">
-                      <IconButton
-                        size="small"
-                        color="info"
-                        onClick={() =>
-                          handleViewGroup(group.groupId, group.type)
-                        }
-                        sx={{
-                          bgcolor: alpha(theme.palette.info.main, 0.1),
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.info.main, 0.2),
-                            transform: "scale(1.1)",
-                            transition: "all 0.2s",
-                          },
-                        }}
-                      >
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Edit Group">
                       <IconButton
                         size="small"
                         color="secondary"
-                        onClick={() => handleEditGroup(group.groupId)}
+                        onClick={() =>
+                          handleEditGroup(group.groupId, group.type)
+                        }
                         sx={{
                           bgcolor: alpha(theme.palette.secondary.main, 0.1),
                           "&:hover": {
@@ -1073,7 +982,9 @@ export default function QuestionListView() {
                         <IconButton
                           size="small"
                           color="secondary"
-                          onClick={() => handleEditQuestion(question.id)}
+                          onClick={() =>
+                            handleEditQuestion(question.id, question.type)
+                          }
                           sx={{
                             bgcolor: alpha(theme.palette.secondary.main, 0.1),
                             "&:hover": {
@@ -1229,7 +1140,9 @@ export default function QuestionListView() {
                         <IconButton
                           size="small"
                           color="secondary"
-                          onClick={() => handleEditGroup(group.groupId)}
+                          onClick={() =>
+                            handleEditGroup(group.groupId, group.type)
+                          }
                           sx={{
                             bgcolor: alpha(theme.palette.secondary.main, 0.1),
                             "&:hover": {
@@ -1451,7 +1364,6 @@ export default function QuestionListView() {
           </Box>
         </Box>
 
-        {/* Tabs for switching between questions and groups */}
         <Box sx={{ mb: 3 }}>
           <Tabs
             value={activeTab}
@@ -1532,69 +1444,6 @@ export default function QuestionListView() {
                   <Badge color="error" variant="dot" sx={{ ml: 1 }} />
                 )}
               </Button>
-
-              <Button
-                variant="outlined"
-                color="primary"
-                size="small"
-                startIcon={<SortByAlpha />}
-                onClick={() => {
-                  if (activeTab === "questions") {
-                    setSortField("name");
-                    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-                  } else {
-                    setGroupSortField("groupName");
-                    setGroupSortDirection(
-                      groupSortDirection === "asc" ? "desc" : "asc"
-                    );
-                  }
-                }}
-                sx={{
-                  borderRadius: 1.5,
-                  transition: "all 0.2s",
-                }}
-              >
-                Sort{" "}
-                {((activeTab === "questions" && sortField === "name") ||
-                  (activeTab === "groups" && groupSortField === "groupName")) &&
-                  ((activeTab === "questions" && sortDirection === "asc") ||
-                  (activeTab === "groups" && groupSortDirection === "asc")
-                    ? "A-Z"
-                    : "Z-A")}
-              </Button>
-
-              <TextField
-                placeholder={`Search ${
-                  activeTab === "questions" ? "questions" : "groups"
-                }...`}
-                size="small"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search fontSize="small" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchTerm && (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setSearchTerm("")}
-                      >
-                        <Clear fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    borderRadius: 1.5,
-                  },
-                }}
-                sx={{
-                  minWidth: { xs: "100%", sm: 250 },
-                  mt: { xs: 1, sm: 0 },
-                }}
-              />
             </Box>
 
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>

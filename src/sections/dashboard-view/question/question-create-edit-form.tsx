@@ -1,9 +1,7 @@
-"use client";
-
 import type React from "react";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -172,11 +170,17 @@ export default function QuestionCreateEditForm() {
   const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();
   const theme = useTheme();
-  const { questionId } = useParams<{ questionId: string }>();
+  const { questionId, groupId } = useParams<{
+    questionId?: string;
+    groupId?: string;
+  }>();
+  const [searchParams] = useSearchParams();
+  const questionTypeFromUrl = searchParams.get("type");
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
-  const isEditMode = !!questionId;
+  const isEditGroupMode = !!groupId;
+  const isEditMode = !!questionId || !!groupId;
 
   // State for question type selection
   const [questionType, setQuestionType] = useState<string>("");
@@ -305,26 +309,23 @@ export default function QuestionCreateEditForm() {
 
   // Fetch question data if in edit mode
   useEffect(() => {
-    if (isEditMode && questionId) {
-      const fetchQuestionData = async () => {
+    if (isEditMode) {
+      const fetchData = async () => {
         setLoading(true);
         try {
-          // Try to fetch as Part 3/4 first
-          try {
-            const response = await getDetailsGroup(Number.parseInt(questionId));
+          if (isEditGroupMode && groupId) {
+            // Edit group (Part3/4)
+            if (questionTypeFromUrl) setQuestionType(questionTypeFromUrl);
+            const response = await getDetailsGroup(Number.parseInt(groupId));
             const groupData = response?.data?.data;
-
+            console.log(groupData);
             if (groupData) {
-              const questionType = groupData.questions[0]?.type || "Part3";
-
-              setQuestionType(questionType);
-
-              // Transform the response data to match our form structure
+              const tagId = groupData.questions[0]?.tagId || 0;
               const transformedData: IQuestionPartT3PostItem = {
                 image: undefined,
                 audio: undefined,
                 transcript: groupData.transcript || "",
-                tagId: groupData.tagId || 0,
+                tagId,
                 questions: groupData.questions.map((q: any) => ({
                   correctAnswer: q.correctAnswer || 1,
                   explanation: q.explanation || "",
@@ -334,12 +335,9 @@ export default function QuestionCreateEditForm() {
                   })),
                 })),
               };
-
               setPart34Data(transformedData);
               setImagePreview(groupData.imageUrl || null);
               setAudioPreview(groupData.audioUrl || null);
-
-              // Update errors state to match the number of questions
               setErrors((prev) => ({
                 ...prev,
                 questions: transformedData.questions.map(() => ({
@@ -349,76 +347,122 @@ export default function QuestionCreateEditForm() {
                   answers: ["", "", "", ""],
                 })),
               }));
-
               return;
             }
-          } catch (error) {
-            // If not Part 3/4, try Part One
-            console.log("Not a Part 3/4 question, trying Part One...");
-          }
-
-          // Try to fetch as Part One
-          try {
-            const response = await getDetailPartOneQuestion(
-              Number.parseInt(questionId)
-            );
-            const questionData = response?.data?.data;
-
-            // Find the tag to get its type
-            const questionTag = tags.find(
-              (tag) => tag.id === questionData.tagId
-            );
-            if (questionTag) {
-              setQuestionType(questionTag.type);
+          } else if (questionId) {
+            // If we have type from URL, use it directly
+            if (questionTypeFromUrl) {
+              setQuestionType(questionTypeFromUrl);
             }
 
-            setQuestionType(questionTag?.type || "");
-            setPartOneData({
-              image: null,
-              audio: null,
-              correctAnswer: questionData.correctAnswer || 1, // Using 1-based indexing
-              transcript: questionData.transcript || "",
-              explanation: questionData.explanation || "",
-              tagId: questionData.tagId,
-              answers: questionData.answers.map((a: any) => ({
-                content: a.content,
-              })),
-            });
+            // Try to fetch as Part 3/4 first if type is Part3 or Part4
+            if (
+              questionTypeFromUrl === "Part3" ||
+              questionTypeFromUrl === "Part4"
+            ) {
+              try {
+                const response = await getDetailsGroup(
+                  Number.parseInt(questionId)
+                );
+                const groupData = response?.data?.data;
 
-            setImagePreview(questionData.imageUrl || null);
-            setAudioPreview(questionData.audioUrl || null);
+                if (groupData) {
+                  // Transform the response data to match our form structure
+                  const transformedData: IQuestionPartT3PostItem = {
+                    image: undefined,
+                    audio: undefined,
+                    transcript: groupData.transcript || "",
+                    tagId: groupData.tagId || 0,
+                    questions: groupData.questions.map((q: any) => ({
+                      correctAnswer: q.correctAnswer || 1,
+                      explanation: q.explanation || "",
+                      stringQuestion: q.stringQuestion || "",
+                      answers: q.answers.map((a: any) => ({
+                        content: a.content || "",
+                      })),
+                    })),
+                  };
 
-            return;
-          } catch (error) {
-            // If not Part One, try Part Two
-            console.log("Not a Part One question, trying Part Two...");
+                  setPart34Data(transformedData);
+                  setImagePreview(groupData.imageUrl || null);
+                  setAudioPreview(groupData.audioUrl || null);
+
+                  // Update errors state to match the number of questions
+                  setErrors((prev) => ({
+                    ...prev,
+                    questions: transformedData.questions.map(() => ({
+                      stringQuestion: "",
+                      correctAnswer: "",
+                      explanation: "",
+                      answers: ["", "", "", ""],
+                    })),
+                  }));
+
+                  return;
+                }
+              } catch (error) {
+                console.error("Error fetching Part 3/4 question:", error);
+              }
+            }
+
+            // Try to fetch as Part One if type is Part1
+            if (questionTypeFromUrl === "Part1") {
+              try {
+                const response = await getDetailPartOneQuestion(
+                  Number.parseInt(questionId)
+                );
+                const questionData = response?.data?.data;
+
+                setPartOneData({
+                  image: null,
+                  audio: null,
+                  correctAnswer: questionData.correctAnswer || 1,
+                  transcript: questionData.transcript || "",
+                  explanation: questionData.explanation || "",
+                  tagId: questionData.tagId,
+                  answers: questionData.answers.map((a: any) => ({
+                    content: a.content,
+                  })),
+                });
+
+                setImagePreview(questionData.imageUrl || null);
+                setAudioPreview(questionData.audioUrl || null);
+                return;
+              } catch (error) {
+                console.error("Error fetching Part 1 question:", error);
+              }
+            }
+
+            // Try to fetch as Part Two if type is Part2
+            if (questionTypeFromUrl === "Part2") {
+              try {
+                const response = await getDetailPartTwoQuestion(
+                  Number.parseInt(questionId)
+                );
+                const questionData = response?.data?.data;
+
+                setPartTwoData({
+                  audio: null,
+                  correctAnswer: questionData.correctAnswer || 1,
+                  transcript: questionData.transcript || "",
+                  explanation: questionData.explanation || "",
+                  tagId: questionData.tagId,
+                  answers: questionData.answers.map((a: any) => ({
+                    content: a.content,
+                  })),
+                });
+
+                setAudioPreview(questionData.audioUrl || null);
+                return;
+              } catch (error) {
+                console.error("Error fetching Part 2 question:", error);
+              }
+            }
+
+            // If we couldn't fetch the question data, show error and redirect
+            showError("Failed to load question data. Please try again.");
+            navigate("/dashboard/manage-questions");
           }
-
-          // Try to fetch as Part Two
-          const response = await getDetailPartTwoQuestion(
-            Number.parseInt(questionId)
-          );
-          const questionData = response?.data?.data;
-
-          // Find the tag to get its type
-          const questionTag = tags.find((tag) => tag.id === questionData.tagId);
-          if (questionTag) {
-            setQuestionType(questionTag.type);
-          }
-
-          setQuestionType(questionTag?.type || "");
-          setPartTwoData({
-            audio: null,
-            correctAnswer: questionData.correctAnswer || 1, // Using 1-based indexing
-            transcript: questionData.transcript || "",
-            explanation: questionData.explanation || "",
-            tagId: questionData.tagId,
-            answers: questionData.answers.map((a: any) => ({
-              content: a.content,
-            })),
-          });
-
-          setAudioPreview(questionData.audioUrl || null);
         } catch (error) {
           console.error("Error fetching question:", error);
           showError("Failed to load question data. Please try again.");
@@ -428,9 +472,9 @@ export default function QuestionCreateEditForm() {
         }
       };
 
-      fetchQuestionData();
+      fetchData();
     }
-  }, [isEditMode, questionId, tags, navigate, showError]);
+  }, [isEditMode, questionId, navigate, showError, questionTypeFromUrl]);
 
   // Handle question type change
   const handleQuestionTypeChange = useCallback(
@@ -915,8 +959,7 @@ export default function QuestionCreateEditForm() {
   // Form validation
   const validateForm = useCallback((): boolean => {
     let isValid = true;
-
-    // Initialize new errors object
+    let errorMessages: string[] = [];
     const newErrors = {
       questionType: "",
       topicType: "",
@@ -933,104 +976,103 @@ export default function QuestionCreateEditForm() {
         answers: ["", "", "", ""],
       })),
     };
-
-    // Validate question type
     if (!questionType) {
       newErrors.questionType = "Please select a question type";
+      errorMessages.push("Please select a question type");
       isValid = false;
     }
-
     if (questionType === "Part1") {
-      // Validate Part 1 fields
       if (!partOneData.tagId) {
         newErrors.tagId = "Please select a tag";
+        errorMessages.push("Please select a tag");
         isValid = false;
       }
-
       if (!isEditMode && !partOneData.image && !imagePreview) {
         newErrors.image = "Please upload an image";
+        errorMessages.push("Please upload an image");
         isValid = false;
       }
-
       if (!isEditMode && !partOneData.audio && !audioPreview) {
         newErrors.audio = "Please upload an audio file";
+        errorMessages.push("Please upload an audio file");
         isValid = false;
       }
-
       if (!partOneData.transcript.trim()) {
         newErrors.transcript = "Transcript is required";
+        errorMessages.push("Transcript is required");
         isValid = false;
       }
-
-      // Validate answers
       partOneData.answers.forEach((answer, index) => {
         if (!answer.content.trim()) {
           newErrors.answers[index] = "Answer content is required";
+          errorMessages.push(`Answer ${index + 1} content is required`);
           isValid = false;
         }
       });
     } else if (questionType === "Part2") {
-      // Validate Part 2 fields
       if (!partTwoData.tagId) {
         newErrors.tagId = "Please select a tag";
+        errorMessages.push("Please select a tag");
         isValid = false;
       }
-
       if (!isEditMode && !partTwoData.audio && !audioPreview) {
         newErrors.audio = "Please upload an audio file";
+        errorMessages.push("Please upload an audio file");
         isValid = false;
       }
-
       if (!partTwoData.transcript.trim()) {
         newErrors.transcript = "Transcript is required";
+        errorMessages.push("Transcript is required");
         isValid = false;
       }
-
-      // Validate answers
       partTwoData.answers.forEach((answer, index) => {
         if (!answer.content.trim()) {
           newErrors.answers[index] = "Answer content is required";
+          errorMessages.push(`Answer ${index + 1} content is required`);
           isValid = false;
         }
       });
     } else if (isPart34) {
-      // Validate Part 3/4 fields
       if (!part34Data.tagId) {
         newErrors.tagId = "Please select a tag";
+        errorMessages.push("Please select a tag");
         isValid = false;
       }
-
       if (!isEditMode && !part34Data.audio && !audioPreview) {
         newErrors.audio = "Please upload an audio file";
+        errorMessages.push("Please upload an audio file");
         isValid = false;
       }
-
       if (!part34Data.transcript.trim()) {
         newErrors.transcript = "Transcript is required";
+        errorMessages.push("Transcript is required");
         isValid = false;
       }
-
-      // Validate sub-questions
       part34Data.questions.forEach((question, qIndex) => {
-        // Validate question text
         if (!question.stringQuestion.trim()) {
           newErrors.questions[qIndex].stringQuestion =
             "Question text is required";
+          errorMessages.push(`Question ${qIndex + 1} text is required`);
           isValid = false;
         }
-
-        // Validate answers
         question.answers.forEach((answer, aIndex) => {
           if (!answer.content.trim()) {
             newErrors.questions[qIndex].answers[aIndex] =
               "Answer content is required";
+            errorMessages.push(
+              `Question ${qIndex + 1} - Answer ${
+                aIndex + 1
+              } content is required`
+            );
             isValid = false;
           }
         });
       });
     }
-
     setErrors(newErrors);
+    if (!isValid && errorMessages.length > 0) {
+      showError(errorMessages[0]); // hoặc errorMessages.join('\n') nếu muốn show nhiều lỗi
+    }
     return isValid;
   }, [
     questionType,
@@ -1046,16 +1088,41 @@ export default function QuestionCreateEditForm() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setSubmitting(true);
-
     try {
       const formData = new FormData();
-
+      if (isEditGroupMode && groupId) {
+        // Edit group (Part3/4)
+        if (part34Data.image) formData.append("image", part34Data.image);
+        if (part34Data.audio) formData.append("audio", part34Data.audio);
+        formData.append("transcript", part34Data.transcript);
+        formData.append("tagId", part34Data.tagId.toString());
+        part34Data.questions.forEach((question, qIndex) => {
+          formData.append(
+            `questions[${qIndex}].stringQuestion`,
+            question.stringQuestion
+          );
+          formData.append(
+            `questions[${qIndex}].correctAnswer`,
+            String(question.correctAnswer)
+          );
+          formData.append(
+            `questions[${qIndex}].explanation`,
+            question.explanation
+          );
+          question.answers.forEach((answer, aIndex) => {
+            formData.append(
+              `questions[${qIndex}].answers[${aIndex}].content`,
+              answer.content
+            );
+          });
+        });
+        await updatePart34Question(Number.parseInt(groupId), formData);
+        showSuccess("Question group updated successfully!");
+        navigate("/dashboard/manage-questions");
+        return;
+      }
       if (questionType === "Part1") {
         // Part One submission
         if (partOneData.image) {

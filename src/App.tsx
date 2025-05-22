@@ -205,7 +205,12 @@ function App() {
                     />
 
                     <Route
-                      path="quetions/:questionId/edit"
+                      path="questions/:questionId/edit"
+                      element={<QuestionCreateEditForm />}
+                    />
+
+                    <Route
+                      path="groups/:groupId/edit"
                       element={<QuestionCreateEditForm />}
                     />
 

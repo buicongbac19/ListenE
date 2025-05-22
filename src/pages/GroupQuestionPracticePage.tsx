@@ -265,7 +265,7 @@ export default function GroupQuestionPracticePage() {
 
   if (!questionData) {
     return (
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="md" sx={{ mt: 8, mb: 4 }}>
         <Typography variant="h5" color="error" align="center">
           Question group not found
         </Typography>
@@ -293,7 +293,7 @@ export default function GroupQuestionPracticePage() {
       <Container
         maxWidth="md"
         sx={{
-          mt: 4,
+          mt: 8,
           mb: 4,
           position: "relative",
         }}
@@ -771,10 +771,20 @@ export default function GroupQuestionPracticePage() {
                                   >
                                     <Card
                                       variant="outlined"
+                                      onClick={() =>
+                                        !showResults &&
+                                        handleAnswerChange(
+                                          questionIndex,
+                                          answerIndex + 1
+                                        )
+                                      }
                                       sx={{
                                         mb: 2,
                                         borderRadius: 2,
                                         borderWidth: 2,
+                                        cursor: !showResults
+                                          ? "pointer"
+                                          : "default",
                                         borderColor: showResults
                                           ? answerIndex + 1 ===
                                             correctAnswers[questionIndex]
