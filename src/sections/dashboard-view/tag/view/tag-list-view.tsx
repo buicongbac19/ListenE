@@ -54,8 +54,6 @@ import {
   LocalOffer,
   FilterList,
   Close,
-  KeyboardArrowLeft,
-  KeyboardArrowRight,
 } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import { motion, AnimatePresence } from "framer-motion";

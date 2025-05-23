@@ -642,38 +642,6 @@ export default function DashboardLayout() {
         </List>
 
         <Box sx={{ mt: "auto", p: 2 }}>
-          <MotionPaper
-            initial="hidden"
-            animate="visible"
-            variants={fadeIn}
-            elevation={0}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)",
-              mb: 2,
-              border: darkMode
-                ? "1px solid rgba(255,255,255,0.1)"
-                : "1px solid rgba(0,0,0,0.05)",
-            }}
-          >
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              Need help with track management?
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              fullWidth
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-              }}
-            >
-              View Documentation
-            </Button>
-          </MotionPaper>
-
           <Divider sx={{ mb: 2 }} />
 
           <ListItem disablePadding>

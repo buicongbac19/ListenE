@@ -27,7 +27,6 @@ import {
   TableHead,
   TableRow,
   Chip,
-  Tooltip,
   TableSortLabel,
   type SelectChangeEvent,
   alpha,
@@ -41,8 +40,6 @@ import {
 } from "@mui/material";
 import {
   Search,
-  Edit,
-  Delete,
   Dashboard,
   Home,
   Refresh,
@@ -378,22 +375,6 @@ export default function UserListView() {
           </Box>
 
           <Box sx={{ mt: { xs: 2, md: 0 } }}>
-            <Button
-              variant="contained"
-              startIcon={<PersonAdd />}
-              onClick={() => navigate("/dashboard/users/create")}
-              sx={{
-                mr: 1,
-                background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                boxShadow: "0 3px 5px 2px rgba(33, 203, 243, .3)",
-                transition: "transform 0.2s",
-                "&:hover": {
-                  transform: "translateY(-3px)",
-                },
-              }}
-            >
-              New User
-            </Button>
             <IconButton onClick={handleRefresh} color="primary">
               <Refresh />
             </IconButton>
@@ -594,7 +575,6 @@ export default function UserListView() {
                         Last Login
                       </TableSortLabel>
                     </TableCell>
-                    <TableCell align="center">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -724,66 +704,6 @@ export default function UserListView() {
                       </TableCell>
                       <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
                         {formatDate(user.lastLogin)}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            gap: 1,
-                          }}
-                        >
-                          <Tooltip title="View User Details">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleViewUserDetails(user.id)}
-                              sx={{
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                "&:hover": {
-                                  bgcolor: alpha(
-                                    theme.palette.primary.main,
-                                    0.2
-                                  ),
-                                  transform: "scale(1.1)",
-                                  transition: "all 0.2s",
-                                },
-                              }}
-                            >
-                              <Person fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Edit User">
-                            <IconButton
-                              size="small"
-                              color="info"
-                              onClick={() => handleEditUser(user.id)}
-                              sx={{
-                                bgcolor: alpha(theme.palette.info.main, 0.1),
-                                "&:hover": {
-                                  bgcolor: alpha(theme.palette.info.main, 0.2),
-                                },
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete User">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteClick(user.id)}
-                              sx={{
-                                bgcolor: alpha(theme.palette.error.main, 0.1),
-                                "&:hover": {
-                                  bgcolor: alpha(theme.palette.error.main, 0.2),
-                                },
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}

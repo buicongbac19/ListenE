@@ -52,14 +52,17 @@ import {
   Refresh,
   GraphicEq,
   Audiotrack,
-  AccessTime,
+  Numbers,
   ArrowUpward,
   ArrowDownward,
+  ViewList,
+  PlaylistPlay,
+  Layers,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ITopicItem } from "../types/topic";
 import type { ITagItem } from "../types/tag";
-import type { ITrackReponseItem } from "../types/track";
+import type { ITrackResponseItem } from "../types/track";
 import { getDetailsTopic } from "../api/topic";
 import { getAllTags } from "../api/tag";
 import { getAllTracks } from "../api/track";
@@ -71,7 +74,7 @@ export default function TopicDetailsPage() {
 
   const [topic, setTopic] = useState<ITopicItem | null>(null);
   const [tags, setTags] = useState<ITagItem[]>([]);
-  const [tracks, setTracks] = useState<ITrackReponseItem[]>([]);
+  const [tracks, setTracks] = useState<ITrackResponseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tracksLoading, setTracksLoading] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
@@ -86,8 +89,8 @@ export default function TopicDetailsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("id");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortField, setSortField] = useState("order");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchTopicAndTags = async (topicId: number) => {
@@ -166,9 +169,14 @@ export default function TopicDetailsPage() {
     navigate(`/topic/${topicId}/tag/${tagId}/questions`);
   };
 
-  const handleTrackClick = (trackId: number) => {
-    // Navigate to track practice page
+  const handleTrackPracticeAll = (trackId: number) => {
+    // Navigate to track practice page (current logic)
     navigate(`/topic/${topicId}/track/${trackId}`);
+  };
+
+  const handleTrackPracticeSegments = (trackId: number) => {
+    // Navigate to track segments page
+    navigate(`/topic/${topicId}/track/${trackId}/segments`);
   };
 
   const toggleFavorite = (tagId: number, event: React.MouseEvent) => {
@@ -225,21 +233,6 @@ export default function TopicDetailsPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const formatDuration = (durationStr: string) => {
-    // If duration is in seconds, convert to MM:SS format
-    if (!durationStr) return "00:00";
-
-    const seconds = Number.parseInt(durationStr, 10);
-    if (isNaN(seconds)) return durationStr;
-
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -267,21 +260,6 @@ export default function TopicDetailsPage() {
         return <MenuBook />;
       default:
         return <LocalOffer />;
-    }
-  };
-
-  const getDifficultyColor = (difficulty?: string) => {
-    if (!difficulty) return theme.palette.info.main;
-
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return theme.palette.success.main;
-      case "medium":
-        return theme.palette.warning.main;
-      case "hard":
-        return theme.palette.error.main;
-      default:
-        return theme.palette.info.main;
     }
   };
 
@@ -529,7 +507,8 @@ export default function TopicDetailsPage() {
             </Box>
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Click on a track to start practicing with audio exercises
+              Choose how you want to practice: segment by segment or the entire
+              track
             </Typography>
 
             {/* Search and Filter Controls */}
@@ -579,10 +558,10 @@ export default function TopicDetailsPage() {
                     </Typography>
                     <Button
                       size="small"
-                      variant={sortField === "id" ? "contained" : "outlined"}
-                      onClick={() => handleSortChange("id")}
+                      variant={sortField === "order" ? "contained" : "outlined"}
+                      onClick={() => handleSortChange("order")}
                       endIcon={
-                        sortField === "id" ? (
+                        sortField === "order" ? (
                           sortDirection === "asc" ? (
                             <ArrowUpward />
                           ) : (
@@ -591,7 +570,7 @@ export default function TopicDetailsPage() {
                         ) : null
                       }
                     >
-                      ID
+                      Order
                     </Button>
                     <Button
                       size="small"
@@ -685,6 +664,8 @@ export default function TopicDetailsPage() {
                             borderRadius: 3,
                             overflow: "hidden",
                             position: "relative",
+                            display: "flex",
+                            flexDirection: "column",
                             background: `linear-gradient(135deg, ${alpha(
                               theme.palette.background.paper,
                               1
@@ -718,166 +699,184 @@ export default function TopicDetailsPage() {
                             </Box>
                           )}
 
-                          <CardActionArea
-                            onClick={() => handleTrackClick(track.id)}
-                            sx={{ height: "100%" }}
+                          <CardContent
+                            sx={{
+                              p: 3,
+                              flexGrow: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                            }}
                           >
-                            <CardContent sx={{ p: 3 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                mb: 2,
+                                justifyContent: "space-between",
+                              }}
+                            >
                               <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  mb: 2,
-                                  justifyContent: "space-between",
-                                }}
+                                sx={{ display: "flex", alignItems: "center" }}
                               >
-                                <Box
-                                  sx={{ display: "flex", alignItems: "center" }}
+                                <Avatar
+                                  sx={{
+                                    bgcolor: alpha(
+                                      theme.palette.primary.main,
+                                      0.1
+                                    ),
+                                    color: theme.palette.primary.main,
+                                    width: 48,
+                                    height: 48,
+                                    mr: 2,
+                                  }}
                                 >
-                                  <Avatar
+                                  <GraphicEq />
+                                </Avatar>
+                                <Box>
+                                  <Typography
+                                    variant="h6"
+                                    component="h3"
                                     sx={{
+                                      fontWeight: 600,
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      display: "-webkit-box",
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: "vertical",
+                                    }}
+                                  >
+                                    {track.name}
+                                  </Typography>
+                                  <Chip
+                                    label={`Order: ${track.order}`}
+                                    size="small"
+                                    sx={{
+                                      mt: 0.5,
                                       bgcolor: alpha(
-                                        theme.palette.primary.main,
+                                        theme.palette.info.main,
                                         0.1
                                       ),
-                                      color: theme.palette.primary.main,
-                                      width: 48,
-                                      height: 48,
-                                      mr: 2,
+                                      color: theme.palette.info.main,
+                                      fontWeight: 500,
                                     }}
-                                  >
-                                    <GraphicEq />
-                                  </Avatar>
-                                  <Box>
-                                    <Typography
-                                      variant="h6"
-                                      component="h3"
-                                      sx={{ fontWeight: 600 }}
-                                    >
-                                      {track.name}
-                                    </Typography>
-                                    {track.difficulty && (
-                                      <Chip
-                                        label={track.difficulty}
-                                        size="small"
-                                        sx={{
-                                          mt: 0.5,
-                                          bgcolor: alpha(
-                                            getDifficultyColor(
-                                              track.difficulty
-                                            ),
-                                            0.1
-                                          ),
-                                          color: getDifficultyColor(
-                                            track.difficulty
-                                          ),
-                                          fontWeight: 500,
-                                        }}
-                                        variant="outlined"
-                                      />
-                                    )}
-                                  </Box>
+                                    variant="outlined"
+                                  />
                                 </Box>
-
-                                <Tooltip
-                                  title={
-                                    favoriteTracks.includes(track.id)
-                                      ? "Remove from favorites"
-                                      : "Add to favorites"
-                                  }
-                                >
-                                  <IconButton
-                                    onClick={(e) =>
-                                      toggleFavoriteTrack(track.id, e)
-                                    }
-                                    color={
-                                      favoriteTracks.includes(track.id)
-                                        ? "warning"
-                                        : "default"
-                                    }
-                                    sx={{
-                                      opacity:
-                                        hoveredTrack === track.id ||
-                                        favoriteTracks.includes(track.id)
-                                          ? 1
-                                          : 0.3,
-                                      transition: "opacity 0.3s ease",
-                                    }}
-                                  >
-                                    {favoriteTracks.includes(track.id) ? (
-                                      <Bookmark />
-                                    ) : (
-                                      <BookmarkBorder />
-                                    )}
-                                  </IconButton>
-                                </Tooltip>
                               </Box>
 
-                              <Divider sx={{ my: 2 }} />
+                              <Tooltip
+                                title={
+                                  favoriteTracks.includes(track.id)
+                                    ? "Remove from favorites"
+                                    : "Add to favorites"
+                                }
+                              >
+                                <IconButton
+                                  onClick={(e) =>
+                                    toggleFavoriteTrack(track.id, e)
+                                  }
+                                  color={
+                                    favoriteTracks.includes(track.id)
+                                      ? "warning"
+                                      : "default"
+                                  }
+                                  sx={{
+                                    opacity:
+                                      hoveredTrack === track.id ||
+                                      favoriteTracks.includes(track.id)
+                                        ? 1
+                                        : 0.3,
+                                    transition: "opacity 0.3s ease",
+                                  }}
+                                >
+                                  {favoriteTracks.includes(track.id) ? (
+                                    <Bookmark />
+                                  ) : (
+                                    <BookmarkBorder />
+                                  )}
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
 
+                            <Divider sx={{ my: 2 }} />
+
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ mb: 3, flexGrow: 1 }}
+                            >
+                              Practice this track with audio exercises. Choose
+                              between segment-by-segment practice or complete
+                              track practice.
+                            </Typography>
+
+                            {/* Action Buttons */}
+                            <Box sx={{ mt: "auto" }}>
                               <Box
                                 sx={{
                                   display: "flex",
-                                  justifyContent: "space-between",
-                                  mb: 2,
+                                  gap: 2,
+                                  justifyContent: "center",
+                                  mt: 2,
                                 }}
                               >
-                                <Chip
-                                  icon={<AccessTime fontSize="small" />}
-                                  label={formatDuration(
-                                    track.fullAudioDuration
-                                  )}
-                                  size="small"
-                                  variant="outlined"
-                                />
-
-                                <Chip
-                                  icon={<Headphones fontSize="small" />}
-                                  label={`${
-                                    track.segments?.length || 0
-                                  } segments`}
-                                  size="small"
-                                  variant="outlined"
-                                />
+                                <Button
+                                  variant="contained"
+                                  size="medium"
+                                  startIcon={<ViewList />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTrackPracticeSegments(track.id);
+                                  }}
+                                  sx={{
+                                    borderRadius: 2,
+                                    px: 2,
+                                    py: 1,
+                                    background: `linear-gradient(45deg, ${theme.palette.secondary.main} 30%, ${theme.palette.secondary.light} 90%)`,
+                                    boxShadow: `0 3px 5px 2px ${alpha(
+                                      theme.palette.secondary.main,
+                                      0.3
+                                    )}`,
+                                    "&:hover": {
+                                      background: `linear-gradient(45deg, ${theme.palette.secondary.dark} 30%, ${theme.palette.secondary.main} 90%)`,
+                                      transform: "translateY(-2px)",
+                                    },
+                                    transition: "transform 0.2s",
+                                    flexGrow: 1,
+                                  }}
+                                >
+                                  Practice Segments
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  size="medium"
+                                  startIcon={<PlaylistPlay />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTrackPracticeAll(track.id);
+                                  }}
+                                  sx={{
+                                    borderRadius: 2,
+                                    px: 2,
+                                    py: 1,
+                                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+                                    boxShadow: `0 3px 5px 2px ${alpha(
+                                      theme.palette.primary.main,
+                                      0.3
+                                    )}`,
+                                    "&:hover": {
+                                      background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                                      transform: "translateY(-2px)",
+                                    },
+                                    transition: "transform 0.2s",
+                                    flexGrow: 1,
+                                  }}
+                                >
+                                  Practice All
+                                </Button>
                               </Box>
-
-                              <AnimatePresence>
-                                {hoveredTrack === track.id && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
-                                    transition={{ duration: 0.2 }}
-                                  >
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        mt: 2,
-                                      }}
-                                    >
-                                      <Button
-                                        variant="contained"
-                                        size="small"
-                                        startIcon={<PlayArrow />}
-                                        sx={{
-                                          borderRadius: 6,
-                                          px: 2,
-                                          background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
-                                          boxShadow: `0 3px 5px 2px ${alpha(
-                                            theme.palette.primary.main,
-                                            0.3
-                                          )}`,
-                                        }}
-                                      >
-                                        Start Practice
-                                      </Button>
-                                    </Box>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </CardContent>
-                          </CardActionArea>
+                            </Box>
+                          </CardContent>
                         </Card>
                       </motion.div>
                     </Grid>
@@ -909,6 +908,19 @@ export default function TopicDetailsPage() {
                     showFirstButton
                     showLastButton
                     size="large"
+                    sx={{
+                      "& .MuiPaginationItem-root": {
+                        transition: "all 0.2s",
+                        "&:hover": {
+                          transform: "scale(1.1)",
+                        },
+                        "&.Mui-selected": {
+                          background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+                          color: "white",
+                          fontWeight: "bold",
+                        },
+                      },
+                    }}
                   />
                 </Box>
                 <Box sx={{ textAlign: "center" }}>
@@ -920,7 +932,7 @@ export default function TopicDetailsPage() {
             )}
           </>
         ) : (
-          // TAGS SECTION FOR OTHER TOPIC TYPES
+          // TAGS SECTION FOR OTHER TOPIC TYPES (unchanged)
           <>
             <Typography
               variant="h5"

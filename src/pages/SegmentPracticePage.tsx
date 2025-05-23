@@ -69,7 +69,7 @@ interface ScoreResponse {
 }
 
 export default function SegmentPracticePage() {
-  const { topicId, sessionId, trackId, segmentId } = useParams();
+  const { topicId, trackId, segmentId } = useParams();
   const navigate = useNavigate();
 
   const [track, setTrack] = useState<ITrackItem | null>(null);
@@ -113,7 +113,7 @@ export default function SegmentPracticePage() {
   };
 
   useEffect(() => {
-    if (topicId && sessionId && trackId && segmentId)
+    if (topicId && trackId && segmentId)
       handelGetDetailsData(Number(trackId), Number(segmentId));
   }, [trackId, segmentId]);
 
@@ -241,7 +241,7 @@ export default function SegmentPracticePage() {
       const currentIndex = segments.findIndex((s) => s.id === segment.id);
       if (currentIndex < segments.length - 1) {
         navigate(
-          `/topic/${topicId}/session/${sessionId}/track/${trackId}/segment/${
+          `/topic/${topicId}/track/${trackId}/segment/${
             segments[currentIndex + 1].id
           }`
         );
@@ -254,7 +254,7 @@ export default function SegmentPracticePage() {
       const currentIndex = segments.findIndex((s) => s.id === segment.id);
       if (currentIndex > 0) {
         navigate(
-          `/topic/${topicId}/session/${sessionId}/track/${trackId}/segment/${
+          `/topic/${topicId}/track/${trackId}/segment/${
             segments[currentIndex - 1].id
           }`
         );
@@ -373,9 +373,7 @@ export default function SegmentPracticePage() {
         <Button
           startIcon={<ArrowBack />}
           onClick={() =>
-            navigate(
-              `/topic/${topicId}/session/${sessionId}/track/${trackId}/segments`
-            )
+            navigate(`/topic/${topicId}/track/${trackId}/segments`)
           }
           sx={{ mt: 2 }}
         >
@@ -406,7 +404,7 @@ export default function SegmentPracticePage() {
           <Link
             underline="hover"
             color="inherit"
-            onClick={() => navigate(`/topic/${topicId}/session/${sessionId}`)}
+            onClick={() => navigate(`/topic/${topicId}`)}
             style={{ cursor: "pointer" }}
           >
             Back to Session
@@ -415,9 +413,7 @@ export default function SegmentPracticePage() {
             underline="hover"
             color="inherit"
             onClick={() =>
-              navigate(
-                `/topic/${topicId}/session/${sessionId}/track/${trackId}/segments`
-              )
+              navigate(`/topic/${topicId}/track/${trackId}/segments`)
             }
             style={{ cursor: "pointer" }}
           >
@@ -430,9 +426,7 @@ export default function SegmentPracticePage() {
           <Button
             startIcon={<ArrowBack />}
             onClick={() =>
-              navigate(
-                `/topic/${topicId}/session/${sessionId}/track/${trackId}/segments`
-              )
+              navigate(`/topic/${topicId}/track/${trackId}/segments`)
             }
             sx={{ mr: 2 }}
           >
@@ -442,23 +436,6 @@ export default function SegmentPracticePage() {
             <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
               {segment.name}
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-              <Chip
-                label={track.difficulty}
-                size="small"
-                color={
-                  track.difficulty === "Easy"
-                    ? "success"
-                    : track.difficulty === "Medium"
-                    ? "primary"
-                    : "error"
-                }
-                sx={{ fontWeight: 500, mr: 2 }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Duration: {segment.duration}
-              </Typography>
-            </Box>
           </Box>
         </Box>
 
@@ -883,7 +860,7 @@ export default function SegmentPracticePage() {
                           variant="contained"
                           onClick={() =>
                             navigate(
-                              `/topic/${topicId}/session/${sessionId}/track/${trackId}/segments`
+                              `/topic/${topicId}/track/${trackId}/segments`
                             )
                           }
                         >
@@ -1023,9 +1000,7 @@ export default function SegmentPracticePage() {
               variant="contained"
               onClick={() => {
                 setShowSuccessDialog(false);
-                navigate(
-                  `/topic/${topicId}/session/${sessionId}/track/${trackId}/segments`
-                );
+                navigate(`/topic/${topicId}/track/${trackId}/segments`);
               }}
               fullWidth
             >

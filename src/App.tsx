@@ -1,5 +1,3 @@
-"use client";
-
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,8 +14,6 @@ import AppLayout from "./layouts/AppLayout";
 import { NotificationProvider } from "./provider/NotificationProvider";
 
 import { UserListView } from "./sections/dashboard-view/user/view";
-import UserCreateEditForm from "./sections/dashboard-view/user/user-create-edit-form";
-import UserDetailView from "./sections/dashboard-view/user/view/user-detail-view";
 
 import { TrackListView } from "./sections/dashboard-view/track/view";
 import TrackManager from "./sections/dashboard-view/track/track-manager";
@@ -179,15 +175,6 @@ function App() {
                       element={<Navigate to="manage-topics" replace />}
                     />
                     <Route path="manage-users" element={<UserListView />} />
-                    <Route
-                      path="users/create"
-                      element={<UserCreateEditForm />}
-                    />
-                    <Route
-                      path="users/:userId/edit"
-                      element={<UserCreateEditForm />}
-                    />
-                    <Route path="users/:userId" element={<UserDetailView />} />
 
                     <Route path="create-track" element={<TrackManager />} />
                     <Route path="manage-tracks" element={<TrackListView />} />

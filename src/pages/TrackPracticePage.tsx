@@ -66,28 +66,15 @@ interface ScoreResponse {
   correctTranscript: string;
 }
 
-const mockTracks: ITrackReponseItem = {
-  id: 1,
-  name: "Introducing Yourself",
-  fullAudioUrl:
-    "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",
-  fullAudioTranscript:
-    "Hi, my name is Sarah. I'm from Canada. It's nice to meet you. What's your name?",
-  fullAudioDuration: "00::00::36.6497959",
-  difficulty: "Easy",
-  segments: [],
-};
-
 const checkUserInput = async (
   segmentId: number,
-  content: string
+  content: string,
+  correctTranscript: string
 ): Promise<ScoreResponse> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const userWords = content.toLowerCase().split(/\s+/);
-      const correctWords = mockTracks.fullAudioTranscript
-        .toLowerCase()
-        .split(/\s+/);
+      const correctWords = correctTranscript.toLowerCase().split(/\s+/);
 
       const checkedWords: CheckedWord[] = [];
       let correctCount = 0;
@@ -122,7 +109,7 @@ const checkUserInput = async (
         correctRate,
         score: Math.round(correctRate),
         maxScore: 100,
-        correctTranscript: mockTracks.fullAudioTranscript,
+        correctTranscript: correctTranscript,
       });
     }, 1500);
   });
@@ -160,11 +147,9 @@ const TrackPracticePage = () => {
       ]);
 
       setTopic(topicRes?.data?.data);
-      setTrack(trackRes?.data?.data || mockTracks);
+      setTrack(trackRes?.data?.data);
     } catch (error) {
-      console.error(error);
-      // Fallback to mock data for testing
-      setTrack(mockTracks);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -243,7 +228,11 @@ const TrackPracticePage = () => {
 
     setIsScoring(true);
     try {
-      const result = await checkUserInput(track.id, userInput);
+      const result = await checkUserInput(
+        track.id,
+        userInput,
+        track.fullAudioTranscript
+      );
       setScoreResult(result);
       setScore(result.score);
       setHasScored(true);
