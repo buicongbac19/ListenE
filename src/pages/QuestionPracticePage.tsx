@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 
 import { useState, useEffect } from "react";
@@ -41,6 +39,7 @@ import {
   Visibility,
   VisibilityOff,
   NavigateNext,
+  NavigateBefore,
   Tag,
   QuestionAnswer,
   Image as ImageIcon,
@@ -98,6 +97,18 @@ export default function QuestionPracticePage() {
     total: 0,
   });
   const [showResultsDialog, setShowResultsDialog] = useState(false);
+
+  // State lưu trạng thái từng câu hỏi
+  const [questionStates, setQuestionStates] = useState<{
+    [id: number]: {
+      selectedAnswer: number | null;
+      isAnswerSubmitted: boolean;
+      isCorrect: boolean;
+      correctAnswer: number | null;
+      explanation: string;
+      showExplanation: boolean;
+    };
+  }>({});
 
   // Fetch all questions in this tag to enable navigation
   useEffect(() => {
@@ -212,13 +223,23 @@ export default function QuestionPracticePage() {
 
     fetchQuestionDetails();
 
-    // Reset states for new question
-    setSelectedAnswer(null);
-    setIsAnswerSubmitted(false);
-    setIsCorrect(false);
-    setCorrectAnswer(null);
-    setExplanation("");
-    setShowExplanation(false);
+    // Khi chuyển câu hỏi, nếu đã có trạng thái thì load lại, nếu chưa thì reset
+    const state = questionStates[Number(questionId)];
+    if (state) {
+      setSelectedAnswer(state.selectedAnswer);
+      setIsAnswerSubmitted(state.isAnswerSubmitted);
+      setIsCorrect(state.isCorrect);
+      setCorrectAnswer(state.correctAnswer);
+      setExplanation(state.explanation);
+      setShowExplanation(state.showExplanation);
+    } else {
+      setSelectedAnswer(null);
+      setIsAnswerSubmitted(false);
+      setIsCorrect(false);
+      setCorrectAnswer(null);
+      setExplanation("");
+      setShowExplanation(false);
+    }
 
     // Dọn dẹp audio khi unmount
     return () => {
@@ -262,12 +283,26 @@ export default function QuestionPracticePage() {
         correctAnswerId = responseData;
       }
 
+      const isAnswerCorrect = selectedAnswer === correctAnswerId;
+
       setCorrectAnswer(correctAnswerId);
       setExplanation(explanationText);
-      const isAnswerCorrect = selectedAnswer === correctAnswerId;
       setIsCorrect(isAnswerCorrect);
       setIsAnswerSubmitted(true);
       setShowExplanation(true); // Tự động hiển thị giải thích
+
+      // Lưu trạng thái câu hỏi này
+      setQuestionStates((prev) => ({
+        ...prev,
+        [question.id]: {
+          selectedAnswer,
+          isAnswerSubmitted: true,
+          isCorrect: isAnswerCorrect,
+          correctAnswer: correctAnswerId,
+          explanation: explanationText,
+          showExplanation: true,
+        },
+      }));
 
       // Update results
       setResults((prev) => ({
@@ -321,6 +356,15 @@ export default function QuestionPracticePage() {
       const nextQuestion = allQuestions[currentQuestionIndex + 1];
       navigate(
         `/topic/${topicId}/tag/${tagId}/question/${nextQuestion.id}/practice`
+      );
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      const prevQuestion = allQuestions[currentQuestionIndex - 1];
+      navigate(
+        `/topic/${topicId}/tag/${tagId}/question/${prevQuestion.id}/practice`
       );
     }
   };
@@ -1144,6 +1188,17 @@ export default function QuestionPracticePage() {
 
         {/* Các nút hành động */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            size="large"
+            onClick={handlePrevQuestion}
+            disabled={currentQuestionIndex <= 0}
+            startIcon={<NavigateBefore />}
+            sx={{ minWidth: 150, borderRadius: 1.5 }}
+          >
+            Câu hỏi trước
+          </Button>
           {!isAnswerSubmitted ? (
             <Button
               variant="contained"
@@ -1202,7 +1257,9 @@ export default function QuestionPracticePage() {
               color="primary"
               size="large"
               endIcon={isLastQuestion ? <Flag /> : <NavigateNext />}
-              onClick={handleNextQuestion}
+              onClick={
+                isLastQuestion ? handleFinishPractice : handleNextQuestion
+              }
               sx={{
                 minWidth: 150,
                 borderRadius: 1.5,

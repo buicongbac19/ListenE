@@ -23,6 +23,10 @@ import {
   IconButton,
   InputAdornment,
   FormHelperText,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   Save,
@@ -58,6 +62,7 @@ export default function TagCreateEditForm() {
   const [tags, setTags] = useState<ITagItem[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [tagTypes, setTagTypes] = useState<string[]>([]);
 
   // Fetch all tags for validation
   useEffect(() => {
@@ -66,6 +71,8 @@ export default function TagCreateEditForm() {
         const response = await getAllTags();
         if (response?.items) {
           setTags(response.items);
+          const types = response.items.map((tag) => tag.type).filter(Boolean);
+          setTagTypes(Array.from(new Set(types)));
         }
       } catch (error) {
         console.error("Error fetching tags:", error);
@@ -430,22 +437,20 @@ export default function TagCreateEditForm() {
                 </Typography>
                 <Divider sx={{ mb: 3 }} />
 
-                <TextField
-                  name="type"
-                  label="Tag Type"
-                  value={tagType}
-                  onChange={handleTagTypeChange}
-                  fullWidth
-                  margin="normal"
-                  variant="outlined"
-                  required={!isEditMode}
-                  InputProps={{
-                    startAdornment: (
+                <FormControl fullWidth margin="normal" required={!isEditMode}>
+                  <InputLabel id="tag-type-label">Tag Type</InputLabel>
+                  <Select
+                    labelId="tag-type-label"
+                    name="type"
+                    label="Tag Type"
+                    value={tagType}
+                    onChange={handleTagTypeChange}
+                    startAdornment={
                       <InputAdornment position="start">
                         <FilterList fontSize="small" />
                       </InputAdornment>
-                    ),
-                    sx: {
+                    }
+                    sx={{
                       borderRadius: 1.5,
                       transition: "all 0.3s ease",
                       "&:hover": {
@@ -454,10 +459,23 @@ export default function TagCreateEditForm() {
                       "&.Mui-focused": {
                         boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.2)",
                       },
-                    },
-                  }}
-                  helperText="Enter a type for categorizing these tags (e.g., part1, part2, part3, part4)"
-                />
+                    }}
+                  >
+                    {tagTypes.length === 0 && (
+                      <MenuItem value="" disabled>
+                        No tag types available
+                      </MenuItem>
+                    )}
+                    {tagTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>
+                    Chọn loại tag (type) từ các loại đã có trong hệ thống
+                  </FormHelperText>
+                </FormControl>
 
                 {isEditMode ? (
                   <TextField
