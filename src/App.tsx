@@ -40,6 +40,7 @@ import TagQuestionsPage from "./pages/TagQuestionsPage";
 import QuestionPracticePage from "./pages/QuestionPracticePage";
 import ResultsPage from "./pages/ResultsPage";
 import GroupQuestionPracticePage from "./pages/GroupQuestionPracticePage";
+import ForbiddenPage from "./pages/ForbiddenPage";
 
 import { AnimatePresence } from "framer-motion";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -168,6 +169,8 @@ function App() {
                     path="/topic/:topicId/tag/:tagId/results"
                     element={<ResultsPage />}
                   />
+
+                  <Route path="/403" element={<ForbiddenPage />} />
 
                   <Route path="/dashboard" element={<DashboardLayout />}>
                     <Route

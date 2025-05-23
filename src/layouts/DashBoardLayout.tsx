@@ -48,7 +48,6 @@ import {
   School,
   Translate,
   Add,
-  Dashboard as DashboardIcon,
   LibraryMusic,
   Audiotrack,
 } from "@mui/icons-material";
@@ -71,15 +70,8 @@ const slideIn = {
   }),
 };
 
-const pulseAnimation = {
-  scale: [1, 1.05, 1],
-  transition: { duration: 1.5, repeat: Number.POSITIVE_INFINITY },
-};
-
 // Styled Motion components
 const MotionListItem = motion(ListItem);
-const MotionPaper = motion(Paper);
-const MotionBox = motion(Box);
 
 export default function DashboardLayout() {
   const theme = useTheme();
@@ -94,13 +86,12 @@ export default function DashboardLayout() {
   );
   const [securityOpen, setSecurityOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [pageTitle, setPageTitle] = useState("Dashboard");
+  const [pageTitle, setPageTitle] = useState("Topics");
 
   // Update page title based on current route
   useEffect(() => {
     const path = location.pathname;
-    if (path === "/dashboard") setPageTitle("Dashboard");
-    else if (path.includes("manage-topics")) setPageTitle("Topics");
+    if (path.includes("manage-topics")) setPageTitle("Topics");
     else if (path.includes("manage-questions")) setPageTitle("Questions");
     else if (path.includes("manage-tags")) setPageTitle("Tags");
     else if (path.includes("manage-users")) setPageTitle("Users");
@@ -109,7 +100,7 @@ export default function DashboardLayout() {
     else if (path.includes("manage-tracks")) setPageTitle("Tracks");
     else if (path.includes("create-track")) setPageTitle("Create Track");
     else if (path.includes("edit-track")) setPageTitle("Edit Track");
-    else setPageTitle("Dashboard");
+    else setPageTitle("Topics");
   }, [location]);
 
   const handleDrawerToggle = () => {
@@ -162,7 +153,6 @@ export default function DashboardLayout() {
   }, [isSecurityPath, securityOpen]);
 
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
     { text: "Topics", icon: <Topic />, path: "/dashboard/manage-topics" },
     {
       text: "Questions",
