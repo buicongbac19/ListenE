@@ -7,7 +7,7 @@ import { ApiResponse } from "../types/api";
 
 export const getAllTags = async ({
   page = 1,
-  size = 10,
+  size = 100,
   type,
   sortField = "",
   sortDirection = "asc",
@@ -16,6 +16,10 @@ export const getAllTags = async ({
 
   if (type) {
     URL += `&type=${type}`;
+  }
+
+  if (size) {
+    URL += `&size=${size}`;
   }
 
   // Add sorting if provided

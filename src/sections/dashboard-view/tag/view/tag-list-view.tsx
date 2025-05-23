@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
@@ -37,7 +39,7 @@ import {
   Select,
   FormControl,
   InputLabel,
-  SelectChangeEvent,
+  type SelectChangeEvent,
   Fade,
   Zoom,
 } from "@mui/material";
@@ -90,21 +92,23 @@ export default function TagListView() {
   const [sortField, setSortField] = useState<string>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
+  // Type filter state
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+
   // Fetch tags with pagination
   const fetchTags = async (
     currentPage = page,
     currentPageSize = pageSize,
-    search = searchTerm
+    search = searchTerm,
+    filterType = typeFilter
   ) => {
     setLoading(true);
     try {
-      // Prepare search parameter if needed
-      let type = undefined;
-
       const response = await getAllTags({
         page: currentPage,
         size: currentPageSize,
-        type,
+        type: filterType || undefined,
         sortField,
         sortDirection,
       });
@@ -113,6 +117,12 @@ export default function TagListView() {
         setTags(response.items || []);
         setTotalItems(response.totalItems || 0);
         setTotalPages(response.totalPages || 1);
+
+        // Extract unique types for filter dropdown
+        const types =
+          response.items?.map((tag) => tag.type).filter(Boolean) || [];
+        const uniqueTypes = Array.from(new Set(types));
+        setAvailableTypes(uniqueTypes);
       }
     } catch (error) {
       console.error("Error fetching tags:", error);
@@ -130,8 +140,8 @@ export default function TagListView() {
 
   // Fetch when pagination or sorting changes
   useEffect(() => {
-    fetchTags(page, pageSize, searchTerm);
-  }, [page, pageSize, sortField, sortDirection]);
+    fetchTags(page, pageSize, searchTerm, typeFilter);
+  }, [page, pageSize, sortField, sortDirection, typeFilter]);
 
   // Handle search input change with debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -316,6 +326,24 @@ export default function TagListView() {
     },
   };
 
+  // Handle type filter change
+  const handleTypeFilterChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value;
+    setTypeFilter(value);
+    setPage(1); // Reset to first page when filter changes
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setTypeFilter("");
+    setPage(1);
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+    fetchTags(1, pageSize, "", "");
+  };
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <motion.div
@@ -442,82 +470,333 @@ export default function TagListView() {
         <Paper
           elevation={2}
           sx={{
-            p: 2,
+            p: 3,
             mb: 4,
-            borderRadius: 2,
-            background: "linear-gradient(to right, #f5f7fa, #e4e7eb)",
+            borderRadius: 3,
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white",
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(255,255,255,0.1)",
+              backdropFilter: "blur(10px)",
+            },
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 2,
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <TextField
-              placeholder="Search tags..."
-              variant="outlined"
-              size="small"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              inputRef={searchInputRef}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-                endAdornment: searchTerm && (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      onClick={handleClearSearch}
-                      edge="end"
-                    >
-                      <Close fontSize="inherit" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-                sx: { borderRadius: 1.5 },
+          <Box sx={{ position: "relative", zIndex: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 2,
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
               }}
-              sx={{ width: { xs: "100%", sm: "auto", md: 300 } }}
-            />
+            >
+              <FilterList />
+              Search & Filter Tags
+            </Typography>
 
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Button
-                variant="outlined"
-                color="primary"
-                size="small"
-                startIcon={<FilterList />}
-                onClick={handleSelectAll}
-                sx={{
-                  borderRadius: 1.5,
-                  transition: "all 0.2s",
-                }}
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", flex: 1 }}>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <TextField
+                    placeholder="Search tags..."
+                    variant="outlined"
+                    size="small"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    inputRef={searchInputRef}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search sx={{ color: "rgba(255,255,255,0.7)" }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: searchTerm && (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={handleClearSearch}
+                            edge="end"
+                            sx={{ color: "rgba(255,255,255,0.7)" }}
+                          >
+                            <Close fontSize="inherit" />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      sx: {
+                        borderRadius: 2,
+                        backgroundColor: "rgba(255,255,255,0.15)",
+                        backdropFilter: "blur(10px)",
+                        "& .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(255,255,255,0.3)",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(255,255,255,0.5)",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(255,255,255,0.8)",
+                        },
+                        "& input": {
+                          color: "white",
+                          "&::placeholder": {
+                            color: "rgba(255,255,255,0.7)",
+                          },
+                        },
+                      },
+                    }}
+                    sx={{ width: { xs: "100%", sm: "auto", md: 300 } }}
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <FormControl
+                    size="small"
+                    sx={{ minWidth: 200, width: { xs: "100%", sm: "auto" } }}
+                  >
+                    <InputLabel
+                      sx={{
+                        color: "rgba(255,255,255,0.7)",
+                        "&.Mui-focused": {
+                          color: "rgba(255,255,255,0.9)",
+                        },
+                      }}
+                    >
+                      Filter by Type
+                    </InputLabel>
+                    <Select
+                      value={typeFilter}
+                      onChange={handleTypeFilterChange}
+                      label="Filter by Type"
+                      sx={{
+                        borderRadius: 2,
+                        backgroundColor: "rgba(255,255,255,0.15)",
+                        backdropFilter: "blur(10px)",
+                        color: "white",
+                        "& .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(255,255,255,0.3)",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(255,255,255,0.5)",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(255,255,255,0.8)",
+                        },
+                        "& .MuiSvgIcon-root": {
+                          color: "rgba(255,255,255,0.7)",
+                        },
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            borderRadius: 2,
+                            mt: 1,
+                            "& .MuiMenuItem-root": {
+                              borderRadius: 1,
+                              mx: 1,
+                              my: 0.5,
+                              transition: "all 0.2s",
+                              "&:hover": {
+                                backgroundColor: alpha(
+                                  theme.palette.primary.main,
+                                  0.1
+                                ),
+                                transform: "translateX(4px)",
+                              },
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <MenuItem value="">
+                        <em>All Types</em>
+                      </MenuItem>
+                      {availableTypes.map((type) => (
+                        <MenuItem key={type} value={type}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <LocalOffer fontSize="small" />
+                            {type}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </motion.div>
+
+                {(searchTerm || typeFilter) && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Close />}
+                      onClick={handleClearFilters}
+                      sx={{
+                        borderRadius: 2,
+                        borderColor: "rgba(255,255,255,0.3)",
+                        color: "white",
+                        "&:hover": {
+                          borderColor: "rgba(255,255,255,0.5)",
+                          backgroundColor: "rgba(255,255,255,0.1)",
+                          transform: "translateY(-2px)",
+                        },
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </motion.div>
+                )}
+              </Box>
+
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<FilterList />}
+                    onClick={handleSelectAll}
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: "rgba(255,255,255,0.3)",
+                      color: "white",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        borderColor: "rgba(255,255,255,0.5)",
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                        transform: "translateY(-2px)",
+                      },
+                    }}
+                  >
+                    {selectedTagIds.length === tags.length && tags.length > 0
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Button>
+                </motion.div>
+
+                {selectedTagIds.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      startIcon={<Delete />}
+                      onClick={() => handleDeleteClick()}
+                      sx={{
+                        borderRadius: 2,
+                        background:
+                          "linear-gradient(45deg, #f44336 30%, #e91e63 90%)",
+                        boxShadow: "0 3px 5px 2px rgba(244, 67, 54, .3)",
+                        "&:hover": {
+                          transform: "translateY(-2px)",
+                          boxShadow: "0 6px 10px 2px rgba(244, 67, 54, .3)",
+                        },
+                      }}
+                    >
+                      Delete ({selectedTagIds.length})
+                    </Button>
+                  </motion.div>
+                )}
+              </Box>
+            </Box>
+
+            {/* Active Filters Display */}
+            {(searchTerm || typeFilter) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
               >
-                {selectedTagIds.length === tags.length && tags.length > 0
-                  ? "Deselect All"
-                  : "Select All"}
-              </Button>
-
-              {selectedTagIds.length > 0 && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
-                  startIcon={<Delete />}
-                  onClick={() => handleDeleteClick()}
+                <Box
                   sx={{
-                    borderRadius: 1.5,
+                    mt: 2,
+                    display: "flex",
+                    gap: 1,
+                    flexWrap: "wrap",
+                    alignItems: "center",
                   }}
                 >
-                  Delete ({selectedTagIds.length})
-                </Button>
-              )}
-            </Box>
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                    Active filters:
+                  </Typography>
+                  {searchTerm && (
+                    <Chip
+                      label={`Search: "${searchTerm}"`}
+                      size="small"
+                      onDelete={handleClearSearch}
+                      sx={{
+                        backgroundColor: "rgba(255,255,255,0.2)",
+                        color: "white",
+                        "& .MuiChip-deleteIcon": {
+                          color: "rgba(255,255,255,0.7)",
+                          "&:hover": {
+                            color: "white",
+                          },
+                        },
+                      }}
+                    />
+                  )}
+                  {typeFilter && (
+                    <Chip
+                      label={`Type: ${typeFilter}`}
+                      size="small"
+                      onDelete={() => setTypeFilter("")}
+                      sx={{
+                        backgroundColor: "rgba(255,255,255,0.2)",
+                        color: "white",
+                        "& .MuiChip-deleteIcon": {
+                          color: "rgba(255,255,255,0.7)",
+                          "&:hover": {
+                            color: "white",
+                          },
+                        },
+                      }}
+                    />
+                  )}
+                </Box>
+              </motion.div>
+            )}
           </Box>
         </Paper>
 
@@ -553,13 +832,13 @@ export default function TagListView() {
                 />
               </Zoom>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                {searchTerm
-                  ? "No tags found matching your search"
+                {searchTerm || typeFilter
+                  ? "No tags found matching your criteria"
                   : "No tags found"}
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                {searchTerm
-                  ? "Try a different search term or clear the search"
+                {searchTerm || typeFilter
+                  ? "Try adjusting your search term or filters"
                   : "Start by adding some tags to organize your content"}
               </Typography>
               <Button

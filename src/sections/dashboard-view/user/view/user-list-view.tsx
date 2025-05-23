@@ -491,15 +491,8 @@ export default function UserListView() {
               No users found
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Try adjusting your search or create a new user.
+              Try adjusting your search.
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<PersonAdd />}
-              onClick={() => navigate("/dashboard/users/create")}
-            >
-              Create New User
-            </Button>
           </Paper>
         ) : (
           <motion.div

@@ -351,43 +351,7 @@ export default function DashboardLayout() {
 
         <Divider />
 
-        <Box sx={{ p: 2 }}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              bgcolor: darkMode
-                ? alpha(theme.palette.primary.main, 0.15)
-                : alpha(theme.palette.primary.main, 0.05),
-              borderRadius: 2,
-              mb: 2,
-            }}
-          >
-            <Avatar
-              sx={{
-                width: 60,
-                height: 60,
-                mb: 1,
-                bgcolor: theme.palette.primary.main,
-                border: `2px solid ${theme.palette.primary.light}`,
-              }}
-            >
-              A
-            </Avatar>
-            <Typography variant="subtitle1" fontWeight="bold">
-              Admin User
-            </Typography>
-            <Typography
-              variant="body2"
-              color={darkMode ? "rgba(255,255,255,0.7)" : "text.secondary"}
-            >
-              Administrator
-            </Typography>
-          </Paper>
-        </Box>
+        <Box sx={{ p: 2 }}></Box>
 
         <List sx={{ px: 2 }} component="nav">
           {menuItems.map((item, index) => (

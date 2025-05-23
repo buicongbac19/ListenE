@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -60,6 +58,7 @@ export default function TagQuestionsPage() {
     try {
       // Fetch tag details first to determine if it's Part3/Part4
       const tagsRes = await getAllTags();
+      console.log(">>>>", tagsRes);
       const foundTag = tagsRes.items.find((t) => t.id === Number(tagId));
 
       if (foundTag) {
@@ -76,7 +75,7 @@ export default function TagQuestionsPage() {
             await getAllGroups({
               tagId,
               page,
-              size: 12,
+              size: 10,
               type: foundTag.type,
             });
 
@@ -92,9 +91,10 @@ export default function TagQuestionsPage() {
             await getAllQuestions({
               tagId,
               page,
-              size: 12,
+              size: 100,
               type: foundTag.type,
             });
+          console.log(questionsRes);
 
           setQuestions(questionsRes.items || []);
           setPagination({

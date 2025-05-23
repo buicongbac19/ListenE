@@ -7,7 +7,7 @@ import { ApiResponse } from "../types/api";
 
 export const getAllQuestions = async ({
   page = 1,
-  size = 10,
+  size = 100,
   tagId,
   type,
   sortField = "",
@@ -135,7 +135,7 @@ export const getDetailsGroup = async (id: number) => {
 
 export const getAllGroups = async ({
   page = 1,
-  size = 10,
+  size = 100,
   tagId,
   type,
   sortField = "",

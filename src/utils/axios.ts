@@ -16,6 +16,9 @@ axiosInstance.interceptors.response.use(
   (error: AxiosError) => {
     try {
       if (error.response) {
+        if (error.response.status === 403) {
+          window.location.href = "/403";
+        }
         const responseData = error.response.data as
           | ApiErrorResponse
           | undefined;
