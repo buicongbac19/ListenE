@@ -98,6 +98,15 @@ export default function GroupQuestionPracticePage() {
   const [currentGroupIndex, setCurrentGroupIndex] = useState(-1);
   const [totalCorrect, setTotalCorrect] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
+  const [groupResults, setGroupResults] = useState<{
+    [groupId: number]: {
+      selectedAnswers: number[];
+      results: boolean[];
+      correctAnswers: number[];
+      showResults: boolean;
+      activeQuestionTab: number;
+    };
+  }>({});
 
   console.log(isPlaying, audioProgress);
 
@@ -107,6 +116,21 @@ export default function GroupQuestionPracticePage() {
       if (!groupId || !tagId) return;
 
       setLoading(true);
+      // Nếu group đã làm rồi thì load lại kết quả, nếu chưa thì reset
+      const saved = groupResults[Number(groupId)];
+      if (saved) {
+        setSelectedAnswers(saved.selectedAnswers);
+        setResults(saved.results);
+        setCorrectAnswers(saved.correctAnswers);
+        setShowResults(saved.showResults);
+        setActiveQuestionTab(saved.activeQuestionTab || 0);
+      } else {
+        setSelectedAnswers([]);
+        setResults([]);
+        setCorrectAnswers([]);
+        setShowResults(false);
+        setActiveQuestionTab(0);
+      }
       try {
         // Fetch current group details
         const response = await getDetailsGroup(Number.parseInt(groupId));
@@ -114,8 +138,10 @@ export default function GroupQuestionPracticePage() {
 
         if (data) {
           setQuestionData(data);
-          // Initialize selected answers array with -1 (nothing selected)
-          setSelectedAnswers(new Array(data.questions.length).fill(-1));
+          // Nếu chưa có kết quả thì khởi tạo selectedAnswers
+          if (!saved) {
+            setSelectedAnswers(new Array(data.questions.length).fill(-1));
+          }
         }
 
         // Fetch all groups for this tag for navigation
@@ -137,7 +163,8 @@ export default function GroupQuestionPracticePage() {
     };
 
     fetchData();
-  }, [groupId, tagId, showError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId, tagId]);
 
   // Handle answer selection
   const handleAnswerChange = (questionIndex: number, value: number) => {
@@ -159,28 +186,30 @@ export default function GroupQuestionPracticePage() {
     try {
       const response = await checkGroupAnswer(Number.parseInt(groupId));
       const responseData = response?.data?.data || {};
-      //   console.log(responseData);
-
-      // The API returns an object with questionKeys array containing correctKey values
-      // Extract the correct answers from the questionKeys array
       if (
         responseData.questionKeys &&
         Array.isArray(responseData.questionKeys)
       ) {
-        // Map the correctKey values from the questionKeys array
         const corrAnswers = responseData.questionKeys.map(
           (item: { correctKey: number }) => item.correctKey
-        ); // +1 because UI uses 1-based indexing
+        );
         setCorrectAnswers(corrAnswers);
-
-        // Compare selected answers with correct answers
         const resultsData = selectedAnswers.map((selected, index) => {
           return selected === corrAnswers[index];
         });
-
         setResults(resultsData);
         setShowResults(true);
-
+        // Lưu kết quả vào groupResults
+        setGroupResults((prev) => ({
+          ...prev,
+          [Number(groupId)]: {
+            selectedAnswers: [...selectedAnswers],
+            results: resultsData,
+            correctAnswers: corrAnswers,
+            showResults: true,
+            activeQuestionTab,
+          },
+        }));
         // Calculate score
         const correctCount = resultsData.filter((result) => result).length;
         setTotalCorrect((prev) => prev + correctCount);
@@ -788,15 +817,15 @@ export default function GroupQuestionPracticePage() {
                                         borderColor: showResults
                                           ? answerIndex + 1 ===
                                             correctAnswers[questionIndex]
-                                            ? theme.palette.success.main // Correct answer - green border
+                                            ? theme.palette.success.main // Đúng: xanh
                                             : selectedAnswers[questionIndex] ===
                                               answerIndex + 1
-                                            ? theme.palette.error.main // Selected wrong answer - red border
-                                            : theme.palette.divider // Not selected, not correct - default border
+                                            ? theme.palette.error.main // Chọn sai: đỏ
+                                            : theme.palette.divider // Mặc định
                                           : selectedAnswers[questionIndex] ===
                                             answerIndex + 1
-                                          ? theme.palette.primary.main // Selected answer before checking - primary border
-                                          : theme.palette.divider, // Not selected - default border
+                                          ? theme.palette.primary.main
+                                          : theme.palette.divider,
                                         boxShadow:
                                           selectedAnswers[questionIndex] ===
                                             answerIndex + 1 ||
@@ -959,6 +988,52 @@ export default function GroupQuestionPracticePage() {
                               {question.explanation ||
                                 "No explanation provided for this question."}
                             </Typography>
+
+                            {/* Navigation buttons after completing group */}
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                mt: 3,
+                                gap: 2,
+                              }}
+                            >
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<NavigateBefore />}
+                                onClick={handlePrevGroup}
+                                disabled={currentGroupIndex <= 0}
+                              >
+                                Previous Group
+                              </Button>
+                              {currentGroupIndex < groups.length - 1 ? (
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  endIcon={<NavigateNext />}
+                                  onClick={handleNextGroup}
+                                >
+                                  Next Group
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="contained"
+                                  color="success"
+                                  endIcon={<Flag />}
+                                  onClick={handleFinish}
+                                  sx={{
+                                    background:
+                                      "linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)",
+                                    boxShadow:
+                                      "0 3px 5px 2px rgba(76, 175, 80, .3)",
+                                  }}
+                                >
+                                  Finish Practice
+                                </Button>
+                              )}
+                            </Box>
                           </Paper>
                         </motion.div>
                       )}
@@ -1028,62 +1103,56 @@ export default function GroupQuestionPracticePage() {
         </motion.div>
 
         {/* Group Navigation and Finish Buttons */}
-        {showResults && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+        <Box sx={{ mt: 4, mb: 2, display: "flex", justifyContent: "center" }}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              mb: 4,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 2,
+              minWidth: 320,
+            }}
           >
-            <Paper
-              elevation={3}
-              sx={{
-                p: 3,
-                borderRadius: 2,
-                mb: 4,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 2,
-              }}
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<NavigateBefore />}
+              onClick={handlePrevGroup}
+              disabled={currentGroupIndex <= 0}
             >
+              Previous Group
+            </Button>
+            {currentGroupIndex < groups.length - 1 ? (
               <Button
-                variant="outlined"
+                variant="contained"
                 color="primary"
-                startIcon={<NavigateBefore />}
-                onClick={handlePrevGroup}
-                disabled={currentGroupIndex <= 0}
+                endIcon={<NavigateNext />}
+                onClick={handleNextGroup}
               >
-                Previous Group
+                Next Group
               </Button>
-
-              {currentGroupIndex < groups.length - 1 ? (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  endIcon={<NavigateNext />}
-                  onClick={handleNextGroup}
-                >
-                  Next Group
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  color="success"
-                  endIcon={<Flag />}
-                  onClick={handleFinish}
-                  sx={{
-                    background:
-                      "linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)",
-                    boxShadow: "0 3px 5px 2px rgba(76, 175, 80, .3)",
-                  }}
-                >
-                  Finish Practice
-                </Button>
-              )}
-            </Paper>
-          </motion.div>
-        )}
+            ) : (
+              <Button
+                variant="contained"
+                color="success"
+                endIcon={<Flag />}
+                onClick={handleFinish}
+                sx={{
+                  background:
+                    "linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)",
+                  boxShadow: "0 3px 5px 2px rgba(76, 175, 80, .3)",
+                }}
+              >
+                Finish Practice
+              </Button>
+            )}
+          </Paper>
+        </Box>
       </Container>
     </motion.div>
   );

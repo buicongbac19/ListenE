@@ -26,3 +26,17 @@ export type IPostUpdateTrackItem = {
   fullTranscript: string;
   segments: IPostUpdateSegmentItem[];
 };
+
+export type FetchTracksParams = {
+  page?: number;
+  size?: number;
+  name?: string;
+  sortField?: string;
+  sortDirection?: "asc" | "desc";
+};
+
+export type ITrackResponseItem = {
+  id: number;
+  name: string;
+  order: number;
+};

@@ -1,6 +1,11 @@
 "use client";
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Authentication from "./pages/Auththentication";
 import GoogleCallback from "./components/GooleAuthCallBack";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -14,8 +19,9 @@ import { UserListView } from "./sections/dashboard-view/user/view";
 import UserCreateEditForm from "./sections/dashboard-view/user/user-create-edit-form";
 import UserDetailView from "./sections/dashboard-view/user/view/user-detail-view";
 
+import { TrackListView } from "./sections/dashboard-view/track/view";
 import TrackManager from "./sections/dashboard-view/track/track-manager";
-// import { TrackEditView } from "./sections/dashboard-view/track/view";
+import { TrackEditView } from "./sections/dashboard-view/track/view";
 
 import { TopicListView } from "./sections/dashboard-view/topic/view";
 import TopicCreateEditForm from "./sections/dashboard-view/topic/topic-create-edit-form";
@@ -168,7 +174,10 @@ function App() {
                   />
 
                   <Route path="/dashboard" element={<DashboardLayout />}>
-                    {/* Users route */}
+                    <Route
+                      index
+                      element={<Navigate to="manage-topics" replace />}
+                    />
                     <Route path="manage-users" element={<UserListView />} />
                     <Route
                       path="users/create"
@@ -180,10 +189,13 @@ function App() {
                     />
                     <Route path="users/:userId" element={<UserDetailView />} />
 
-                    {/* Tracks route */}
                     <Route path="create-track" element={<TrackManager />} />
+                    <Route path="manage-tracks" element={<TrackListView />} />
+                    <Route
+                      path="tracks/:trackId/edit"
+                      element={<TrackEditView />}
+                    />
 
-                    {/* Topics route */}
                     <Route path="manage-topics" element={<TopicListView />} />
                     <Route
                       path="topics/create"
@@ -194,7 +206,6 @@ function App() {
                       element={<TopicCreateEditForm />}
                     />
 
-                    {/* Questions route */}
                     <Route
                       path="manage-questions"
                       element={<QuestionListView />}
@@ -214,7 +225,6 @@ function App() {
                       element={<QuestionCreateEditForm />}
                     />
 
-                    {/* Tags Route */}
                     <Route path="manage-tags" element={<TagListView />} />
                     <Route path="tags/create" element={<TagCreateEditForm />} />
                     <Route
@@ -222,7 +232,6 @@ function App() {
                       element={<TagCreateEditForm />}
                     />
 
-                    {/* Roles route */}
                     <Route
                       path="manage-roles"
                       element={<RoleManagementPage />}

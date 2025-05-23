@@ -69,6 +69,8 @@ import {
   updatePartOneQuestion,
   updatePartTwoQuestion,
   updatePart34Question,
+  checkGroupAnswer,
+  checkAnswerQuestion,
 } from "../../../api/question";
 import { getAllTags } from "../../../api/tag";
 import { getAllTopics } from "../../../api/topic";
@@ -318,17 +320,34 @@ export default function QuestionCreateEditForm() {
             if (questionTypeFromUrl) setQuestionType(questionTypeFromUrl);
             const response = await getDetailsGroup(Number.parseInt(groupId));
             const groupData = response?.data?.data;
-            console.log(groupData);
+            let explanationsMap: Record<number, { explanation: string }> = {};
+            let transcriptFromCheck: string | undefined = undefined;
+            let explanationFromCheck: string | undefined = undefined;
+            try {
+              const checkRes = await checkGroupAnswer(Number.parseInt(groupId));
+              const checkData = checkRes?.data?.data;
+              transcriptFromCheck = checkData?.transcript;
+              explanationFromCheck = checkData?.explanation;
+              if (Array.isArray(checkData?.questionKeys)) {
+                checkData.questionKeys.forEach((item: any) => {
+                  explanationsMap[item.questionId] = {
+                    explanation: item.explanation,
+                  };
+                });
+              }
+            } catch (e) {
+              // Có thể log lỗi hoặc bỏ qua
+            }
             if (groupData) {
               const tagId = groupData.questions[0]?.tagId || 0;
               const transformedData: IQuestionPartT3PostItem = {
                 image: undefined,
                 audio: undefined,
-                transcript: groupData.transcript || "",
+                transcript: transcriptFromCheck || groupData.transcript || "",
                 tagId,
                 questions: groupData.questions.map((q: any) => ({
                   correctAnswer: q.correctAnswer || 1,
-                  explanation: q.explanation || "",
+                  explanation: explanationsMap[q.id]?.explanation || "",
                   stringQuestion: q.stringQuestion || "",
                   answers: q.answers.map((a: any) => ({
                     content: a.content || "",
@@ -412,19 +431,29 @@ export default function QuestionCreateEditForm() {
                   Number.parseInt(questionId)
                 );
                 const questionData = response?.data?.data;
-
+                let transcriptFromCheck: string | undefined = undefined;
+                let explanationFromCheck: string | undefined = undefined;
+                try {
+                  const checkRes = await checkAnswerQuestion(
+                    Number.parseInt(questionId)
+                  );
+                  const checkData = checkRes?.data?.data;
+                  transcriptFromCheck = checkData?.transcript;
+                  explanationFromCheck = checkData?.explanation;
+                } catch (e) {}
                 setPartOneData({
                   image: null,
                   audio: null,
                   correctAnswer: questionData.correctAnswer || 1,
-                  transcript: questionData.transcript || "",
-                  explanation: questionData.explanation || "",
+                  transcript:
+                    transcriptFromCheck || questionData.transcript || "",
+                  explanation:
+                    explanationFromCheck || questionData.explanation || "",
                   tagId: questionData.tagId,
                   answers: questionData.answers.map((a: any) => ({
                     content: a.content,
                   })),
                 });
-
                 setImagePreview(questionData.imageUrl || null);
                 setAudioPreview(questionData.audioUrl || null);
                 return;
@@ -440,18 +469,28 @@ export default function QuestionCreateEditForm() {
                   Number.parseInt(questionId)
                 );
                 const questionData = response?.data?.data;
-
+                let transcriptFromCheck: string | undefined = undefined;
+                let explanationFromCheck: string | undefined = undefined;
+                try {
+                  const checkRes = await checkAnswerQuestion(
+                    Number.parseInt(questionId)
+                  );
+                  const checkData = checkRes?.data?.data;
+                  transcriptFromCheck = checkData?.transcript;
+                  explanationFromCheck = checkData?.explanation;
+                } catch (e) {}
                 setPartTwoData({
                   audio: null,
                   correctAnswer: questionData.correctAnswer || 1,
-                  transcript: questionData.transcript || "",
-                  explanation: questionData.explanation || "",
+                  transcript:
+                    transcriptFromCheck || questionData.transcript || "",
+                  explanation:
+                    explanationFromCheck || questionData.explanation || "",
                   tagId: questionData.tagId,
                   answers: questionData.answers.map((a: any) => ({
                     content: a.content,
                   })),
                 });
-
                 setAudioPreview(questionData.audioUrl || null);
                 return;
               } catch (error) {

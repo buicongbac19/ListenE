@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -24,6 +24,15 @@ import {
   CardMedia,
   IconButton,
   Tooltip,
+  TextField,
+  InputAdornment,
+  Pagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  type SelectChangeEvent,
+  CircularProgress,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -39,12 +48,21 @@ import {
   VolumeUp,
   Bookmark,
   BookmarkBorder,
+  Search,
+  Refresh,
+  GraphicEq,
+  Audiotrack,
+  AccessTime,
+  ArrowUpward,
+  ArrowDownward,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ITopicItem } from "../types/topic";
 import type { ITagItem } from "../types/tag";
+import type { ITrackReponseItem } from "../types/track";
 import { getDetailsTopic } from "../api/topic";
 import { getAllTags } from "../api/tag";
+import { getAllTracks } from "../api/track";
 
 export default function TopicDetailsPage() {
   const { topicId } = useParams();
@@ -53,9 +71,24 @@ export default function TopicDetailsPage() {
 
   const [topic, setTopic] = useState<ITopicItem | null>(null);
   const [tags, setTags] = useState<ITagItem[]>([]);
+  const [tracks, setTracks] = useState<ITrackReponseItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tracksLoading, setTracksLoading] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [favoriteTracks, setFavoriteTracks] = useState<number[]>([]);
   const [hoveredTag, setHoveredTag] = useState<number | null>(null);
+  const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
+  const [isBasicPractice, setIsBasicPractice] = useState(false);
+
+  // Track pagination state
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(6);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortField, setSortField] = useState("id");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchTopicAndTags = async (topicId: number) => {
     setLoading(true);
@@ -65,10 +98,19 @@ export default function TopicDetailsPage() {
       const topicData = topicRes?.data?.data;
       setTopic(topicData);
 
+      // Check if topic type is BasicPractice
+      const isBasic = topicData?.type === "BasicPractice";
+      setIsBasicPractice(isBasic);
+
       if (topicData?.type) {
-        // Fetch tags with the same type as the topic
-        const tagsRes = await getAllTags({ type: topicData.type });
-        setTags(tagsRes?.items || []);
+        if (isBasic) {
+          // For BasicPractice, we'll fetch tracks instead of tags
+          await fetchTracks();
+        } else {
+          // For other types, fetch tags as usual
+          const tagsRes = await getAllTags({ type: topicData.type });
+          setTags(tagsRes?.items || []);
+        }
       }
     } catch (error) {
       console.error("Error fetching topic and tags:", error);
@@ -76,6 +118,27 @@ export default function TopicDetailsPage() {
       setLoading(false);
     }
   };
+
+  const fetchTracks = useCallback(async () => {
+    setTracksLoading(true);
+    try {
+      const response = await getAllTracks({
+        page,
+        size,
+        name: searchTerm,
+        sortField,
+        sortDirection,
+      });
+
+      setTracks(response.items || []);
+      setTotalPages(response.totalPages || 1);
+      setTotalItems(response.totalItems || 0);
+    } catch (error) {
+      console.error("Error fetching tracks:", error);
+    } finally {
+      setTracksLoading(false);
+    }
+  }, [page, size, searchTerm, sortField, sortDirection]);
 
   useEffect(() => {
     if (topicId) fetchTopicAndTags(Number(topicId));
@@ -85,11 +148,27 @@ export default function TopicDetailsPage() {
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
     }
+
+    const savedFavoriteTracks = localStorage.getItem("favoriteTracks");
+    if (savedFavoriteTracks) {
+      setFavoriteTracks(JSON.parse(savedFavoriteTracks));
+    }
   }, [topicId]);
+
+  useEffect(() => {
+    if (isBasicPractice) {
+      fetchTracks();
+    }
+  }, [isBasicPractice, fetchTracks, refreshKey]);
 
   const handleTagClick = (tagId: number) => {
     // Navigate to questions page filtered by tag
     navigate(`/topic/${topicId}/tag/${tagId}/questions`);
+  };
+
+  const handleTrackClick = (trackId: number) => {
+    // Navigate to track practice page
+    navigate(`/topic/${topicId}/track/${trackId}`);
   };
 
   const toggleFavorite = (tagId: number, event: React.MouseEvent) => {
@@ -101,6 +180,64 @@ export default function TopicDetailsPage() {
 
     setFavorites(newFavorites);
     localStorage.setItem("favoriteTags", JSON.stringify(newFavorites));
+  };
+
+  const toggleFavoriteTrack = (trackId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+
+    const newFavorites = favoriteTracks.includes(trackId)
+      ? favoriteTracks.filter((id) => id !== trackId)
+      : [...favoriteTracks, trackId];
+
+    setFavoriteTracks(newFavorites);
+    localStorage.setItem("favoriteTracks", JSON.stringify(newFavorites));
+  };
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
+  };
+
+  const handleSizeChange = (event: SelectChangeEvent<number>) => {
+    setSize(Number(event.target.value));
+    setPage(1); // Reset to first page when changing size
+  };
+
+  const handleSortChange = (field: string) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Set new field and default to ascending
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+    setPage(1); // Reset to first page when searching
+  };
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
+  const formatDuration = (durationStr: string) => {
+    // If duration is in seconds, convert to MM:SS format
+    if (!durationStr) return "00:00";
+
+    const seconds = Number.parseInt(durationStr, 10);
+    if (isNaN(seconds)) return durationStr;
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const container = {
@@ -130,6 +267,21 @@ export default function TopicDetailsPage() {
         return <MenuBook />;
       default:
         return <LocalOffer />;
+    }
+  };
+
+  const getDifficultyColor = (difficulty?: string) => {
+    if (!difficulty) return theme.palette.info.main;
+
+    switch (difficulty.toLowerCase()) {
+      case "easy":
+        return theme.palette.success.main;
+      case "medium":
+        return theme.palette.warning.main;
+      case "hard":
+        return theme.palette.error.main;
+      default:
+        return theme.palette.info.main;
     }
   };
 
@@ -299,245 +451,718 @@ export default function TopicDetailsPage() {
                     variant="outlined"
                     color="primary"
                   />
-                  <Chip
-                    icon={<QuestionAnswer />}
-                    label={`${tags.length} Tags Available`}
-                    variant="outlined"
-                    color="info"
-                  />
+                  {isBasicPractice ? (
+                    <Chip
+                      icon={<Audiotrack />}
+                      label={`${totalItems} Tracks Available`}
+                      variant="outlined"
+                      color="info"
+                    />
+                  ) : (
+                    <Chip
+                      icon={<QuestionAnswer />}
+                      label={`${tags.length} Tags Available`}
+                      variant="outlined"
+                      color="info"
+                    />
+                  )}
                 </Box>
               </Box>
             </CardContent>
           </Card>
         </motion.div>
 
-        <Typography
-          variant="h5"
-          component="h2"
-          gutterBottom
-          sx={{
-            fontWeight: 600,
-            mt: 6,
-            display: "flex",
-            alignItems: "center",
-            position: "relative",
-            "&:after": {
-              content: '""',
-              position: "absolute",
-              bottom: -8,
-              left: 0,
-              width: 60,
-              height: 4,
-              borderRadius: 2,
-              bgcolor: theme.palette.primary.main,
-            },
-          }}
-        >
-          <LocalOffer sx={{ mr: 1 }} />
-          Available Tags ({tags.length})
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Click on a tag to view all questions in that category
-        </Typography>
-        <Divider sx={{ mb: 4 }} />
+        {isBasicPractice ? (
+          // TRACKS SECTION FOR BASIC PRACTICE
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 3,
+              }}
+            >
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  mt: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  position: "relative",
+                  "&:after": {
+                    content: '""',
+                    position: "absolute",
+                    bottom: -8,
+                    left: 0,
+                    width: 60,
+                    height: 4,
+                    borderRadius: 2,
+                    bgcolor: theme.palette.primary.main,
+                  },
+                }}
+              >
+                <Audiotrack sx={{ mr: 1 }} />
+                Available Tracks ({totalItems})
+              </Typography>
 
-        {tags.length === 0 ? (
-          <Box sx={{ textAlign: "center", py: 4 }}>
-            <Typography variant="h6" color="text.secondary">
-              No tags available for this topic type
+              <Tooltip title="Refresh tracks">
+                <IconButton
+                  onClick={handleRefresh}
+                  color="primary"
+                  sx={{
+                    animation: tracksLoading
+                      ? "spin 1s linear infinite"
+                      : "none",
+                    "@keyframes spin": {
+                      "0%": { transform: "rotate(0deg)" },
+                      "100%": { transform: "rotate(360deg)" },
+                    },
+                  }}
+                >
+                  <Refresh />
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Click on a track to start practicing with audio exercises
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Tags with type "{topic.type}" will appear here
-            </Typography>
-          </Box>
-        ) : (
-          <motion.div variants={container} initial="hidden" animate="show">
-            <Grid container spacing={3}>
-              {tags.map((tag) => (
-                <Grid item xs={12} sm={6} md={4} key={tag.id}>
-                  <motion.div
-                    variants={item}
-                    onHoverStart={() => setHoveredTag(tag.id)}
-                    onHoverEnd={() => setHoveredTag(null)}
-                  >
-                    <Card
-                      sx={{
-                        height: "100%",
-                        transition: "all 0.3s ease",
-                        transform:
-                          hoveredTag === tag.id ? "translateY(-8px)" : "none",
-                        boxShadow:
-                          hoveredTag === tag.id
-                            ? "0 12px 28px rgba(0, 0, 0, 0.15)"
-                            : "0 8px 16px rgba(0, 0, 0, 0.08)",
-                        borderRadius: 3,
-                        overflow: "hidden",
-                        position: "relative",
-                      }}
+
+            {/* Search and Filter Controls */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", md: "row" },
+                  gap: 2,
+                  mb: 4,
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <TextField
+                  placeholder="Search tracks..."
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  sx={{ maxWidth: { xs: "100%", md: "300px" } }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Sort by:
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant={sortField === "id" ? "contained" : "outlined"}
+                      onClick={() => handleSortChange("id")}
+                      endIcon={
+                        sortField === "id" ? (
+                          sortDirection === "asc" ? (
+                            <ArrowUpward />
+                          ) : (
+                            <ArrowDownward />
+                          )
+                        ) : null
+                      }
                     >
-                      {favorites.includes(tag.id) && (
-                        <Box
+                      ID
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={sortField === "name" ? "contained" : "outlined"}
+                      onClick={() => handleSortChange("name")}
+                      endIcon={
+                        sortField === "name" ? (
+                          sortDirection === "asc" ? (
+                            <ArrowUpward />
+                          ) : (
+                            <ArrowDownward />
+                          )
+                        ) : null
+                      }
+                    >
+                      Name
+                    </Button>
+                  </Box>
+
+                  <FormControl size="small" sx={{ minWidth: 80 }}>
+                    <InputLabel id="page-size-label">Show</InputLabel>
+                    <Select
+                      labelId="page-size-label"
+                      value={size}
+                      label="Show"
+                      onChange={handleSizeChange}
+                    >
+                      <MenuItem value={6}>6</MenuItem>
+                      <MenuItem value={12}>12</MenuItem>
+                      <MenuItem value={24}>24</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+            </motion.div>
+
+            <Divider sx={{ mb: 4 }} />
+
+            {tracksLoading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                <CircularProgress />
+              </Box>
+            ) : tracks.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 8 }}>
+                <Typography variant="h6" color="text.secondary">
+                  No tracks available
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  {searchTerm
+                    ? `No results found for "${searchTerm}"`
+                    : "Tracks will appear here when available"}
+                </Typography>
+                {searchTerm && (
+                  <Button
+                    variant="outlined"
+                    sx={{ mt: 2 }}
+                    onClick={() => setSearchTerm("")}
+                  >
+                    Clear Search
+                  </Button>
+                )}
+              </Box>
+            ) : (
+              <motion.div variants={container} initial="hidden" animate="show">
+                <Grid container spacing={3}>
+                  {tracks.map((track) => (
+                    <Grid item xs={12} sm={6} md={4} key={track.id}>
+                      <motion.div
+                        variants={item}
+                        onHoverStart={() => setHoveredTrack(track.id)}
+                        onHoverEnd={() => setHoveredTrack(null)}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 15,
+                        }}
+                      >
+                        <Card
                           sx={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            bgcolor: "warning.main",
-                            color: "white",
-                            px: 2,
-                            py: 0.5,
-                            borderBottomLeftRadius: 8,
-                            zIndex: 1,
-                            fontSize: "0.75rem",
-                            fontWeight: "bold",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
+                            height: "100%",
+                            transition: "all 0.3s ease",
+                            boxShadow:
+                              hoveredTrack === track.id
+                                ? "0 12px 28px rgba(0, 0, 0, 0.15)"
+                                : "0 8px 16px rgba(0, 0, 0, 0.08)",
+                            borderRadius: 3,
+                            overflow: "hidden",
+                            position: "relative",
+                            background: `linear-gradient(135deg, ${alpha(
+                              theme.palette.background.paper,
+                              1
+                            )} 0%, ${alpha(
+                              theme.palette.background.paper,
+                              0.9
+                            )} 100%)`,
                           }}
                         >
-                          <Bookmark fontSize="small" />
-                          Favorite
-                        </Box>
-                      )}
-
-                      <CardActionArea
-                        onClick={() => handleTagClick(tag.id)}
-                        sx={{ height: "100%" }}
-                      >
-                        <CardContent sx={{ p: 3 }}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              mb: 2,
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <Avatar
-                                sx={{
-                                  bgcolor: alpha(
-                                    theme.palette.primary.main,
-                                    0.1
-                                  ),
-                                  color: theme.palette.primary.main,
-                                  width: 48,
-                                  height: 48,
-                                  mr: 2,
-                                }}
-                              >
-                                {getTagIcon(tag.type)}
-                              </Avatar>
-                              <Box>
-                                <Typography
-                                  variant="h6"
-                                  component="h3"
-                                  sx={{ fontWeight: 600 }}
-                                >
-                                  {tag.name}
-                                </Typography>
-                                <Chip
-                                  label={tag.type}
-                                  size="small"
-                                  color="info"
-                                  variant="outlined"
-                                  sx={{ mt: 0.5 }}
-                                />
-                              </Box>
-                            </Box>
-
-                            <Tooltip
-                              title={
-                                favorites.includes(tag.id)
-                                  ? "Remove from favorites"
-                                  : "Add to favorites"
-                              }
+                          {favoriteTracks.includes(track.id) && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                bgcolor: "warning.main",
+                                color: "white",
+                                px: 2,
+                                py: 0.5,
+                                borderBottomLeftRadius: 8,
+                                zIndex: 1,
+                                fontSize: "0.75rem",
+                                fontWeight: "bold",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
                             >
-                              <IconButton
-                                onClick={(e) => toggleFavorite(tag.id, e)}
-                                color={
-                                  favorites.includes(tag.id)
-                                    ? "warning"
-                                    : "default"
-                                }
-                                sx={{
-                                  opacity:
-                                    hoveredTag === tag.id ||
-                                    favorites.includes(tag.id)
-                                      ? 1
-                                      : 0.3,
-                                  transition: "opacity 0.3s ease",
-                                }}
-                              >
-                                {favorites.includes(tag.id) ? (
-                                  <Bookmark />
-                                ) : (
-                                  <BookmarkBorder />
-                                )}
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
+                              <Bookmark fontSize="small" />
+                              Favorite
+                            </Box>
+                          )}
 
-                          <Divider sx={{ my: 2 }} />
-
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 2 }}
+                          <CardActionArea
+                            onClick={() => handleTrackClick(track.id)}
+                            sx={{ height: "100%" }}
                           >
-                            Practice questions related to {tag.name} in the{" "}
-                            {topic.name} topic.
-                          </Typography>
-
-                          <AnimatePresence>
-                            {hoveredTag === tag.id && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 10 }}
-                                transition={{ duration: 0.2 }}
+                            <CardContent sx={{ p: 3 }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  mb: 2,
+                                  justifyContent: "space-between",
+                                }}
                               >
                                 <Box
-                                  sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    mt: 2,
-                                  }}
+                                  sx={{ display: "flex", alignItems: "center" }}
                                 >
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    startIcon={<PlayArrow />}
+                                  <Avatar
                                     sx={{
-                                      borderRadius: 6,
-                                      px: 2,
-                                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
-                                      boxShadow: `0 3px 5px 2px ${alpha(
+                                      bgcolor: alpha(
                                         theme.palette.primary.main,
-                                        0.3
-                                      )}`,
+                                        0.1
+                                      ),
+                                      color: theme.palette.primary.main,
+                                      width: 48,
+                                      height: 48,
+                                      mr: 2,
                                     }}
                                   >
-                                    Start Practice
-                                  </Button>
+                                    <GraphicEq />
+                                  </Avatar>
+                                  <Box>
+                                    <Typography
+                                      variant="h6"
+                                      component="h3"
+                                      sx={{ fontWeight: 600 }}
+                                    >
+                                      {track.name}
+                                    </Typography>
+                                    {track.difficulty && (
+                                      <Chip
+                                        label={track.difficulty}
+                                        size="small"
+                                        sx={{
+                                          mt: 0.5,
+                                          bgcolor: alpha(
+                                            getDifficultyColor(
+                                              track.difficulty
+                                            ),
+                                            0.1
+                                          ),
+                                          color: getDifficultyColor(
+                                            track.difficulty
+                                          ),
+                                          fontWeight: 500,
+                                        }}
+                                        variant="outlined"
+                                      />
+                                    )}
+                                  </Box>
                                 </Box>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  </motion.div>
+
+                                <Tooltip
+                                  title={
+                                    favoriteTracks.includes(track.id)
+                                      ? "Remove from favorites"
+                                      : "Add to favorites"
+                                  }
+                                >
+                                  <IconButton
+                                    onClick={(e) =>
+                                      toggleFavoriteTrack(track.id, e)
+                                    }
+                                    color={
+                                      favoriteTracks.includes(track.id)
+                                        ? "warning"
+                                        : "default"
+                                    }
+                                    sx={{
+                                      opacity:
+                                        hoveredTrack === track.id ||
+                                        favoriteTracks.includes(track.id)
+                                          ? 1
+                                          : 0.3,
+                                      transition: "opacity 0.3s ease",
+                                    }}
+                                  >
+                                    {favoriteTracks.includes(track.id) ? (
+                                      <Bookmark />
+                                    ) : (
+                                      <BookmarkBorder />
+                                    )}
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+
+                              <Divider sx={{ my: 2 }} />
+
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  mb: 2,
+                                }}
+                              >
+                                <Chip
+                                  icon={<AccessTime fontSize="small" />}
+                                  label={formatDuration(
+                                    track.fullAudioDuration
+                                  )}
+                                  size="small"
+                                  variant="outlined"
+                                />
+
+                                <Chip
+                                  icon={<Headphones fontSize="small" />}
+                                  label={`${
+                                    track.segments?.length || 0
+                                  } segments`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              </Box>
+
+                              <AnimatePresence>
+                                {hoveredTrack === track.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        mt: 2,
+                                      }}
+                                    >
+                                      <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<PlayArrow />}
+                                        sx={{
+                                          borderRadius: 6,
+                                          px: 2,
+                                          background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+                                          boxShadow: `0 3px 5px 2px ${alpha(
+                                            theme.palette.primary.main,
+                                            0.3
+                                          )}`,
+                                        }}
+                                      >
+                                        Start Practice
+                                      </Button>
+                                    </Box>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </CardContent>
+                          </CardActionArea>
+                        </Card>
+                      </motion.div>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
-          </motion.div>
+              </motion.div>
+            )}
+
+            {/* Pagination */}
+            {!tracksLoading && tracks.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mt: 4,
+                    mb: 2,
+                  }}
+                >
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={handlePageChange}
+                    color="primary"
+                    showFirstButton
+                    showLastButton
+                    size="large"
+                  />
+                </Box>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Showing {tracks.length} of {totalItems} tracks
+                  </Typography>
+                </Box>
+              </motion.div>
+            )}
+          </>
+        ) : (
+          // TAGS SECTION FOR OTHER TOPIC TYPES
+          <>
+            <Typography
+              variant="h5"
+              component="h2"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                mt: 6,
+                display: "flex",
+                alignItems: "center",
+                position: "relative",
+                "&:after": {
+                  content: '""',
+                  position: "absolute",
+                  bottom: -8,
+                  left: 0,
+                  width: 60,
+                  height: 4,
+                  borderRadius: 2,
+                  bgcolor: theme.palette.primary.main,
+                },
+              }}
+            >
+              <LocalOffer sx={{ mr: 1 }} />
+              Available Tags ({tags.length})
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Click on a tag to view all questions in that category
+            </Typography>
+            <Divider sx={{ mb: 4 }} />
+
+            {tags.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography variant="h6" color="text.secondary">
+                  No tags available for this topic type
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  Tags with type "{topic.type}" will appear here
+                </Typography>
+              </Box>
+            ) : (
+              <motion.div variants={container} initial="hidden" animate="show">
+                <Grid container spacing={3}>
+                  {tags.map((tag) => (
+                    <Grid item xs={12} sm={6} md={4} key={tag.id}>
+                      <motion.div
+                        variants={item}
+                        onHoverStart={() => setHoveredTag(tag.id)}
+                        onHoverEnd={() => setHoveredTag(null)}
+                      >
+                        <Card
+                          sx={{
+                            height: "100%",
+                            transition: "all 0.3s ease",
+                            transform:
+                              hoveredTag === tag.id
+                                ? "translateY(-8px)"
+                                : "none",
+                            boxShadow:
+                              hoveredTag === tag.id
+                                ? "0 12px 28px rgba(0, 0, 0, 0.15)"
+                                : "0 8px 16px rgba(0, 0, 0, 0.08)",
+                            borderRadius: 3,
+                            overflow: "hidden",
+                            position: "relative",
+                          }}
+                        >
+                          {favorites.includes(tag.id) && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                bgcolor: "warning.main",
+                                color: "white",
+                                px: 2,
+                                py: 0.5,
+                                borderBottomLeftRadius: 8,
+                                zIndex: 1,
+                                fontSize: "0.75rem",
+                                fontWeight: "bold",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Bookmark fontSize="small" />
+                              Favorite
+                            </Box>
+                          )}
+
+                          <CardActionArea
+                            onClick={() => handleTagClick(tag.id)}
+                            sx={{ height: "100%" }}
+                          >
+                            <CardContent sx={{ p: 3 }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  mb: 2,
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                <Box
+                                  sx={{ display: "flex", alignItems: "center" }}
+                                >
+                                  <Avatar
+                                    sx={{
+                                      bgcolor: alpha(
+                                        theme.palette.primary.main,
+                                        0.1
+                                      ),
+                                      color: theme.palette.primary.main,
+                                      width: 48,
+                                      height: 48,
+                                      mr: 2,
+                                    }}
+                                  >
+                                    {getTagIcon(tag.type)}
+                                  </Avatar>
+                                  <Box>
+                                    <Typography
+                                      variant="h6"
+                                      component="h3"
+                                      sx={{ fontWeight: 600 }}
+                                    >
+                                      {tag.name}
+                                    </Typography>
+                                    <Chip
+                                      label={tag.type}
+                                      size="small"
+                                      color="info"
+                                      variant="outlined"
+                                      sx={{ mt: 0.5 }}
+                                    />
+                                  </Box>
+                                </Box>
+
+                                <Tooltip
+                                  title={
+                                    favorites.includes(tag.id)
+                                      ? "Remove from favorites"
+                                      : "Add to favorites"
+                                  }
+                                >
+                                  <IconButton
+                                    onClick={(e) => toggleFavorite(tag.id, e)}
+                                    color={
+                                      favorites.includes(tag.id)
+                                        ? "warning"
+                                        : "default"
+                                    }
+                                    sx={{
+                                      opacity:
+                                        hoveredTag === tag.id ||
+                                        favorites.includes(tag.id)
+                                          ? 1
+                                          : 0.3,
+                                      transition: "opacity 0.3s ease",
+                                    }}
+                                  >
+                                    {favorites.includes(tag.id) ? (
+                                      <Bookmark />
+                                    ) : (
+                                      <BookmarkBorder />
+                                    )}
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+
+                              <Divider sx={{ my: 2 }} />
+
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ mb: 2 }}
+                              >
+                                Practice questions related to {tag.name} in the{" "}
+                                {topic.name} topic.
+                              </Typography>
+
+                              <AnimatePresence>
+                                {hoveredTag === tag.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        mt: 2,
+                                      }}
+                                    >
+                                      <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<PlayArrow />}
+                                        sx={{
+                                          borderRadius: 6,
+                                          px: 2,
+                                          background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+                                          boxShadow: `0 3px 5px 2px ${alpha(
+                                            theme.palette.primary.main,
+                                            0.3
+                                          )}`,
+                                        }}
+                                      >
+                                        Start Practice
+                                      </Button>
+                                    </Box>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </CardContent>
+                          </CardActionArea>
+                        </Card>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </Grid>
+              </motion.div>
+            )}
+          </>
         )}
 
         {/* Call to action */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 + Math.min(tags.length, 6) * 0.1 }}
+          transition={{
+            delay:
+              0.5 +
+              Math.min(isBasicPractice ? tracks.length : tags.length, 6) * 0.1,
+          }}
         >
           <Box
             sx={{
@@ -556,7 +1181,9 @@ export default function TopicDetailsPage() {
               Ready to improve your English skills?
             </Typography>
             <Typography variant="body1" paragraph>
-              Choose a tag above to start practicing with interactive exercises.
+              {isBasicPractice
+                ? "Choose a track above to start practicing with audio exercises."
+                : "Choose a tag above to start practicing with interactive exercises."}
             </Typography>
             <Button
               variant="contained"

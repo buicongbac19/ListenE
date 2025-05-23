@@ -1,6 +1,10 @@
 import { IPostUpdateTrackItem } from "./../types/track";
 import axios from "../utils/axios";
 import { endpoints } from "../utils/axios";
+import { FetchTracksParams } from "./../types/track";
+import { PaginatedResult } from "../types/page";
+import { ApiResponse } from "../types/api";
+import { ITrackResponseItem } from "./../types/track";
 
 export async function deleteTrack(trackId: number) {
   const URL = `${endpoints.track.root}/${trackId}`;
@@ -29,3 +33,33 @@ export async function createTrack(params: FormData) {
   });
   return response;
 }
+
+export const getAllTracks = async ({
+  page = 1,
+  size = 10,
+  name = "",
+  sortField = "",
+  sortDirection = "asc",
+}: FetchTracksParams = {}): Promise<PaginatedResult<ITrackResponseItem>> => {
+  let URL = `${endpoints.track.root}?page=${page}&size=${size}`;
+
+  if (name) {
+    URL += `&name=${name}`;
+  }
+
+  // Add sorting if provided
+  if (sortField) {
+    URL += `&sort=${sortField},${sortDirection}`;
+  }
+
+  try {
+    const response = await axios.get<
+      ApiResponse<PaginatedResult<ITrackResponseItem>>
+    >(URL);
+
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    throw error;
+  }
+};

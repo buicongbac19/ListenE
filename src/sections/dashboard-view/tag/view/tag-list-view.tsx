@@ -32,6 +32,14 @@ import {
   Tooltip,
   Collapse,
   Alert,
+  Pagination,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+  Fade,
+  Zoom,
 } from "@mui/material";
 import {
   Add,
@@ -46,9 +54,11 @@ import {
   LocalOffer,
   FilterList,
   Close,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
 } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { getAllTags, bulkDeleteTag } from "../../../../api/tag";
 import { useNotification } from "../../../../provider/NotificationProvider";
 import type { ITagItem } from "../../../../types/tag";
@@ -64,7 +74,6 @@ export default function TagListView() {
 
   // State
   const [tags, setTags] = useState<ITagItem[]>([]);
-  const [filteredTags, setFilteredTags] = useState<ITagItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
@@ -73,22 +82,39 @@ export default function TagListView() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   // Sorting state
   const [sortField, setSortField] = useState<string>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  // Fetch all tags
-  const fetchTags = async () => {
+  // Fetch tags with pagination
+  const fetchTags = async (
+    currentPage = page,
+    currentPageSize = pageSize,
+    search = searchTerm
+  ) => {
     setLoading(true);
     try {
-      const response = await getAllTags();
-      if (response?.items) {
-        const fetchedTags = response.items;
-        setTags(fetchedTags);
+      // Prepare search parameter if needed
+      let type = undefined;
 
-        // Apply sorting to the fetched tags
-        const sorted = sortTags(fetchedTags, sortField, sortDirection);
-        setFilteredTags(sorted);
+      const response = await getAllTags({
+        page: currentPage,
+        size: currentPageSize,
+        type,
+        sortField,
+        sortDirection,
+      });
+
+      if (response) {
+        setTags(response.items || []);
+        setTotalItems(response.totalItems || 0);
+        setTotalPages(response.totalPages || 1);
       }
     } catch (error) {
       console.error("Error fetching tags:", error);
@@ -99,58 +125,32 @@ export default function TagListView() {
     }
   };
 
-  // Sort tags based on field and direction
-  const sortTags = (
-    tagsToSort: ITagItem[],
-    field: string,
-    direction: SortDirection
-  ) => {
-    return [...tagsToSort].sort((a, b) => {
-      if (field === "id") {
-        return direction === "asc" ? a.id - b.id : b.id - a.id;
-      } else if (field === "type") {
-        const typeA = (a.type || "").toLowerCase();
-        const typeB = (b.type || "").toLowerCase();
-        return direction === "asc"
-          ? typeA.localeCompare(typeB)
-          : typeB.localeCompare(typeA);
-      } else {
-        // Default sort by name
-        const nameA = a.name.toLowerCase();
-        const nameB = b.name.toLowerCase();
-        return direction === "asc"
-          ? nameA.localeCompare(nameB)
-          : nameB.localeCompare(nameA);
-      }
-    });
-  };
-
+  // Initial fetch
   useEffect(() => {
     fetchTags();
   }, []);
 
-  // Apply sorting and filtering when dependencies change
+  // Fetch when pagination or sorting changes
   useEffect(() => {
-    if (tags.length > 0) {
-      let result = [...tags];
+    fetchTags(page, pageSize, searchTerm);
+  }, [page, pageSize, sortField, sortDirection]);
 
-      // Apply search filter
-      if (searchTerm) {
-        result = result.filter((tag) =>
-          tag.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      // Apply sorting
-      result = sortTags(result, sortField, sortDirection);
-
-      setFilteredTags(result);
-    }
-  }, [searchTerm, sortField, sortDirection, tags]);
-
-  // Handle search input change
+  // Handle search input change with debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    // Reset to first page when searching
+    if (page !== 1) {
+      setPage(1);
+    } else {
+      // If already on page 1, we need to trigger a fetch
+      const timer = setTimeout(() => {
+        fetchTags(1, pageSize, value);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
   };
 
   // Clear search
@@ -159,13 +159,33 @@ export default function TagListView() {
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
+    setPage(1);
+    fetchTags(1, pageSize, "");
   };
 
   // Handle sort
   const handleSort = (field: string) => {
     const isAsc = sortField === field && sortDirection === "asc";
-    setSortDirection(isAsc ? "desc" : "asc");
+    const newDirection = isAsc ? "desc" : "asc";
+    setSortDirection(newDirection);
     setSortField(field);
+    // Reset to first page when sorting changes
+    setPage(1);
+  };
+
+  // Handle page change
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
+  };
+
+  // Handle rows per page change
+  const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
+    const newSize = Number(event.target.value);
+    setPageSize(newSize);
+    setPage(1); // Reset to first page when changing page size
   };
 
   // Handle tag selection
@@ -181,10 +201,10 @@ export default function TagListView() {
 
   // Handle select all tags
   const handleSelectAll = () => {
-    if (selectedTagIds.length === filteredTags.length) {
+    if (selectedTagIds.length === tags.length) {
       setSelectedTagIds([]);
     } else {
-      setSelectedTagIds(filteredTags.map((tag) => tag.id));
+      setSelectedTagIds(tags.map((tag) => tag.id));
     }
   };
 
@@ -225,7 +245,18 @@ export default function TagListView() {
         `${selectedTagIds.length} tag(s) deleted successfully!`
       );
       setSelectedTagIds([]);
-      fetchTags();
+
+      // After deletion, we might need to adjust the current page
+      // If we're on the last page and delete all items, go to previous page
+      const remainingItems = totalItems - selectedTagIds.length;
+      const newTotalPages = Math.ceil(remainingItems / pageSize);
+
+      if (page > newTotalPages && newTotalPages > 0) {
+        setPage(newTotalPages);
+      } else {
+        // Refresh current page
+        fetchTags();
+      }
     } catch (error) {
       console.error("Error deleting tags:", error);
       showError("Failed to delete tags. Please try again.");
@@ -260,6 +291,12 @@ export default function TagListView() {
     }
   }, [successMessage]);
 
+  // Function to truncate text
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -267,14 +304,18 @@ export default function TagListView() {
       opacity: 1,
       transition: {
         duration: 0.5,
+        staggerChildren: 0.1,
       },
     },
   };
 
-  // Function to truncate text
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 100 },
+    },
   };
 
   return (
@@ -459,7 +500,7 @@ export default function TagListView() {
                   transition: "all 0.2s",
                 }}
               >
-                {selectedTagIds.length === filteredTags.length
+                {selectedTagIds.length === tags.length && tags.length > 0
                   ? "Deselect All"
                   : "Select All"}
               </Button>
@@ -494,43 +535,48 @@ export default function TagListView() {
           >
             <CircularProgress />
           </Box>
-        ) : filteredTags.length === 0 ? (
-          <Paper
-            sx={{
-              p: 4,
-              textAlign: "center",
-              borderRadius: 2,
-              bgcolor: "background.paper",
-            }}
-          >
-            <LocalOffer
+        ) : tags.length === 0 ? (
+          <Fade in={true} timeout={800}>
+            <Paper
               sx={{
-                fontSize: 60,
-                color: alpha(theme.palette.text.secondary, 0.2),
-                mb: 2,
-              }}
-            />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              {searchTerm
-                ? "No tags found matching your search"
-                : "No tags found"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              {searchTerm
-                ? "Try a different search term or clear the search"
-                : "Start by adding some tags to organize your content"}
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate("/dashboard/tags/create")}
-              sx={{
-                background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                p: 4,
+                textAlign: "center",
+                borderRadius: 2,
+                bgcolor: "background.paper",
               }}
             >
-              Create New Tag
-            </Button>
-          </Paper>
+              <Zoom in={true} style={{ transitionDelay: "300ms" }}>
+                <LocalOffer
+                  sx={{
+                    fontSize: 60,
+                    color: alpha(theme.palette.text.secondary, 0.2),
+                    mb: 2,
+                  }}
+                />
+              </Zoom>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                {searchTerm
+                  ? "No tags found matching your search"
+                  : "No tags found"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                {searchTerm
+                  ? "Try a different search term or clear the search"
+                  : "Start by adding some tags to organize your content"}
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => navigate("/dashboard/tags/create")}
+                sx={{
+                  background:
+                    "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                }}
+              >
+                Create New Tag
+              </Button>
+            </Paper>
+          </Fade>
         ) : (
           <motion.div
             variants={containerVariants}
@@ -559,7 +605,7 @@ export default function TagListView() {
                     <TableCell padding="checkbox">
                       <Tooltip title="Select All">
                         <Chip
-                          label={`${selectedTagIds.length}/${filteredTags.length}`}
+                          label={`${selectedTagIds.length}/${tags.length}`}
                           size="small"
                           color={
                             selectedTagIds.length > 0 ? "primary" : "default"
@@ -618,151 +664,211 @@ export default function TagListView() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredTags.map((tag, index) => (
-                    <TableRow
-                      key={tag.id}
-                      sx={{
-                        "&:nth-of-type(odd)": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.02),
-                        },
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.05),
-                        },
-                        bgcolor: selectedTagIds.includes(tag.id)
-                          ? alpha(theme.palette.primary.main, 0.1)
-                          : "inherit",
-                        transition: "background-color 0.2s",
-                        // Animation with CSS
-                        animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
-                        "@keyframes fadeIn": {
-                          from: { opacity: 0, transform: "translateY(20px)" },
-                          to: { opacity: 1, transform: "translateY(0)" },
-                        },
-                      }}
-                      onClick={() => handleTagSelect(tag.id)}
-                    >
-                      <TableCell padding="checkbox">
-                        <Chip
-                          icon={<LocalOffer fontSize="small" />}
-                          label={
-                            selectedTagIds.includes(tag.id)
-                              ? "Selected"
-                              : "Select"
-                          }
-                          size="small"
-                          color={
-                            selectedTagIds.includes(tag.id)
-                              ? "primary"
-                              : "default"
-                          }
-                          variant={
-                            selectedTagIds.includes(tag.id)
-                              ? "filled"
-                              : "outlined"
-                          }
-                          sx={{ cursor: "pointer" }}
-                        />
-                      </TableCell>
-                      <TableCell component="th" scope="row">
-                        {tag.id}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          fontWeight: selectedTagIds.includes(tag.id)
-                            ? 600
-                            : 500,
-                          color: selectedTagIds.includes(tag.id)
-                            ? theme.palette.primary.main
-                            : theme.palette.text.primary,
-                          maxWidth: { xs: "120px", sm: "200px", md: "300px" },
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                  <AnimatePresence>
+                    {tags.map((tag, index) => (
+                      <motion.tr
+                        key={tag.id}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit={{ opacity: 0, x: -100 }}
+                        transition={{ delay: index * 0.05 }}
+                        style={{
+                          cursor: "pointer",
+                          backgroundColor: selectedTagIds.includes(tag.id)
+                            ? alpha(theme.palette.primary.main, 0.1)
+                            : index % 2 === 0
+                            ? alpha(theme.palette.primary.main, 0.02)
+                            : "inherit",
                         }}
-                      >
-                        <Tooltip title={tag.name}>
-                          <span>{truncateText(tag.name, 50)}</span>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          fontWeight: selectedTagIds.includes(tag.id)
-                            ? 600
-                            : 500,
-                          color: selectedTagIds.includes(tag.id)
-                            ? theme.palette.primary.main
-                            : theme.palette.text.primary,
+                        whileHover={{
+                          backgroundColor: alpha(
+                            theme.palette.primary.main,
+                            0.05
+                          ),
+                          transition: { duration: 0.2 },
                         }}
+                        onClick={() => handleTagSelect(tag.id)}
                       >
-                        <Chip
-                          label={tag.type || "Default"}
-                          size="small"
-                          variant="outlined"
-                          color="secondary"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
+                        <TableCell padding="checkbox">
+                          <Chip
+                            icon={<LocalOffer fontSize="small" />}
+                            label={
+                              selectedTagIds.includes(tag.id)
+                                ? "Selected"
+                                : "Select"
+                            }
+                            size="small"
+                            color={
+                              selectedTagIds.includes(tag.id)
+                                ? "primary"
+                                : "default"
+                            }
+                            variant={
+                              selectedTagIds.includes(tag.id)
+                                ? "filled"
+                                : "outlined"
+                            }
+                            sx={{ cursor: "pointer" }}
+                          />
+                        </TableCell>
+                        <TableCell component="th" scope="row">
+                          {tag.id}
+                        </TableCell>
+                        <TableCell
                           sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            gap: 1,
+                            fontWeight: selectedTagIds.includes(tag.id)
+                              ? 600
+                              : 500,
+                            color: selectedTagIds.includes(tag.id)
+                              ? theme.palette.primary.main
+                              : theme.palette.text.primary,
+                            maxWidth: { xs: "120px", sm: "200px", md: "300px" },
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
-                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Tooltip title="Edit Tag">
-                            <IconButton
-                              size="small"
-                              color="info"
-                              onClick={() => handleEditTag(tag.id)}
-                              sx={{
-                                bgcolor: alpha(theme.palette.info.main, 0.1),
-                                "&:hover": {
-                                  bgcolor: alpha(theme.palette.info.main, 0.2),
-                                },
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
+                          <Tooltip title={tag.name}>
+                            <span>{truncateText(tag.name, 50)}</span>
                           </Tooltip>
-                          <Tooltip title="Delete Tag">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteClick(tag.id)}
-                              sx={{
-                                bgcolor: alpha(theme.palette.error.main, 0.1),
-                                "&:hover": {
-                                  bgcolor: alpha(theme.palette.error.main, 0.2),
-                                },
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: selectedTagIds.includes(tag.id)
+                              ? 600
+                              : 500,
+                            color: selectedTagIds.includes(tag.id)
+                              ? theme.palette.primary.main
+                              : theme.palette.text.primary,
+                          }}
+                        >
+                          <Chip
+                            label={tag.type || "Default"}
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              gap: 1,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Tooltip title="Edit Tag">
+                              <IconButton
+                                size="small"
+                                color="info"
+                                onClick={() => handleEditTag(tag.id)}
+                                sx={{
+                                  bgcolor: alpha(theme.palette.info.main, 0.1),
+                                  "&:hover": {
+                                    bgcolor: alpha(
+                                      theme.palette.info.main,
+                                      0.2
+                                    ),
+                                  },
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Tag">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteClick(tag.id)}
+                                sx={{
+                                  bgcolor: alpha(theme.palette.error.main, 0.1),
+                                  "&:hover": {
+                                    bgcolor: alpha(
+                                      theme.palette.error.main,
+                                      0.2
+                                    ),
+                                  },
+                                }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
                 </TableBody>
               </Table>
             </TableContainer>
 
-            {/* Summary */}
-            <Box
+            {/* Pagination Controls */}
+            <Paper
+              elevation={0}
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mt: 4,
+                p: 2,
+                mt: 2,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.background.paper, 0.8),
                 flexWrap: "wrap",
                 gap: 2,
               }}
             >
-              <Typography variant="body2" color="text.secondary">
-                Showing {filteredTags.length} of {tags.length} tags
-              </Typography>
-            </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Showing {tags.length} of {totalItems} tags
+                </Typography>
+
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel id="rows-per-page-label">
+                    Rows per page
+                  </InputLabel>
+                  <Select
+                    labelId="rows-per-page-label"
+                    id="rows-per-page"
+                    value={pageSize}
+                    label="Rows per page"
+                    onChange={handlePageSizeChange}
+                  >
+                    <MenuItem value={5}>5</MenuItem>
+                    <MenuItem value={10}>10</MenuItem>
+                    <MenuItem value={25}>25</MenuItem>
+                    <MenuItem value={50}>50</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  shape="rounded"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        transform: "scale(1.1)",
+                      },
+                      "&.Mui-selected": {
+                        background:
+                          "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                        color: "white",
+                        fontWeight: "bold",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </Paper>
           </motion.div>
         )}
       </motion.div>
@@ -779,6 +885,7 @@ export default function TagListView() {
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
           },
         }}
+        TransitionComponent={Zoom}
       >
         <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
         <DialogContent>

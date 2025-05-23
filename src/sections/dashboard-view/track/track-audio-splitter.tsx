@@ -82,7 +82,6 @@ export default function TrackAudioSplitter({
   hideCreateButton?: boolean;
 }) {
   const { showSuccess } = useNotification();
-  const { sessionId } = useParams();
   const navigate = useNavigate();
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -561,22 +560,18 @@ export default function TrackAudioSplitter({
           (segment.order ?? 0).toString()
         );
       });
-      if (sessionId) {
-        const response = await handleCreateNewTrack(formData);
-        console.log("Track created successfully:", response);
-        showSuccess("Tạo mới track thành công!");
+      const response = await handleCreateNewTrack(formData);
+      console.log("Track created successfully:", response);
+      showSuccess("Tạo mới track thành công!");
 
-        setTrackName("");
-        setAudioFile(null);
-        setAudioUrl(null);
-        if (wavesurfer) {
-          wavesurfer.empty();
-        }
-        setSentences([]);
-        navigate(`/dashboard/manage-sessions`);
-      } else {
-        throw new Error("Session ID is missing");
+      setTrackName("");
+      setAudioFile(null);
+      setAudioUrl(null);
+      if (wavesurfer) {
+        wavesurfer.empty();
       }
+      setSentences([]);
+      navigate(`/dashboard/manage-sessions`);
     } catch (err) {
       console.error("API error:", err);
       setError("Không thể tạo mới track. Vui lòng thử lại sau.");
