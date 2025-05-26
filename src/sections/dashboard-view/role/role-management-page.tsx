@@ -232,28 +232,6 @@ const RoleManagementPage = () => {
               Manage system roles and permissions
             </Typography>
           </Box>
-
-          <Box sx={{ mt: { xs: 2, md: 0 } }}>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setCreateDialogOpen(true)}
-              sx={{
-                mr: 1,
-                background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                boxShadow: "0 3px 5px 2px rgba(33, 203, 243, .3)",
-                transition: "transform 0.2s",
-                "&:hover": {
-                  transform: "translateY(-3px)",
-                },
-              }}
-            >
-              New Role
-            </Button>
-            <IconButton onClick={handleGetAllRoles} color="primary">
-              <Refresh />
-            </IconButton>
-          </Box>
         </Box>
 
         <Paper
@@ -309,13 +287,6 @@ const RoleManagementPage = () => {
                 ? "Try adjusting your search."
                 : "Create your first role to get started."}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setCreateDialogOpen(true)}
-            >
-              Create New Role
-            </Button>
           </Paper>
         ) : (
           <motion.div
@@ -445,113 +416,6 @@ const RoleManagementPage = () => {
           </motion.div>
         )}
       </motion.div>
-
-      {/* Create Role Dialog */}
-      <Dialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-          },
-        }}
-      >
-        <DialogTitle>Create New Role</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Enter a name for the new role. Role names should be descriptive of
-            the permissions they grant.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Role Name"
-            fullWidth
-            variant="outlined"
-            value={newRoleName}
-            onChange={(e) => setNewRoleName(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleCreateRole}
-            variant="contained"
-            disabled={!newRoleName.trim()}
-          >
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Edit Role Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-          },
-        }}
-      >
-        <DialogTitle>Edit Role</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Update the name of this role.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Role Name"
-            fullWidth
-            variant="outlined"
-            value={editRoleName}
-            onChange={(e) => setEditRoleName(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleEditConfirm}
-            variant="contained"
-            disabled={!editRoleName.trim()}
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-          },
-        }}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this role? This action cannot be
-            undone and may affect users who have been assigned this role.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 };
