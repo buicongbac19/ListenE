@@ -407,7 +407,7 @@ export default function SegmentPracticePage() {
             onClick={() => navigate(`/topic/${topicId}`)}
             style={{ cursor: "pointer" }}
           >
-            Back to Session
+            Back to Topic
           </Link>
           <Link
             underline="hover"

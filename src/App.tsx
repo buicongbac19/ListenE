@@ -182,7 +182,7 @@ function App() {
                     <Route path="create-track" element={<TrackManager />} />
                     <Route path="manage-tracks" element={<TrackListView />} />
                     <Route
-                      path="tracks/:trackId/edit"
+                      path="tracks/:trackId/edit-track"
                       element={<TrackEditView />}
                     />
 

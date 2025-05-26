@@ -32,8 +32,7 @@ import LoadingOverlay from "./track-loading-overlay";
 export default function TrackEditView() {
   const theme = useTheme();
   const { showSuccess, showError } = useNotification();
-  const { sessionId, trackId } = useParams<{
-    sessionId: string;
+  const { trackId } = useParams<{
     trackId: string;
   }>();
   const navigate = useNavigate();
@@ -181,10 +180,7 @@ export default function TrackEditView() {
         showSuccess("Cập nhật track thành công!");
         setOriginalSegments(JSON.parse(JSON.stringify(segments)));
 
-        // Navigate back to the track list
-        if (sessionId) {
-          navigate(`/dashboard/sessions/${sessionId}/tracks`);
-        }
+        navigate(`/dashboard/manage-tracks`);
       }
     } catch (err) {
       console.error("API error:", err);
@@ -273,7 +269,7 @@ export default function TrackEditView() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <TrackHeader sessionId={sessionId} navigate={navigate} />
+        <TrackHeader navigate={navigate} />
 
         {error && (
           <Zoom in={!!error}>

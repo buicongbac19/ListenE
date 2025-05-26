@@ -571,7 +571,7 @@ export default function TrackAudioSplitter({
         wavesurfer.empty();
       }
       setSentences([]);
-      navigate(`/dashboard/manage-sessions`);
+      navigate(`/dashboard/manage-tracks`);
     } catch (err) {
       console.error("API error:", err);
       setError("Không thể tạo mới track. Vui lòng thử lại sau.");

@@ -225,7 +225,7 @@ export default function TrackListView() {
   };
 
   const handleEditTrack = (trackId: number) => {
-    navigate(`/dashboard/edit-track/${trackId}`);
+    navigate(`/dashboard/tracks/${trackId}/edit-track`);
     handleMenuClose();
   };
 

@@ -1,20 +1,13 @@
 "use client";
 
 import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
-import {
-  Home,
-  Dashboard,
-  School,
-  LibraryMusic,
-  Edit,
-} from "@mui/icons-material";
+import { Home, Dashboard, LibraryMusic, Edit } from "@mui/icons-material";
 
 interface TrackHeaderProps {
-  sessionId?: string;
   navigate: (path: string) => void;
 }
 
-export default function TrackHeader({ sessionId, navigate }: TrackHeaderProps) {
+export default function TrackHeader({ navigate }: TrackHeaderProps) {
   return (
     <Box sx={{ mb: 3 }}>
       <Breadcrumbs sx={{ mb: 1 }}>
@@ -42,19 +35,7 @@ export default function TrackHeader({ sessionId, navigate }: TrackHeaderProps) {
           underline="hover"
           color="inherit"
           sx={{ display: "flex", alignItems: "center" }}
-          onClick={() => navigate("/dashboard/sessions")}
-          style={{ cursor: "pointer" }}
-        >
-          <School sx={{ mr: 0.5 }} fontSize="inherit" />
-          Sessions
-        </Link>
-        <Link
-          underline="hover"
-          color="inherit"
-          sx={{ display: "flex", alignItems: "center" }}
-          onClick={() =>
-            sessionId && navigate(`/dashboard/sessions/${sessionId}/tracks`)
-          }
+          onClick={() => navigate(`/dashboard/manage-tracks`)}
           style={{ cursor: "pointer" }}
         >
           <LibraryMusic sx={{ mr: 0.5 }} fontSize="inherit" />

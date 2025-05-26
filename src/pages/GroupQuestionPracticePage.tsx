@@ -567,32 +567,6 @@ export default function GroupQuestionPracticePage() {
                     </Paper>
                   </Box>
                 )}
-
-                <Box sx={{ mt: 2 }}>
-                  <Typography
-                    variant="subtitle1"
-                    gutterBottom
-                    fontWeight="bold"
-                  >
-                    Transcript
-                  </Typography>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      bgcolor: alpha(theme.palette.background.paper, 0.7),
-                      maxHeight: 200,
-                      overflow: "auto",
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                      {showResults
-                        ? questionData.transcript
-                        : "Listen to the audio and answer the questions."}
-                    </Typography>
-                  </Paper>
-                </Box>
               </Box>
             </Box>
 

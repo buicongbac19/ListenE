@@ -1305,16 +1305,6 @@ export default function QuestionListView() {
                 <Dashboard sx={{ mr: 0.5 }} fontSize="inherit" />
                 Dashboard
               </Link>
-              <Link
-                underline="hover"
-                color="inherit"
-                sx={{ display: "flex", alignItems: "center" }}
-                onClick={() => navigate("/dashboard/manage-lessons")}
-                style={{ cursor: "pointer" }}
-              >
-                <MenuBook sx={{ mr: 0.5 }} fontSize="inherit" />
-                Lessons
-              </Link>
               <Typography
                 color="text.primary"
                 sx={{ display: "flex", alignItems: "center" }}
