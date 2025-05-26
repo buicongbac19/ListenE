@@ -378,36 +378,6 @@ const RoleManagementPage = () => {
                             : `Custom role with specific permissions`}
                         </Typography>
                       </CardContent>
-                      <Divider />
-                      <CardActions
-                        sx={{
-                          justifyContent: "space-between",
-                          px: 2,
-                          py: 1,
-                        }}
-                      >
-                        <Button
-                          size="small"
-                          startIcon={<Edit />}
-                          onClick={() => handleEditClick(role)}
-                          sx={{
-                            color: theme.palette.info.main,
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="small"
-                          startIcon={<Delete />}
-                          onClick={() => handleDeleteClick(role.id)}
-                          sx={{
-                            color: theme.palette.error.main,
-                          }}
-                          disabled={role.name.toLowerCase() === "admin"}
-                        >
-                          Delete
-                        </Button>
-                      </CardActions>
                     </Card>
                   </motion.div>
                 </Grid>
