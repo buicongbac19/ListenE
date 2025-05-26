@@ -108,6 +108,7 @@ export default function TagListView() {
       const response = await getAllTags({
         page: currentPage,
         size: currentPageSize,
+        name: searchTerm,
         type: filterType || undefined,
         sortField,
         sortDirection,
@@ -117,12 +118,6 @@ export default function TagListView() {
         setTags(response.items || []);
         setTotalItems(response.totalItems || 0);
         setTotalPages(response.totalPages || 1);
-
-        // Extract unique types for filter dropdown
-        const types =
-          response.items?.map((tag) => tag.type).filter(Boolean) || [];
-        const uniqueTypes = Array.from(new Set(types));
-        setAvailableTypes(uniqueTypes);
       }
     } catch (error) {
       console.error("Error fetching tags:", error);
@@ -145,20 +140,8 @@ export default function TagListView() {
 
   // Handle search input change with debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-
-    // Reset to first page when searching
-    if (page !== 1) {
-      setPage(1);
-    } else {
-      // If already on page 1, we need to trigger a fetch
-      const timer = setTimeout(() => {
-        fetchTags(1, pageSize, value);
-      }, 300);
-
-      return () => clearTimeout(timer);
-    }
+    setSearchTerm(e.target.value);
+    setPage(1);
   };
 
   // Clear search
@@ -343,6 +326,14 @@ export default function TagListView() {
     }
     fetchTags(1, pageSize, "", "");
   };
+
+  // useEffect debounce fetchTags khi searchTerm, page, pageSize, typeFilter, sortField, sortDirection thay đổi
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTags(page, pageSize, searchTerm, typeFilter);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, page, pageSize, typeFilter, sortField, sortDirection]);
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -635,20 +626,10 @@ export default function TagListView() {
                       <MenuItem value="">
                         <em>All Types</em>
                       </MenuItem>
-                      {availableTypes.map((type) => (
-                        <MenuItem key={type} value={type}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <LocalOffer fontSize="small" />
-                            {type}
-                          </Box>
-                        </MenuItem>
-                      ))}
+                      <MenuItem value="Part1">Part1</MenuItem>
+                      <MenuItem value="Part2">Part2</MenuItem>
+                      <MenuItem value="Part3">Part3</MenuItem>
+                      <MenuItem value="Part4">Part4</MenuItem>
                     </Select>
                   </FormControl>
                 </motion.div>

@@ -8,6 +8,7 @@ export type FetchTagsParams = {
   page?: number;
   size?: number;
   type?: string;
+  name?: string;
   sortField?: string;
   sortDirection?: "asc" | "desc";
 };

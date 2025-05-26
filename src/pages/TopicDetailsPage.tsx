@@ -738,11 +738,12 @@ export default function TopicDetailsPage() {
                                     component="h3"
                                     sx={{
                                       fontWeight: 600,
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
                                       display: "-webkit-box",
                                       WebkitLineClamp: 2,
                                       WebkitBoxOrient: "vertical",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      minHeight: "3.2em",
                                     }}
                                   >
                                     {track.name}
@@ -1062,7 +1063,15 @@ export default function TopicDetailsPage() {
                                     <Typography
                                       variant="h6"
                                       component="h3"
-                                      sx={{ fontWeight: 600 }}
+                                      sx={{
+                                        fontWeight: 600,
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: "vertical",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        minHeight: "3.2em",
+                                      }}
                                     >
                                       {tag.name}
                                     </Typography>

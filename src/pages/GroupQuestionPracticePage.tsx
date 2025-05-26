@@ -107,6 +107,9 @@ export default function GroupQuestionPracticePage() {
       activeQuestionTab: number;
     };
   }>({});
+  const [groupTranscript, setGroupTranscript] = useState("");
+  const [explanations, setExplanations] = useState<string[]>([]);
+  const [showTranscript, setShowTranscript] = useState(false);
 
   console.log(isPlaying, audioProgress);
 
@@ -214,6 +217,14 @@ export default function GroupQuestionPracticePage() {
         const correctCount = resultsData.filter((result) => result).length;
         setTotalCorrect((prev) => prev + correctCount);
         setTotalQuestions((prev) => prev + resultsData.length);
+
+        // Lưu transcript và explanations
+        setGroupTranscript(responseData.transcript || "");
+        setExplanations(
+          Array.isArray(responseData.questionKeys)
+            ? responseData.questionKeys.map((q: any) => q.explanation || "")
+            : []
+        );
 
         // Calculate percentage
         const percentage = Math.round(
@@ -947,6 +958,9 @@ export default function GroupQuestionPracticePage() {
                                                   : "normal",
                                             }}
                                           >
+                                            {String.fromCharCode(
+                                              65 + answerIndex
+                                            ) + ". "}
                                             {answer.content}
                                           </Typography>
                                         </Box>
@@ -977,6 +991,46 @@ export default function GroupQuestionPracticePage() {
                               )}`,
                             }}
                           >
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => setShowTranscript((prev) => !prev)}
+                              sx={{ mb: 2 }}
+                            >
+                              {showTranscript
+                                ? "Ẩn transcript"
+                                : "Hiện transcript"}
+                            </Button>
+                            {showTranscript && groupTranscript && (
+                              <Box sx={{ mb: 2 }}>
+                                <Typography
+                                  variant="subtitle2"
+                                  color="info.main"
+                                  gutterBottom
+                                >
+                                  Transcript
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    whiteSpace: "pre-line",
+                                    bgcolor: alpha(
+                                      theme.palette.background.paper,
+                                      0.5
+                                    ),
+                                    p: 2,
+                                    borderRadius: 1,
+                                    border: `1px solid ${alpha(
+                                      theme.palette.divider,
+                                      0.3
+                                    )}`,
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  {groupTranscript}
+                                </Typography>
+                              </Box>
+                            )}
                             <Typography
                               variant="subtitle2"
                               color="info.dark"
@@ -985,10 +1039,9 @@ export default function GroupQuestionPracticePage() {
                               Explanation:
                             </Typography>
                             <Typography variant="body2">
-                              {question.explanation ||
+                              {explanations[questionIndex] ||
                                 "No explanation provided for this question."}
                             </Typography>
-
                             {/* Navigation buttons after completing group */}
                             <Box
                               sx={{

@@ -9,6 +9,7 @@ export const getAllTags = async ({
   page = 1,
   size = 100,
   type,
+  name = "",
   sortField = "",
   sortDirection = "asc",
 }: FetchTagsParams = {}): Promise<PaginatedResult<ITagItem>> => {
@@ -16,6 +17,10 @@ export const getAllTags = async ({
 
   if (type) {
     URL += `&type=${type}`;
+  }
+
+  if (name) {
+    URL += `&name=${name}`;
   }
 
   if (size) {

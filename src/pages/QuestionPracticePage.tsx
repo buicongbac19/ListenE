@@ -110,6 +110,8 @@ export default function QuestionPracticePage() {
     };
   }>({});
 
+  const [transcript, setTranscript] = useState<string>("");
+
   // Fetch all questions in this tag to enable navigation
   useEffect(() => {
     const fetchAllQuestionsInTag = async () => {
@@ -270,6 +272,7 @@ export default function QuestionPracticePage() {
       // Xử lý dữ liệu trả về từ API
       let correctAnswerId = null;
       let explanationText = "";
+      let transcriptText = "";
 
       // Kiểm tra nếu dữ liệu trả về là đối tượng có correctKey
       if (
@@ -278,6 +281,7 @@ export default function QuestionPracticePage() {
       ) {
         correctAnswerId = responseData.correctKey;
         explanationText = responseData.explanation || "";
+        transcriptText = responseData.transcript || "";
       } else {
         // Nếu không, giả định dữ liệu trả về trực tiếp là correctKey
         correctAnswerId = responseData;
@@ -287,6 +291,7 @@ export default function QuestionPracticePage() {
 
       setCorrectAnswer(correctAnswerId);
       setExplanation(explanationText);
+      setTranscript(transcriptText);
       setIsCorrect(isAnswerCorrect);
       setIsAnswerSubmitted(true);
       setShowExplanation(true); // Tự động hiển thị giải thích
@@ -502,18 +507,20 @@ export default function QuestionPracticePage() {
             underline="hover"
             color="inherit"
             sx={{ display: "flex", alignItems: "center" }}
-            onClick={() => navigate("/topic")}
+            onClick={() => navigate("/topics")}
             style={{ cursor: "pointer" }}
           >
             <MenuBook sx={{ mr: 0.5 }} fontSize="inherit" />
-            Chủ đề
+            Topic
           </Link>
           {topic && (
             <Link
               underline="hover"
               color="inherit"
               sx={{ display: "flex", alignItems: "center" }}
-              onClick={() => navigate(`/topic/tag/${tagId}/questions`)}
+              onClick={() =>
+                navigate(`/topic/${topicId}/tag/${tagId}/questions`)
+              }
               style={{ cursor: "pointer" }}
             >
               <Tag sx={{ mr: 0.5 }} fontSize="inherit" />
@@ -727,44 +734,43 @@ export default function QuestionPracticePage() {
           {questionType === "part1" && (
             <Box>
               {/* Hình ảnh cho Part 1 */}
-              {(question as IQuestionPartOneResponseItem).imageUrl && (
-                <Box
-                  sx={{
-                    mb: 3,
-                    display: "flex",
-                    justifyContent: "center",
-                    borderRadius: 2,
-                    overflow: "hidden",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    position: "relative",
-                    "&:hover": {
-                      "&::after": {
-                        content: '""',
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: "rgba(0,0,0,0.02)",
-                        zIndex: 1,
-                      },
+              <Box
+                sx={{
+                  mb: 3,
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  position: "relative",
+                  width: "100%",
+                  p: 0,
+                  "&:hover": {
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: "rgba(0,0,0,0.02)",
+                      zIndex: 1,
                     },
+                  },
+                }}
+              >
+                <motion.img
+                  src={(question as IQuestionPartOneResponseItem).imageUrl}
+                  alt="Hình ảnh câu hỏi"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    objectFit: "cover",
+                    display: "block",
                   }}
-                >
-                  <motion.img
-                    src={(question as IQuestionPartOneResponseItem).imageUrl}
-                    alt="Hình ảnh câu hỏi"
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: "300px",
-                      objectFit: "contain",
-                    }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </Box>
-              )}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                />
+              </Box>
 
               {/* Điều khiển âm thanh */}
               {audio && (
@@ -1017,6 +1023,7 @@ export default function QuestionPracticePage() {
                                       : 400,
                                 }}
                               >
+                                {String.fromCharCode(65 + index)}
                                 {answer.content}
                               </Typography>
                               {isAnswerSubmitted &&
@@ -1110,6 +1117,41 @@ export default function QuestionPracticePage() {
                             }}
                           />
                           <Box>
+                            {/* Transcript hiển thị cùng logic với explanation, cùng style */}
+                            {transcript && (
+                              <Box sx={{ mb: 3 }}>
+                                <Typography
+                                  variant="h6"
+                                  gutterBottom
+                                  sx={{
+                                    color: theme.palette.info.main,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Bản ghi âm:
+                                </Typography>
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    whiteSpace: "pre-line",
+                                    lineHeight: 1.7,
+                                    bgcolor: alpha(
+                                      theme.palette.background.paper,
+                                      0.5
+                                    ),
+                                    p: 2,
+                                    borderRadius: 1,
+                                    border: `1px solid ${alpha(
+                                      theme.palette.divider,
+                                      0.3
+                                    )}`,
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  {transcript}
+                                </Typography>
+                              </Box>
+                            )}
                             <Typography
                               variant="h6"
                               gutterBottom
@@ -1131,50 +1173,6 @@ export default function QuestionPracticePage() {
                                 question.explanation ||
                                 "Không có giải thích cho câu hỏi này."}
                             </Typography>
-
-                            {question.transcript && (
-                              <Box
-                                sx={{
-                                  mt: 3,
-                                  pt: 2,
-                                  borderTop: `1px solid ${alpha(
-                                    theme.palette.divider,
-                                    0.5
-                                  )}`,
-                                }}
-                              >
-                                <Typography
-                                  variant="h6"
-                                  gutterBottom
-                                  sx={{
-                                    color: theme.palette.info.main,
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  Bản ghi âm:
-                                </Typography>
-                                <Typography
-                                  variant="body1"
-                                  sx={{
-                                    whiteSpace: "pre-line",
-                                    lineHeight: 1.8,
-                                    fontStyle: "italic",
-                                    bgcolor: alpha(
-                                      theme.palette.background.paper,
-                                      0.5
-                                    ),
-                                    p: 2,
-                                    borderRadius: 1,
-                                    border: `1px solid ${alpha(
-                                      theme.palette.divider,
-                                      0.3
-                                    )}`,
-                                  }}
-                                >
-                                  {question.transcript}
-                                </Typography>
-                              </Box>
-                            )}
                           </Box>
                         </Box>
                       </Paper>

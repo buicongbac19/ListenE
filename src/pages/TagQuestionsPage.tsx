@@ -232,7 +232,7 @@ export default function TagQuestionsPage() {
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() => window.history.back()}
+            onClick={() => navigate(`/topic/${topicId}`)}
             sx={{ mr: 2 }}
           >
             Back
