@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
 import { Home, Dashboard, LibraryMusic, Edit } from "@mui/icons-material";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import TableRow from "@mui/material/TableRow";
