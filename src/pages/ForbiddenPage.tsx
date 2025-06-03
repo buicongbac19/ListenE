@@ -55,6 +55,8 @@ const ForbiddenPage: React.FC = () => {
     navigate("/auth");
   };
 
+  console.log("Hello World");
+
   return (
     <Box
       sx={{
