@@ -28,7 +28,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
-  // Testimonials data
   const testimonials = [
     {
       id: 1,
@@ -104,7 +103,6 @@ const HomePage = () => {
     },
   ];
 
-  // Animation variants
   const container = {
     hidden: { opacity: 0 },
     show: {

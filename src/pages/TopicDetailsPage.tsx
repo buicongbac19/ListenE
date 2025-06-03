@@ -81,7 +81,6 @@ export default function TopicDetailsPage() {
   const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
   const [isBasicPractice, setIsBasicPractice] = useState(false);
 
-  // Track pagination state
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(6);
   const [totalPages, setTotalPages] = useState(1);
@@ -94,21 +93,17 @@ export default function TopicDetailsPage() {
   const fetchTopicAndTags = async (topicId: number) => {
     setLoading(true);
     try {
-      // Fetch topic details
       const topicRes = await getDetailsTopic(topicId);
       const topicData = topicRes?.data?.data;
       setTopic(topicData);
 
-      // Check if topic type is BasicPractice
       const isBasic = topicData?.type === "BasicPractice";
       setIsBasicPractice(isBasic);
 
       if (topicData?.type) {
         if (isBasic) {
-          // For BasicPractice, we'll fetch tracks instead of tags
           await fetchTracks();
         } else {
-          // For other types, fetch tags as usual
           const tagsRes = await getAllTags({ type: topicData.type });
           setTags(tagsRes?.items || []);
         }
@@ -144,7 +139,6 @@ export default function TopicDetailsPage() {
   useEffect(() => {
     if (topicId) fetchTopicAndTags(Number(topicId));
 
-    // Load favorites from localStorage
     const savedFavorites = localStorage.getItem("favoriteTags");
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
@@ -163,17 +157,14 @@ export default function TopicDetailsPage() {
   }, [isBasicPractice, fetchTracks, refreshKey]);
 
   const handleTagClick = (tagId: number) => {
-    // Navigate to questions page filtered by tag
     navigate(`/topic/${topicId}/tag/${tagId}/questions`);
   };
 
   const handleTrackPracticeAll = (trackId: number) => {
-    // Navigate to track practice page (current logic)
     navigate(`/topic/${topicId}/track/${trackId}`);
   };
 
   const handleTrackPracticeSegments = (trackId: number) => {
-    // Navigate to track segments page
     navigate(`/topic/${topicId}/track/${trackId}/segments`);
   };
 
@@ -208,15 +199,13 @@ export default function TopicDetailsPage() {
 
   const handleSizeChange = (event: SelectChangeEvent<number>) => {
     setSize(Number(event.target.value));
-    setPage(1); // Reset to first page when changing size
+    setPage(1);
   };
 
   const handleSortChange = (field: string) => {
     if (sortField === field) {
-      // Toggle direction if same field
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // Set new field and default to ascending
       setSortField(field);
       setSortDirection("asc");
     }
@@ -224,7 +213,7 @@ export default function TopicDetailsPage() {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-    setPage(1); // Reset to first page when searching
+    setPage(1);
   };
 
   const handleRefresh = () => {
@@ -337,7 +326,6 @@ export default function TopicDetailsPage() {
           <Typography color="text.primary">{topic.name}</Typography>
         </Breadcrumbs>
 
-        {/* Topic Header */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -449,7 +437,6 @@ export default function TopicDetailsPage() {
         </motion.div>
 
         {isBasicPractice ? (
-          // TRACKS SECTION FOR BASIC PRACTICE
           <>
             <Box
               sx={{
@@ -509,7 +496,6 @@ export default function TopicDetailsPage() {
               track
             </Typography>
 
-            {/* Search and Filter Controls */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -884,7 +870,6 @@ export default function TopicDetailsPage() {
               </motion.div>
             )}
 
-            {/* Pagination */}
             {!tracksLoading && tracks.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -931,7 +916,6 @@ export default function TopicDetailsPage() {
             )}
           </>
         ) : (
-          // TAGS SECTION FOR OTHER TOPIC TYPES (unchanged)
           <>
             <Typography
               variant="h5"
@@ -1173,7 +1157,6 @@ export default function TopicDetailsPage() {
           </>
         )}
 
-        {/* Call to action */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

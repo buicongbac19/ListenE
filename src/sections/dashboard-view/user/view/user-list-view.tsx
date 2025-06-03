@@ -250,16 +250,16 @@ export default function UserListView() {
   const getAvatarColor = (firstName: string, lastName: string) => {
     const name = `${firstName} ${lastName}`;
     const colors = [
-      "#1E88E5", // Blue
-      "#43A047", // Green
-      "#E53935", // Red
-      "#FB8C00", // Orange
-      "#8E24AA", // Purple
-      "#00ACC1", // Cyan
-      "#3949AB", // Indigo
-      "#00897B", // Teal
-      "#7CB342", // Light Green
-      "#C0CA33", // Lime
+      "#1E88E5",
+      "#43A047",
+      "#E53935",
+      "#FB8C00",
+      "#8E24AA",
+      "#00ACC1",
+      "#3949AB",
+      "#00897B",
+      "#7CB342",
+      "#C0CA33",
     ];
 
     let hash = 0;

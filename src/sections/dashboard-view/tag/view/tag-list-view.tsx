@@ -61,7 +61,6 @@ import { getAllTags, bulkDeleteTag } from "../../../../api/tag";
 import { useNotification } from "../../../../provider/NotificationProvider";
 import type { ITagItem } from "../../../../types/tag";
 
-// Define sort direction type
 type SortDirection = "asc" | "desc";
 
 export default function TagListView() {
@@ -70,7 +69,6 @@ export default function TagListView() {
   const theme = useTheme();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // State
   const [tags, setTags] = useState<ITagItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -80,21 +78,17 @@ export default function TagListView() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Sorting state
   const [sortField, setSortField] = useState<string>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  // Type filter state
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [availableTypes, setAvailableTypes] = useState<string[]>([]);
 
-  // Fetch tags with pagination
   const fetchTags = async (
     currentPage = page,
     currentPageSize = pageSize,
@@ -126,23 +120,19 @@ export default function TagListView() {
     }
   };
 
-  // Initial fetch
   useEffect(() => {
     fetchTags();
   }, []);
 
-  // Fetch when pagination or sorting changes
   useEffect(() => {
     fetchTags(page, pageSize, searchTerm, typeFilter);
   }, [page, pageSize, sortField, sortDirection, typeFilter]);
 
-  // Handle search input change with debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setPage(1);
   };
 
-  // Clear search
   const handleClearSearch = () => {
     setSearchTerm("");
     if (searchInputRef.current) {
@@ -152,17 +142,14 @@ export default function TagListView() {
     fetchTags(1, pageSize, "");
   };
 
-  // Handle sort
   const handleSort = (field: string) => {
     const isAsc = sortField === field && sortDirection === "asc";
     const newDirection = isAsc ? "desc" : "asc";
     setSortDirection(newDirection);
     setSortField(field);
-    // Reset to first page when sorting changes
     setPage(1);
   };
 
-  // Handle page change
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
     value: number
@@ -170,14 +157,12 @@ export default function TagListView() {
     setPage(value);
   };
 
-  // Handle rows per page change
   const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
     const newSize = Number(event.target.value);
     setPageSize(newSize);
-    setPage(1); // Reset to first page when changing page size
+    setPage(1);
   };
 
-  // Handle tag selection
   const handleTagSelect = (tagId: number) => {
     setSelectedTagIds((prev) => {
       if (prev.includes(tagId)) {
@@ -188,7 +173,6 @@ export default function TagListView() {
     });
   };
 
-  // Handle select all tags
   const handleSelectAll = () => {
     if (selectedTagIds.length === tags.length) {
       setSelectedTagIds([]);
@@ -197,12 +181,10 @@ export default function TagListView() {
     }
   };
 
-  // Handle edit tag
   const handleEditTag = (tagId: number) => {
     navigate(`/dashboard/tags/${tagId}/edit`);
   };
 
-  // Handle delete click
   const handleDeleteClick = (tagId?: number) => {
     if (tagId) {
       setSelectedTagIds([tagId]);
@@ -216,12 +198,10 @@ export default function TagListView() {
     setDeleteDialogOpen(true);
   };
 
-  // Handle delete cancel
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
   };
 
-  // Handle delete confirm
   const handleDeleteConfirm = async () => {
     if (selectedTagIds.length === 0) return;
 
@@ -235,15 +215,12 @@ export default function TagListView() {
       );
       setSelectedTagIds([]);
 
-      // After deletion, we might need to adjust the current page
-      // If we're on the last page and delete all items, go to previous page
       const remainingItems = totalItems - selectedTagIds.length;
       const newTotalPages = Math.ceil(remainingItems / pageSize);
 
       if (page > newTotalPages && newTotalPages > 0) {
         setPage(newTotalPages);
       } else {
-        // Refresh current page
         fetchTags();
       }
     } catch (error) {
@@ -256,12 +233,10 @@ export default function TagListView() {
     }
   };
 
-  // Handle refresh
   const handleRefresh = () => {
     fetchTags();
   };
 
-  // Clear messages after a delay
   useEffect(() => {
     if (errorMessage) {
       const timer = setTimeout(() => {
@@ -280,13 +255,11 @@ export default function TagListView() {
     }
   }, [successMessage]);
 
-  // Function to truncate text
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -307,14 +280,12 @@ export default function TagListView() {
     },
   };
 
-  // Handle type filter change
   const handleTypeFilterChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     setTypeFilter(value);
-    setPage(1); // Reset to first page when filter changes
+    setPage(1);
   };
 
-  // Clear all filters
   const handleClearFilters = () => {
     setSearchTerm("");
     setTypeFilter("");
@@ -325,7 +296,6 @@ export default function TagListView() {
     fetchTags(1, pageSize, "", "");
   };
 
-  // useEffect debounce fetchTags khi searchTerm, page, pageSize, typeFilter, sortField, sortDirection thay đổi
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchTags(page, pageSize, searchTerm, typeFilter);
@@ -416,7 +386,6 @@ export default function TagListView() {
           </Box>
         </Box>
 
-        {/* Error and Success Messages */}
         <Collapse in={!!errorMessage}>
           <Alert
             severity="error"
@@ -455,7 +424,6 @@ export default function TagListView() {
           </Alert>
         </Collapse>
 
-        {/* Search and Filters */}
         <Paper
           elevation={2}
           sx={{
@@ -720,7 +688,6 @@ export default function TagListView() {
               </Box>
             </Box>
 
-            {/* Active Filters Display */}
             {(searchTerm || typeFilter) && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -779,7 +746,6 @@ export default function TagListView() {
           </Box>
         </Paper>
 
-        {/* Tags Table */}
         {loading ? (
           <Box
             sx={{
@@ -1060,7 +1026,6 @@ export default function TagListView() {
               </Table>
             </TableContainer>
 
-            {/* Pagination Controls */}
             <Paper
               elevation={0}
               sx={{
@@ -1129,7 +1094,6 @@ export default function TagListView() {
         )}
       </motion.div>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}

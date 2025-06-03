@@ -16,7 +16,6 @@ import { Lock, Home, ArrowBack, Security, Warning } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { keyframes } from "@mui/system";
 
-// Animation keyframes
 const float = keyframes`
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-20px) rotate(5deg); }

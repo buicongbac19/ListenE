@@ -32,7 +32,6 @@ import {
   Replay,
   VolumeUp,
   VolumeMute,
-  // Mic,
   Send,
   EmojiEvents,
   NavigateNext,

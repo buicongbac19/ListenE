@@ -50,7 +50,6 @@ export default function TagCreateEditForm() {
 
   const isEditMode = !!tagId;
 
-  // State
   const [tagName, setTagName] = useState("");
   const [tagType, setTagType] = useState("");
   const [tagNames, setTagNames] = useState<string[]>([]);
@@ -62,7 +61,6 @@ export default function TagCreateEditForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [tagTypes, setTagTypes] = useState<string[]>([]);
 
-  // Fetch all tags for validation
   useEffect(() => {
     const fetchTags = async () => {
       try {
@@ -80,7 +78,6 @@ export default function TagCreateEditForm() {
     fetchTags();
   }, []);
 
-  // Fetch tag data if in edit mode
   useEffect(() => {
     if (isEditMode && tagId) {
       const fetchTagData = async () => {
@@ -112,29 +109,24 @@ export default function TagCreateEditForm() {
     }
   }, [isEditMode, tagId]);
 
-  // Handle tag type change
   const handleTagTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTagType(e.target.value);
   };
 
-  // Handle current tag name change
   const handleCurrentTagNameChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setCurrentTagName(e.target.value);
   };
 
-  // Add tag to the list
   const handleAddTag = () => {
     if (!currentTagName.trim()) return;
 
-    // Check if tag already exists in the list
     if (tagNames.includes(currentTagName.trim())) {
       setErrorMessage("This tag is already in your list");
       return;
     }
 
-    // Check if tag already exists in the database
     const tagExists = tags.some(
       (tag) => tag.name.toLowerCase() === currentTagName.trim().toLowerCase()
     );
@@ -148,12 +140,10 @@ export default function TagCreateEditForm() {
     setErrorMessage("");
   };
 
-  // Remove tag from the list
   const handleRemoveTag = (tagToRemove: string) => {
     setTagNames(tagNames.filter((tag) => tag !== tagToRemove));
   };
 
-  // Handle key press in tag input
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -161,16 +151,13 @@ export default function TagCreateEditForm() {
     }
   };
 
-  // Validate form
   const validateForm = (): boolean => {
-    // In edit mode, check the single tag name
     if (isEditMode) {
       if (!tagName.trim()) {
         setErrorMessage("Tag name cannot be empty");
         return false;
       }
 
-      // Check if tag name already exists (excluding the current tag in edit mode)
       const tagExists = tags.some(
         (tag) =>
           tag.name.toLowerCase() === tagName.toLowerCase() &&
@@ -185,7 +172,6 @@ export default function TagCreateEditForm() {
       return true;
     }
 
-    // In create mode, check the tag names list
     if (tagNames.length === 0) {
       setErrorMessage("Please add at least one tag");
       return false;
@@ -199,7 +185,6 @@ export default function TagCreateEditForm() {
     return true;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -212,17 +197,14 @@ export default function TagCreateEditForm() {
 
     try {
       if (isEditMode && tagId) {
-        // Update existing tag
         await updateTag(Number(tagId), tagName.trim(), tagType.trim());
         showSuccess("Tag updated successfully!");
       } else {
-        // Create new tags in bulk
         await bulkCreateTag(tagType.trim(), tagNames);
         showSuccess(`${tagNames.length} tag(s) created successfully!`);
         setSuccessMessage(`${tagNames.length} tag(s) created successfully!`);
       }
 
-      // Redirect after a short delay to show the success message
       setTimeout(() => {
         navigate("/dashboard/manage-tags");
       }, 1500);
@@ -243,7 +225,6 @@ export default function TagCreateEditForm() {
     }
   };
 
-  // Clear messages after a delay
   useEffect(() => {
     if (errorMessage) {
       const timer = setTimeout(() => {
@@ -262,7 +243,6 @@ export default function TagCreateEditForm() {
     }
   }, [successMessage]);
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -360,7 +340,6 @@ export default function TagCreateEditForm() {
           </Box>
         </Box>
 
-        {/* Error and Success Messages */}
         <Collapse in={!!errorMessage}>
           <Alert
             severity="error"

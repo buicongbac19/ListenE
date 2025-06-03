@@ -55,7 +55,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const drawerWidth = 280;
 
-// Animation variants
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.5 } },
@@ -70,7 +69,6 @@ const slideIn = {
   }),
 };
 
-// Styled Motion components
 const MotionListItem = motion(ListItem);
 
 export default function DashboardLayout() {
@@ -88,7 +86,6 @@ export default function DashboardLayout() {
   const [darkMode, setDarkMode] = useState(false);
   const [pageTitle, setPageTitle] = useState("Topics");
 
-  // Update page title based on current route
   useEffect(() => {
     const path = location.pathname;
     if (path.includes("manage-topics")) setPageTitle("Topics");
@@ -134,18 +131,14 @@ export default function DashboardLayout() {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
-    // In a real app, you would update your theme provider here
   };
 
-  // Check if the current path is under the security section
   const isSecurityPath =
     location.pathname.includes("/dashboard/manage-roles") ||
     location.pathname.includes("/dashboard/asign-roles");
 
-  // Check if the current path is under the tracks section
   const isTracksPath = location.pathname.includes("/dashboard/manage-tracks");
 
-  // If we're on a security path, open the security menu
   useEffect(() => {
     if (isSecurityPath && !securityOpen) {
       setSecurityOpen(true);
@@ -415,7 +408,6 @@ export default function DashboardLayout() {
             </MotionListItem>
           ))}
 
-          {/* Security Section with Submenu */}
           <MotionListItem
             disablePadding
             custom={menuItems.length - 1}
@@ -650,7 +642,6 @@ export default function DashboardLayout() {
         </AnimatePresence>
       </Box>
 
-      {/* Profile Menu */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -725,7 +716,6 @@ export default function DashboardLayout() {
         </MenuItem>
       </Menu>
 
-      {/* Notifications Menu */}
       <Menu
         anchorEl={notificationEl}
         open={Boolean(notificationEl)}

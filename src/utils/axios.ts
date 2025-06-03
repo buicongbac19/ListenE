@@ -4,8 +4,6 @@ import { HOST_API } from "../config-global";
 
 import { ApiErrorResponse } from "./ApiResponse";
 
-// ----------------------------------------------------------------------
-
 const axiosInstance = axios.create({
   baseURL: HOST_API,
   withCredentials: true,
@@ -33,8 +31,6 @@ axiosInstance.interceptors.response.use(
 );
 export default axiosInstance;
 
-// ----------------------------------------------------------------------
-
 export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
   const [url, config] = Array.isArray(args) ? args : [args];
 
@@ -57,8 +53,6 @@ export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
   }
   return res.data;
 };
-
-// ----------------------------------------------------------------------
 
 export const endpoints = {
   auth: {

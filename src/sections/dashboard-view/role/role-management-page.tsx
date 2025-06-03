@@ -42,7 +42,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getAllRoles } from "../../../api/role";
 
-// Define types
 interface Role {
   id: number;
   name: string;
@@ -61,7 +60,6 @@ const RoleManagementPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editRoleName, setEditRoleName] = useState("");
 
-  // Fetch all roles
   const handleGetAllRoles = async () => {
     setLoading(true);
     try {
@@ -78,7 +76,6 @@ const RoleManagementPage = () => {
     handleGetAllRoles();
   }, []);
 
-  // Handle role deletion
   const handleDeleteClick = (roleId: number) => {
     setSelectedRoleId(roleId);
     setDeleteDialogOpen(true);
@@ -87,7 +84,6 @@ const RoleManagementPage = () => {
   const handleDeleteConfirm = async () => {
     if (selectedRoleId) {
       try {
-        // This is a mock API call - replace with your actual API
         await axios.delete(`/api/v1/users/roles/${selectedRoleId}`);
         setRoles(roles.filter((role) => role.id !== selectedRoleId));
       } catch (error) {
@@ -98,12 +94,10 @@ const RoleManagementPage = () => {
     setSelectedRoleId(null);
   };
 
-  // Handle role creation
   const handleCreateRole = async () => {
     if (!newRoleName.trim()) return;
 
     try {
-      // This is a mock API call - replace with your actual API
       const response = await axios.post("/api/v1/users/roles", {
         name: newRoleName,
       });
@@ -115,7 +109,6 @@ const RoleManagementPage = () => {
     }
   };
 
-  // Handle role editing
   const handleEditClick = (role: Role) => {
     setSelectedRoleId(role.id);
     setEditRoleName(role.name);
@@ -126,7 +119,6 @@ const RoleManagementPage = () => {
     if (!editRoleName.trim() || !selectedRoleId) return;
 
     try {
-      // This is a mock API call - replace with your actual API
       await axios.put(`/api/v1/users/roles/${selectedRoleId}`, {
         name: editRoleName,
       });
@@ -143,12 +135,10 @@ const RoleManagementPage = () => {
     }
   };
 
-  // Filter roles based on search term
   const filteredRoles = roles.filter((role) =>
     role.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

@@ -60,7 +60,6 @@ const UserRoleAssignment = () => {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch all roles
   const handleGetAllRoles = async () => {
     try {
       const response = await getAllRoles();
@@ -70,7 +69,6 @@ const UserRoleAssignment = () => {
     }
   };
 
-  // Fetch all users
   const handleGetAllUsers = async () => {
     try {
       const response = await getAllUsers({ size: 100 });
@@ -82,15 +80,12 @@ const UserRoleAssignment = () => {
     }
   };
 
-  // Initial data loading
   useEffect(() => {
     Promise.all([handleGetAllRoles(), handleGetAllUsers()]);
   }, []);
 
-  // Handle URL parameter for user selection
   useEffect(() => {
     if (userId && !isNaN(Number(userId)) && users.length > 0) {
-      // Find user from the existing users array
       const user = users.find((u) => u.id === Number(userId));
       if (user) {
         setSelectedUser(user);
@@ -99,7 +94,6 @@ const UserRoleAssignment = () => {
     }
   }, [userId, users]);
 
-  // Handle role toggle
   const handleRoleToggle = (roleName: string) => {
     setSelectedRoles((prev) =>
       prev.includes(roleName)
@@ -108,12 +102,10 @@ const UserRoleAssignment = () => {
     );
   };
 
-  // Handle user selection
   const handleUserSelect = (user: IUserResponseItem | null) => {
     if (user) {
       setSelectedUser(user);
       setSelectedRoles(user.roles || []);
-      // Update URL without reloading
       navigate(`/dashboard/asign-roles/${user.id}`, { replace: true });
     } else {
       setSelectedUser(null);
@@ -122,7 +114,6 @@ const UserRoleAssignment = () => {
     }
   };
 
-  // Save user roles
   const handleSaveRoles = async () => {
     if (!selectedUser) return;
 
@@ -131,14 +122,12 @@ const UserRoleAssignment = () => {
       await asignRoles(selectedRoles, selectedUser.id);
       showSuccess("Updated successfully!");
 
-      // Update local state
       setUsers(
         users.map((user) =>
           user.id === selectedUser.id ? { ...user, roles: selectedRoles } : user
         )
       );
 
-      // Update selected user state
       setSelectedUser({
         ...selectedUser,
         roles: selectedRoles,
@@ -152,19 +141,16 @@ const UserRoleAssignment = () => {
     }
   };
 
-  // Filter roles based on search term
   const filteredRoles = roles.filter((role) =>
     role.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Get initials for avatar
   const getInitials = (firstName: string, lastName: string) => {
     return (
       firstName.charAt(0) + (lastName ? lastName.charAt(0) : "")
     ).toUpperCase();
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -275,7 +261,6 @@ const UserRoleAssignment = () => {
         </Box>
 
         <Grid container spacing={3}>
-          {/* User Selection Panel */}
           <Grid item xs={12} md={4}>
             <Paper
               elevation={3}

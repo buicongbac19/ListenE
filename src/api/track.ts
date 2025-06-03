@@ -47,7 +47,6 @@ export const getAllTracks = async ({
     URL += `&name=${name}`;
   }
 
-  // Add sorting if provided
   if (sortField) {
     URL += `&sort=${sortField},${sortDirection}`;
   }

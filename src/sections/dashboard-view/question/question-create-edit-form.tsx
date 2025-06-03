@@ -85,7 +85,6 @@ import type { ITagItem } from "../../../types/tag";
 import type { ITopicItem } from "../../../types/topic";
 import { SelectChangeEvent } from "@mui/material";
 
-// Tab panel component for question tabs
 function TabPanel(props: {
   children?: React.ReactNode;
   index: number;
@@ -108,23 +107,20 @@ function TabPanel(props: {
 }
 
 export default function QuestionCreateEditForm() {
-  // Define initial question types (will be replaced with topic types)
   const [questionTypes, setQuestionTypes] = useState<Record<string, string>>(
     {}
   );
 
   console.log(questionTypes);
 
-  // Define initial answer structure
   const initialAnswer: IAnswerPostItem = {
     content: "",
   };
 
-  // Define initial form data for Part One
   const initialPartOneData: IQuestionPartOnePostItem = {
     image: null,
     audio: null,
-    correctAnswer: 1, // Changed to 1-based indexing
+    correctAnswer: 1,
     transcript: "",
     explanation: "",
     tagId: 0,
@@ -133,10 +129,9 @@ export default function QuestionCreateEditForm() {
       .map(() => ({ ...initialAnswer })),
   };
 
-  // Define initial form data for Part Two
   const initialPartTwoData: IQuestionPartTwoPostItem = {
     audio: null,
-    correctAnswer: 1, // Changed to 1-based indexing
+    correctAnswer: 1,
     transcript: "",
     explanation: "",
     tagId: 0,
@@ -145,14 +140,12 @@ export default function QuestionCreateEditForm() {
       .map(() => ({ ...initialAnswer })),
   };
 
-  // Define initial sub-answer structure for Part 3/4
   const initialSubAnswer: ISubAnswerPart34PostItem = {
     content: "",
   };
 
-  // Define initial sub-question structure for Part 3/4
   const initialSubQuestion = {
-    correctAnswer: 1, // 1-based indexing
+    correctAnswer: 1,
     explanation: "",
     stringQuestion: "",
     answers: Array(4)
@@ -160,7 +153,6 @@ export default function QuestionCreateEditForm() {
       .map(() => ({ ...initialSubAnswer })),
   };
 
-  // Define initial form data for Part 3/4
   const initialPart34Data: IQuestionPartT3PostItem = {
     image: undefined,
     audio: undefined,
@@ -184,7 +176,6 @@ export default function QuestionCreateEditForm() {
   const isEditGroupMode = !!groupId;
   const isEditMode = !!questionId || !!groupId;
 
-  // State for question type selection
   const [questionType, setQuestionType] = useState<string>("");
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -192,12 +183,10 @@ export default function QuestionCreateEditForm() {
   const [tags, setTags] = useState<ITagItem[]>([]);
   const [tagsLoading, setTagsLoading] = useState(false);
 
-  // New state for topics and topic types
   const [topics, setTopics] = useState<ITopicItem[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
   console.log(topics);
 
-  // Form data for different question types
   const [partOneData, setPartOneData] = useState<IQuestionPartOnePostItem>({
     ...initialPartOneData,
   });
@@ -208,10 +197,8 @@ export default function QuestionCreateEditForm() {
     ...initialPart34Data,
   });
 
-  // State for active question tab in Part 3/4
   const [activeQuestionTab, setActiveQuestionTab] = useState(0);
 
-  // Form validation errors
   const [errors, setErrors] = useState({
     questionType: "",
     topicType: "",
@@ -231,27 +218,22 @@ export default function QuestionCreateEditForm() {
     ],
   });
 
-  // Preview states
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
 
-  // Tab state for question type selection
   const [tabValue] = useState(0);
 
   console.log(tabValue);
 
-  // Filter tags based on selected topic type using useMemo
   const filteredTags = useMemo(() => {
     if (!questionType) return [];
     return tags.filter((tag) => tag.type === questionType);
   }, [tags, questionType]);
 
-  // Determine if current question type is Part 3 or Part 4
   const isPart34 = useMemo(() => {
     return questionType === "Part3" || questionType === "Part4";
   }, [questionType]);
 
-  // Fetch all topics
   useEffect(() => {
     const fetchTopics = async () => {
       setTopicsLoading(true);
@@ -261,18 +243,15 @@ export default function QuestionCreateEditForm() {
           const topicsData = response.data.data;
           setTopics(topicsData);
 
-          // Extract unique types excluding "BasicPractice"
           const types = [
             ...new Set(topicsData.map((topic: ITopicItem) => topic.type)),
           ].filter((type) => type !== "BasicPractice") as string[];
 
-          // Create a mapping of type to display name for the dropdown
           const typeMapping: Record<string, string> = {};
           types.forEach((type) => {
             typeMapping[type] = type;
           });
 
-          // Add Part 3 and Part 4 types
           typeMapping["Part3"] = "Part 3 (Conversation)";
           typeMapping["Part4"] = "Part 4 (Short Talk)";
 
@@ -289,7 +268,6 @@ export default function QuestionCreateEditForm() {
     fetchTopics();
   }, [showError]);
 
-  // Fetch all tags - only once when component mounts
   useEffect(() => {
     const fetchTags = async () => {
       setTagsLoading(true);
@@ -309,14 +287,12 @@ export default function QuestionCreateEditForm() {
     fetchTags();
   }, [showError]);
 
-  // Fetch question data if in edit mode
   useEffect(() => {
     if (isEditMode) {
       const fetchData = async () => {
         setLoading(true);
         try {
           if (isEditGroupMode && groupId) {
-            // Edit group (Part3/4)
             if (questionTypeFromUrl) setQuestionType(questionTypeFromUrl);
             const response = await getDetailsGroup(Number.parseInt(groupId));
             const groupData = response?.data?.data;
@@ -335,9 +311,7 @@ export default function QuestionCreateEditForm() {
                   };
                 });
               }
-            } catch (e) {
-              // Có thể log lỗi hoặc bỏ qua
-            }
+            } catch (e) {}
             if (groupData) {
               const tagId = groupData.questions[0]?.tagId || 0;
               const transformedData: IQuestionPartT3PostItem = {
@@ -369,12 +343,10 @@ export default function QuestionCreateEditForm() {
               return;
             }
           } else if (questionId) {
-            // If we have type from URL, use it directly
             if (questionTypeFromUrl) {
               setQuestionType(questionTypeFromUrl);
             }
 
-            // Try to fetch as Part 3/4 first if type is Part3 or Part4
             if (
               questionTypeFromUrl === "Part3" ||
               questionTypeFromUrl === "Part4"
@@ -386,7 +358,6 @@ export default function QuestionCreateEditForm() {
                 const groupData = response?.data?.data;
 
                 if (groupData) {
-                  // Transform the response data to match our form structure
                   const transformedData: IQuestionPartT3PostItem = {
                     image: undefined,
                     audio: undefined,
@@ -406,7 +377,6 @@ export default function QuestionCreateEditForm() {
                   setImagePreview(groupData.imageUrl || null);
                   setAudioPreview(groupData.audioUrl || null);
 
-                  // Update errors state to match the number of questions
                   setErrors((prev) => ({
                     ...prev,
                     questions: transformedData.questions.map(() => ({
@@ -424,7 +394,6 @@ export default function QuestionCreateEditForm() {
               }
             }
 
-            // Try to fetch as Part One if type is Part1
             if (questionTypeFromUrl === "Part1") {
               try {
                 const response = await getDetailPartOneQuestion(
@@ -462,7 +431,6 @@ export default function QuestionCreateEditForm() {
               }
             }
 
-            // Try to fetch as Part Two if type is Part2
             if (questionTypeFromUrl === "Part2") {
               try {
                 const response = await getDetailPartTwoQuestion(
@@ -498,7 +466,6 @@ export default function QuestionCreateEditForm() {
               }
             }
 
-            // If we couldn't fetch the question data, show error and redirect
             showError("Failed to load question data. Please try again.");
             navigate("/dashboard/manage-questions");
           }
@@ -515,13 +482,11 @@ export default function QuestionCreateEditForm() {
     }
   }, [isEditMode, questionId, navigate, showError, questionTypeFromUrl]);
 
-  // Handle question type change
   const handleQuestionTypeChange = useCallback(
     (event: SelectChangeEvent<string>) => {
       const type = event.target.value;
       setQuestionType(type);
 
-      // Reset tag selection when question type changes
       if (type === "Part1") {
         setPartOneData((prev) => ({ ...prev, tagId: 0 }));
       } else if (type === "Part2") {
@@ -531,12 +496,11 @@ export default function QuestionCreateEditForm() {
       }
 
       setErrors((prev) => ({ ...prev, questionType: "" }));
-      setActiveStep(1); // Move to next step after selecting type
+      setActiveStep(1);
     },
     []
   );
 
-  // Handle Part One data changes
   const handlePartOneChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
@@ -545,7 +509,6 @@ export default function QuestionCreateEditForm() {
         [name]: value,
       }));
 
-      // Clear error for this field if it exists
       if (errors[name as keyof typeof errors]) {
         setErrors((prev) => ({
           ...prev,
@@ -556,7 +519,6 @@ export default function QuestionCreateEditForm() {
     [errors]
   );
 
-  // Handle Part Two data changes
   const handlePartTwoChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
@@ -565,7 +527,6 @@ export default function QuestionCreateEditForm() {
         [name]: value,
       }));
 
-      // Clear error for this field if it exists
       if (errors[name as keyof typeof errors]) {
         setErrors((prev) => ({
           ...prev,
@@ -576,7 +537,6 @@ export default function QuestionCreateEditForm() {
     [errors]
   );
 
-  // Handle Part 3/4 data changes
   const handlePart34Change = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
@@ -585,7 +545,6 @@ export default function QuestionCreateEditForm() {
         [name]: value,
       }));
 
-      // Clear error for this field if it exists
       if (errors[name as keyof typeof errors]) {
         setErrors((prev) => ({
           ...prev,
@@ -596,7 +555,6 @@ export default function QuestionCreateEditForm() {
     [errors]
   );
 
-  // Handle tag selection
   const handleTagChange = useCallback(
     (event: SelectChangeEvent<number>) => {
       const tagId = Number(event.target.value);
@@ -623,7 +581,6 @@ export default function QuestionCreateEditForm() {
     [questionType, isPart34]
   );
 
-  // Handle correct answer selection for Part 1/2
   const handleCorrectAnswerChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = Number(event.target.value);
@@ -645,7 +602,6 @@ export default function QuestionCreateEditForm() {
     [questionType]
   );
 
-  // Handle answer content changes for Part 1/2
   const handleAnswerChange = useCallback(
     (index: number, content: string) => {
       if (questionType === "Part1") {
@@ -668,7 +624,6 @@ export default function QuestionCreateEditForm() {
         });
       }
 
-      // Clear error for this answer
       setErrors((prev) => {
         const newAnswerErrors = [...prev.answers];
         newAnswerErrors[index] = "";
@@ -681,7 +636,6 @@ export default function QuestionCreateEditForm() {
     [questionType]
   );
 
-  // Handle sub-question changes for Part 3/4
   const handleSubQuestionChange = useCallback(
     (
       index: number,
@@ -700,7 +654,6 @@ export default function QuestionCreateEditForm() {
         };
       });
 
-      // Clear error for this field if it exists
       if (
         errors.questions[index] &&
         errors.questions[index][name as keyof (typeof errors.questions)[0]]
@@ -721,7 +674,6 @@ export default function QuestionCreateEditForm() {
     [errors.questions]
   );
 
-  // Handle correct answer selection for sub-questions in Part 3/4
   const handleSubQuestionCorrectAnswerChange = useCallback(
     (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
       const value = Number(event.target.value);
@@ -737,7 +689,6 @@ export default function QuestionCreateEditForm() {
         };
       });
 
-      // Clear error for this field if it exists
       setErrors((prev) => {
         const newQuestionErrors = [...prev.questions];
         newQuestionErrors[index] = {
@@ -753,7 +704,6 @@ export default function QuestionCreateEditForm() {
     []
   );
 
-  // Handle answer content changes for sub-questions in Part 3/4
   const handleSubQuestionAnswerChange = useCallback(
     (questionIndex: number, answerIndex: number, content: string) => {
       setPart34Data((prev) => {
@@ -770,7 +720,6 @@ export default function QuestionCreateEditForm() {
         };
       });
 
-      // Clear error for this answer
       setErrors((prev) => {
         const newQuestionErrors = [...prev.questions];
         const newAnswerErrors = [...newQuestionErrors[questionIndex].answers];
@@ -788,7 +737,6 @@ export default function QuestionCreateEditForm() {
     []
   );
 
-  // Handle tab change for Part 3/4 questions
   const handleQuestionTabChange = useCallback(
     (_: React.SyntheticEvent, newValue: number) => {
       setActiveQuestionTab(newValue);
@@ -796,7 +744,6 @@ export default function QuestionCreateEditForm() {
     []
   );
 
-  // Add a new sub-question for Part 3/4
   const handleAddSubQuestion = useCallback(() => {
     setPart34Data((prev) => {
       const newQuestions = [...prev.questions, { ...initialSubQuestion }];
@@ -806,7 +753,6 @@ export default function QuestionCreateEditForm() {
       };
     });
 
-    // Add corresponding error state
     setErrors((prev) => ({
       ...prev,
       questions: [
@@ -820,13 +766,11 @@ export default function QuestionCreateEditForm() {
       ],
     }));
 
-    // Switch to the new tab
     setTimeout(() => {
       setActiveQuestionTab(part34Data.questions.length);
     }, 100);
   }, [part34Data.questions.length]);
 
-  // Remove a sub-question for Part 3/4
   const handleRemoveSubQuestion = useCallback(
     (index: number) => {
       if (part34Data.questions.length <= 1) {
@@ -842,7 +786,6 @@ export default function QuestionCreateEditForm() {
         };
       });
 
-      // Remove corresponding error state
       setErrors((prev) => {
         const newQuestions = prev.questions.filter((_, i) => i !== index);
         return {
@@ -851,7 +794,6 @@ export default function QuestionCreateEditForm() {
         };
       });
 
-      // Adjust active tab if needed
       if (activeQuestionTab >= index && activeQuestionTab > 0) {
         setActiveQuestionTab(activeQuestionTab - 1);
       }
@@ -859,13 +801,11 @@ export default function QuestionCreateEditForm() {
     [part34Data.questions.length, activeQuestionTab, showError]
   );
 
-  // Handle image upload
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
 
-        // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
           setErrors((prev) => ({
             ...prev,
@@ -901,13 +841,11 @@ export default function QuestionCreateEditForm() {
     [questionType, isPart34]
   );
 
-  // Handle audio upload
   const handleAudioChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
 
-        // Validate file size (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
           setErrors((prev) => ({
             ...prev,
@@ -948,7 +886,6 @@ export default function QuestionCreateEditForm() {
     [questionType, isPart34]
   );
 
-  // Handle removing image
   const handleRemoveImage = useCallback(() => {
     setImagePreview(null);
 
@@ -969,7 +906,6 @@ export default function QuestionCreateEditForm() {
     }
   }, [questionType, isPart34]);
 
-  // Handle removing audio
   const handleRemoveAudio = useCallback(() => {
     setAudioPreview(null);
 
@@ -995,7 +931,6 @@ export default function QuestionCreateEditForm() {
     }
   }, [questionType, isPart34]);
 
-  // Form validation
   const validateForm = useCallback((): boolean => {
     let isValid = true;
     let errorMessages: string[] = [];
@@ -1110,7 +1045,7 @@ export default function QuestionCreateEditForm() {
     }
     setErrors(newErrors);
     if (!isValid && errorMessages.length > 0) {
-      showError(errorMessages[0]); // hoặc errorMessages.join('\n') nếu muốn show nhiều lỗi
+      showError(errorMessages[0]);
     }
     return isValid;
   }, [
@@ -1124,7 +1059,6 @@ export default function QuestionCreateEditForm() {
     audioPreview,
   ]);
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -1132,7 +1066,6 @@ export default function QuestionCreateEditForm() {
     try {
       const formData = new FormData();
       if (isEditGroupMode && groupId) {
-        // Edit group (Part3/4)
         if (part34Data.image) formData.append("image", part34Data.image);
         if (part34Data.audio) formData.append("audio", part34Data.audio);
         formData.append("transcript", part34Data.transcript);
@@ -1163,7 +1096,6 @@ export default function QuestionCreateEditForm() {
         return;
       }
       if (questionType === "Part1") {
-        // Part One submission
         if (partOneData.image) {
           formData.append("image", partOneData.image);
         }
@@ -1172,7 +1104,6 @@ export default function QuestionCreateEditForm() {
           formData.append("audio", partOneData.audio);
         }
 
-        // Convert from 1-based to 0-based indexing for the API
         formData.append("correctAnswer", String(partOneData.correctAnswer));
         formData.append("transcript", partOneData.transcript);
         formData.append("explanation", partOneData.explanation);
@@ -1190,12 +1121,10 @@ export default function QuestionCreateEditForm() {
           showSuccess("Question created successfully!");
         }
       } else if (questionType === "Part2") {
-        // Part Two submission
         if (partTwoData.audio) {
           formData.append("audio", partTwoData.audio);
         }
 
-        // Convert from 1-based to 0-based indexing for the API
         formData.append("correctAnswer", String(partTwoData.correctAnswer));
         formData.append("transcript", partTwoData.transcript);
         formData.append("explanation", partTwoData.explanation);
@@ -1213,7 +1142,6 @@ export default function QuestionCreateEditForm() {
           showSuccess("Question created successfully!");
         }
       } else if (isPart34) {
-        // Part 3/4 submission
         if (part34Data.image) {
           formData.append("image", part34Data.image);
         }
@@ -1225,7 +1153,6 @@ export default function QuestionCreateEditForm() {
         formData.append("transcript", part34Data.transcript);
         formData.append("tagId", part34Data.tagId.toString());
 
-        // Add questions data
         part34Data.questions.forEach((question, qIndex) => {
           formData.append(
             `questions[${qIndex}].stringQuestion`,
@@ -1234,7 +1161,7 @@ export default function QuestionCreateEditForm() {
           formData.append(
             `questions[${qIndex}].correctAnswer`,
             String(question.correctAnswer)
-          ); // Convert to 0-based for API
+          );
           formData.append(
             `questions[${qIndex}].explanation`,
             question.explanation
@@ -1270,7 +1197,6 @@ export default function QuestionCreateEditForm() {
     }
   };
 
-  // Handle step navigation
   const handleNext = useCallback(() => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   }, []);
@@ -1279,7 +1205,6 @@ export default function QuestionCreateEditForm() {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   }, []);
 
-  // Get current data based on question type
   const getCurrentData = useCallback(() => {
     if (questionType === "Part1") {
       return partOneData;
@@ -1288,10 +1213,9 @@ export default function QuestionCreateEditForm() {
     } else if (isPart34) {
       return part34Data;
     }
-    return partOneData; // Default
+    return partOneData;
   }, [questionType, isPart34, partOneData, partTwoData, part34Data]);
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -1302,7 +1226,6 @@ export default function QuestionCreateEditForm() {
     },
   };
 
-  // Define steps for the stepper
   const steps = [
     {
       label: "Select Question Type",
@@ -1405,7 +1328,6 @@ export default function QuestionCreateEditForm() {
             )}
           </FormControl>
 
-          {/* Tag chips display */}
           {getCurrentData().tagId > 0 && (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               <Chip
@@ -1680,7 +1602,6 @@ export default function QuestionCreateEditForm() {
         ? "Add questions and answers for this group"
         : "Add answer options and select the correct one",
       content: isPart34 ? (
-        // Part 3/4 Questions with Tabs
         <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
             <Tabs
@@ -1853,7 +1774,7 @@ export default function QuestionCreateEditForm() {
                             }}
                           >
                             <FormControlLabel
-                              value={answerIndex + 1} // Using 1-based indexing
+                              value={answerIndex + 1}
                               control={
                                 <Radio
                                   color="success"
@@ -1937,7 +1858,6 @@ export default function QuestionCreateEditForm() {
           </Box>
         </Box>
       ) : (
-        // Part 1/2 Answer Options
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
           <Typography variant="subtitle1" gutterBottom>
             Answer Options
@@ -1996,7 +1916,7 @@ export default function QuestionCreateEditForm() {
                       sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
                     >
                       <FormControlLabel
-                        value={index + 1} // Using 1-based indexing
+                        value={index + 1}
                         control={
                           <Radio
                             color="success"

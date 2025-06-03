@@ -13,8 +13,6 @@ import { ITopicItem } from "../../../types/topic";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-// ----------------------------------------------------------------------
-
 type Props = {
   onEditRow: VoidFunction;
   row: ITopicItem;
@@ -42,9 +40,9 @@ export default function QuestionTableRow({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 maxWidth: {
-                  xs: 150, // Max width for extra small screens
-                  sm: 200, // Max width for small screens
-                  md: 250, // Max width for medium screens
+                  xs: 150,
+                  sm: 200,
+                  md: 250,
                 },
               }}
             >

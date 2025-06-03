@@ -35,8 +35,8 @@ import { getDetailsTopic } from "../api/topic";
 import { getAllTags } from "../api/tag";
 import type { ITopicItem } from "../types/topic";
 import type { ITagItem } from "../types/tag";
-import { getAllQuestions } from "../api/question"; // Import getAllQuestions function
-import type { IQuestionResponseItem } from "../types/question"; // Import IQuestionItem type
+import { getAllQuestions } from "../api/question";
+import type { IQuestionResponseItem } from "../types/question";
 
 export default function ResultsPage() {
   const { topicId, tagId } = useParams();
@@ -47,16 +47,14 @@ export default function ResultsPage() {
   const [topic, setTopic] = useState<ITopicItem | null>(null);
   const [tag, setTag] = useState<ITagItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const [allQuestions, setAllQuestions] = useState<IQuestionResponseItem[]>([]); // Declare allQuestions state
+  const [allQuestions, setAllQuestions] = useState<IQuestionResponseItem[]>([]);
 
-  // Get results from location state or use default
   const results = location.state?.results || { correct: 0, total: 0 };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch topic details
         if (topicId) {
           const topicRes = await getDetailsTopic(Number(topicId));
           if (topicRes?.data?.data) {
@@ -64,7 +62,6 @@ export default function ResultsPage() {
           }
         }
 
-        // Fetch tag details
         if (tagId) {
           const tagsRes = await getAllTags();
           const foundTag = tagsRes.items.find(
@@ -75,7 +72,6 @@ export default function ResultsPage() {
           }
         }
 
-        // Fetch all questions for the tag
         if (tagId) {
           const questionsRes = await getAllQuestions({ tagId: Number(tagId) });
           if (questionsRes?.items) {
@@ -224,7 +220,6 @@ export default function ResultsPage() {
           )}
         </Box>
 
-        {/* Results Summary Card */}
         <Paper
           elevation={3}
           sx={{
@@ -530,7 +525,6 @@ export default function ResultsPage() {
           </Box>
         </Paper>
 
-        {/* Suggestions for next steps */}
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" fontWeight="bold" gutterBottom>
             <School sx={{ mr: 1, verticalAlign: "middle" }} />

@@ -56,7 +56,6 @@ export default function TagQuestionsPage() {
   const fetchTagAndItems = async (tagId: number, page = 1) => {
     setLoading(true);
     try {
-      // Fetch tag details first to determine if it's Part3/Part4
       const tagsRes = await getAllTags();
       console.log(">>>>", tagsRes);
       const foundTag = tagsRes.items.find((t) => t.id === Number(tagId));
@@ -64,13 +63,11 @@ export default function TagQuestionsPage() {
       if (foundTag) {
         setTag(foundTag);
 
-        // Check if tag type is Part3 or Part4
         const isPart34Tag =
           foundTag.type === "Part3" || foundTag.type === "Part4";
         setIsPart34(isPart34Tag);
 
         if (isPart34Tag) {
-          // Fetch groups for Part3/Part4
           const groupsRes: PaginatedResult<IGroupResponseItem> =
             await getAllGroups({
               tagId,
@@ -86,7 +83,6 @@ export default function TagQuestionsPage() {
             totalItems: groupsRes.totalItems || 0,
           });
         } else {
-          // Fetch individual questions for other parts
           const questionsRes: PaginatedResult<IQuestionResponseItem> =
             await getAllQuestions({
               tagId,
@@ -279,7 +275,6 @@ export default function TagQuestionsPage() {
         <Divider sx={{ mb: 4 }} />
 
         {isPart34 ? (
-          // Render groups for Part3/Part4
           groups.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 4 }}>
               <Typography variant="h6" color="text.secondary">
@@ -375,8 +370,7 @@ export default function TagQuestionsPage() {
               </Grid>
             </motion.div>
           )
-        ) : // Render individual questions for other parts
-        questions.length === 0 ? (
+        ) : questions.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 4 }}>
             <Typography variant="h6" color="text.secondary">
               No questions available for this tag

@@ -113,13 +113,11 @@ export default function GroupQuestionPracticePage() {
 
   console.log(isPlaying, audioProgress);
 
-  // Fetch question data and all groups for navigation
   useEffect(() => {
     const fetchData = async () => {
       if (!groupId || !tagId) return;
 
       setLoading(true);
-      // Nếu group đã làm rồi thì load lại kết quả, nếu chưa thì reset
       const saved = groupResults[Number(groupId)];
       if (saved) {
         setSelectedAnswers(saved.selectedAnswers);
@@ -135,23 +133,19 @@ export default function GroupQuestionPracticePage() {
         setActiveQuestionTab(0);
       }
       try {
-        // Fetch current group details
         const response = await getDetailsGroup(Number.parseInt(groupId));
         const data = response?.data?.data;
 
         if (data) {
           setQuestionData(data);
-          // Nếu chưa có kết quả thì khởi tạo selectedAnswers
           if (!saved) {
             setSelectedAnswers(new Array(data.questions.length).fill(-1));
           }
         }
 
-        // Fetch all groups for this tag for navigation
         const groupsRes = await getAllGroups({ tagId: Number(tagId) });
         if (groupsRes?.items) {
           setGroups(groupsRes.items);
-          // Find current group index
           const index = groupsRes.items.findIndex(
             (g) => g.groupId === Number(groupId)
           );
@@ -169,7 +163,6 @@ export default function GroupQuestionPracticePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, tagId]);
 
-  // Handle answer selection
   const handleAnswerChange = (questionIndex: number, value: number) => {
     const newSelectedAnswers = [...selectedAnswers];
     newSelectedAnswers[questionIndex] = value;
@@ -179,7 +172,6 @@ export default function GroupQuestionPracticePage() {
   const handleCheckAnswers = async () => {
     if (!groupId) return;
 
-    // Check if all questions have been answered
     if (selectedAnswers.includes(-1)) {
       showError("Please answer all questions before submitting");
       return;
@@ -202,7 +194,6 @@ export default function GroupQuestionPracticePage() {
         });
         setResults(resultsData);
         setShowResults(true);
-        // Lưu kết quả vào groupResults
         setGroupResults((prev) => ({
           ...prev,
           [Number(groupId)]: {
@@ -213,12 +204,10 @@ export default function GroupQuestionPracticePage() {
             activeQuestionTab,
           },
         }));
-        // Calculate score
         const correctCount = resultsData.filter((result) => result).length;
         setTotalCorrect((prev) => prev + correctCount);
         setTotalQuestions((prev) => prev + resultsData.length);
 
-        // Lưu transcript và explanations
         setGroupTranscript(responseData.transcript || "");
         setExplanations(
           Array.isArray(responseData.questionKeys)
@@ -226,7 +215,6 @@ export default function GroupQuestionPracticePage() {
             : []
         );
 
-        // Calculate percentage
         const percentage = Math.round(
           (correctCount / resultsData.length) * 100
         );
@@ -244,7 +232,6 @@ export default function GroupQuestionPracticePage() {
     }
   };
 
-  // Reset practice
   const handleReset = () => {
     setSelectedAnswers(new Array(questionData?.questions.length || 0).fill(-1));
     setResults([]);
@@ -252,7 +239,6 @@ export default function GroupQuestionPracticePage() {
     setShowResults(false);
     setActiveQuestionTab(0);
 
-    // Reset audio
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -261,7 +247,6 @@ export default function GroupQuestionPracticePage() {
     }
   };
 
-  // Navigate to next group+
   const handleNextGroup = () => {
     if (currentGroupIndex < groups.length - 1) {
       const nextGroup = groups[currentGroupIndex + 1];
@@ -271,7 +256,6 @@ export default function GroupQuestionPracticePage() {
     }
   };
 
-  // Navigate to previous group
   const handlePrevGroup = () => {
     if (currentGroupIndex > 0) {
       const prevGroup = groups[currentGroupIndex - 1];
@@ -281,7 +265,6 @@ export default function GroupQuestionPracticePage() {
     }
   };
 
-  // Finish practice and go to results
   const handleFinish = () => {
     navigate(`/topic/${topicId}/tag/${tagId}/results`, {
       state: { results: { correct: totalCorrect, total: totalQuestions } },
@@ -482,7 +465,6 @@ export default function GroupQuestionPracticePage() {
                 mb: 3,
               }}
             >
-              {/* Media Section */}
               <Box
                 sx={{
                   flex: 1,
@@ -599,7 +581,6 @@ export default function GroupQuestionPracticePage() {
 
             <Divider sx={{ my: 3 }} />
 
-            {/* Questions Section */}
             <Box>
               <Typography
                 variant="h6"
@@ -624,7 +605,6 @@ export default function GroupQuestionPracticePage() {
                 </Tooltip>
               </Typography>
 
-              {/* Question Navigation Tabs */}
               <Box sx={{ position: "relative", mb: 3 }}>
                 <Box
                   sx={{
@@ -702,7 +682,6 @@ export default function GroupQuestionPracticePage() {
                 </Box>
               </Box>
 
-              {/* Question Content */}
               {questionData.questions.map((question, questionIndex) => (
                 <Box
                   key={questionIndex}
@@ -802,11 +781,11 @@ export default function GroupQuestionPracticePage() {
                                         borderColor: showResults
                                           ? answerIndex + 1 ===
                                             correctAnswers[questionIndex]
-                                            ? theme.palette.success.main // Đúng: xanh
+                                            ? theme.palette.success.main
                                             : selectedAnswers[questionIndex] ===
                                               answerIndex + 1
-                                            ? theme.palette.error.main // Chọn sai: đỏ
-                                            : theme.palette.divider // Mặc định
+                                            ? theme.palette.error.main
+                                            : theme.palette.divider
                                           : selectedAnswers[questionIndex] ===
                                             answerIndex + 1
                                           ? theme.palette.primary.main
@@ -1016,7 +995,6 @@ export default function GroupQuestionPracticePage() {
                               {explanations[questionIndex] ||
                                 "No explanation provided for this question."}
                             </Typography>
-                            {/* Navigation buttons after completing group */}
                             <Box
                               sx={{
                                 display: "flex",
@@ -1129,7 +1107,6 @@ export default function GroupQuestionPracticePage() {
           </Paper>
         </motion.div>
 
-        {/* Group Navigation and Finish Buttons */}
         <Box sx={{ mt: 4, mb: 2, display: "flex", justifyContent: "center" }}>
           <Paper
             elevation={3}

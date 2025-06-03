@@ -69,7 +69,6 @@ import type {
   FetchTracksParams,
 } from "../../../../types/track";
 
-// Animation variants
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -94,7 +93,6 @@ export default function TrackListView() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
 
-  // State
   const [tracks, setTracks] = useState<ITrackResponseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -114,7 +112,6 @@ export default function TrackListView() {
   const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
   const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
 
-  // Fetch tracks
   const fetchTracks = useCallback(async () => {
     try {
       setLoading(true);
@@ -145,12 +142,10 @@ export default function TrackListView() {
     showError,
   ]);
 
-  // Initial fetch
   useEffect(() => {
     fetchTracks();
   }, [fetchTracks]);
 
-  // Search debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -159,7 +154,6 @@ export default function TrackListView() {
     return () => clearTimeout(timer);
   }, [searchTerm, page]);
 
-  // Handlers
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchTracks();
@@ -248,7 +242,6 @@ export default function TrackListView() {
         setDeleteDialogOpen(false);
         setSelectedTrack(null);
 
-        // If we deleted the last item on the page, go to previous page
         if (tracks.length === 1 && page > 1) {
           setPage(page - 1);
         } else {
@@ -263,7 +256,6 @@ export default function TrackListView() {
     }
   };
 
-  // Render functions
   const renderGridView = () => (
     <AnimatePresence>
       <motion.div variants={container} initial="hidden" animate="show">

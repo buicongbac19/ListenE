@@ -17,7 +17,6 @@ export const getAllQuestions = async ({
 > => {
   let URL = `${endpoints.question.root}?page=${page}&size=${size}`;
 
-  // Add optional filters if provided
   if (tagId !== undefined) {
     URL += `&tagId=${tagId}`;
   }
@@ -26,7 +25,6 @@ export const getAllQuestions = async ({
     URL += `&type=${type}`;
   }
 
-  // Add sorting if provided
   if (sortField) {
     URL += `&sort=${sortField},${sortDirection}`;
   }
@@ -143,7 +141,6 @@ export const getAllGroups = async ({
 }: FetchQuestionsParams = {}): Promise<PaginatedResult<IGroupResponseItem>> => {
   let URL = `${endpoints.question.part34}?page=${page}&size=${size}`;
 
-  // Add optional filters if provided
   if (tagId !== undefined) {
     URL += `&tagId=${tagId}`;
   }
@@ -152,7 +149,6 @@ export const getAllGroups = async ({
     URL += `&type=${type}`;
   }
 
-  // Add sorting if provided
   if (sortField) {
     URL += `&sort=${sortField},${sortDirection}`;
   }

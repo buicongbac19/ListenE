@@ -88,7 +88,6 @@ export default function QuestionPracticePage() {
     "success" | "error" | "info" | "warning"
   >("info");
 
-  // New state for handling next questions
   const [allQuestions, setAllQuestions] = useState<IQuestionResponseItem[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(-1);
   const [isLastQuestion, setIsLastQuestion] = useState(false);
@@ -98,7 +97,6 @@ export default function QuestionPracticePage() {
   });
   const [showResultsDialog, setShowResultsDialog] = useState(false);
 
-  // State lưu trạng thái từng câu hỏi
   const [questionStates, setQuestionStates] = useState<{
     [id: number]: {
       selectedAnswer: number | null;
@@ -112,7 +110,6 @@ export default function QuestionPracticePage() {
 
   const [transcript, setTranscript] = useState<string>("");
 
-  // Fetch all questions in this tag to enable navigation
   useEffect(() => {
     const fetchAllQuestionsInTag = async () => {
       if (!tagId) return;
@@ -120,19 +117,17 @@ export default function QuestionPracticePage() {
       try {
         const questionsResponse = await getAllQuestions({
           tagId: Number(tagId),
-          size: 100, // Get a large number to ensure we get all questions
+          size: 100,
         });
 
         if (questionsResponse?.items) {
           setAllQuestions(questionsResponse.items);
 
-          // Find the index of the current question
           const index = questionsResponse.items.findIndex(
             (q) => q.id === Number(questionId)
           );
           setCurrentQuestionIndex(index);
 
-          // Check if this is the last question
           setIsLastQuestion(index === questionsResponse.items.length - 1);
         }
       } catch (error) {
@@ -143,7 +138,6 @@ export default function QuestionPracticePage() {
     fetchAllQuestionsInTag();
   }, [tagId, questionId]);
 
-  // Lấy thông tin topic từ tagId
   useEffect(() => {
     const fetchTopicDetails = async () => {
       if (!topicId) return;
@@ -167,14 +161,12 @@ export default function QuestionPracticePage() {
 
       setLoading(true);
       try {
-        // Thử lấy thông tin câu hỏi Part One
         try {
           const part1Res = await getDetailPartOneQuestion(Number(questionId));
           const questionData = part1Res?.data?.data;
           if (questionData) {
             setQuestion(questionData);
 
-            // Khởi tạo audio nếu có
             if (questionData.audioUrl) {
               const newAudio = new Audio(questionData.audioUrl);
               newAudio.addEventListener("ended", () => setIsPlaying(false));
@@ -188,14 +180,12 @@ export default function QuestionPracticePage() {
           console.log("Không phải câu hỏi Part One, đang thử Part Two...");
         }
 
-        // Nếu không phải Part One, thử Part Two
         try {
           const part2Res = await getDetailPartTwoQuestion(Number(questionId));
           const questionData = part2Res?.data?.data;
           if (questionData) {
             setQuestion(questionData);
 
-            // Khởi tạo audio nếu có
             if (questionData.audioUrl) {
               const newAudio = new Audio(questionData.audioUrl);
               newAudio.addEventListener("ended", () => setIsPlaying(false));
@@ -209,7 +199,6 @@ export default function QuestionPracticePage() {
           console.error("Cũng không phải câu hỏi Part Two:", error);
         }
 
-        // Nếu đến đây, chúng ta không thể xác định loại câu hỏi
         setSnackbarMessage("Không thể xác định loại câu hỏi");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
@@ -225,7 +214,6 @@ export default function QuestionPracticePage() {
 
     fetchQuestionDetails();
 
-    // Khi chuyển câu hỏi, nếu đã có trạng thái thì load lại, nếu chưa thì reset
     const state = questionStates[Number(questionId)];
     if (state) {
       setSelectedAnswer(state.selectedAnswer);
@@ -243,7 +231,6 @@ export default function QuestionPracticePage() {
       setShowExplanation(false);
     }
 
-    // Dọn dẹp audio khi unmount
     return () => {
       if (audio) {
         audio.pause();
@@ -269,12 +256,10 @@ export default function QuestionPracticePage() {
       const response = await checkAnswerQuestion(Number(questionId));
       const responseData = response?.data?.data;
 
-      // Xử lý dữ liệu trả về từ API
       let correctAnswerId = null;
       let explanationText = "";
       let transcriptText = "";
 
-      // Kiểm tra nếu dữ liệu trả về là đối tượng có correctKey
       if (
         typeof responseData === "object" &&
         responseData.correctKey !== undefined
@@ -283,7 +268,6 @@ export default function QuestionPracticePage() {
         explanationText = responseData.explanation || "";
         transcriptText = responseData.transcript || "";
       } else {
-        // Nếu không, giả định dữ liệu trả về trực tiếp là correctKey
         correctAnswerId = responseData;
       }
 
@@ -294,9 +278,8 @@ export default function QuestionPracticePage() {
       setTranscript(transcriptText);
       setIsCorrect(isAnswerCorrect);
       setIsAnswerSubmitted(true);
-      setShowExplanation(true); // Tự động hiển thị giải thích
+      setShowExplanation(true);
 
-      // Lưu trạng thái câu hỏi này
       setQuestionStates((prev) => ({
         ...prev,
         [question.id]: {
@@ -309,7 +292,6 @@ export default function QuestionPracticePage() {
         },
       }));
 
-      // Update results
       setResults((prev) => ({
         correct: prev.correct + (isAnswerCorrect ? 1 : 0),
         total: prev.total + 1,
@@ -351,13 +333,11 @@ export default function QuestionPracticePage() {
 
   const handleNextQuestion = () => {
     if (isLastQuestion) {
-      // Show results dialog if this is the last question
       setShowResultsDialog(true);
     } else if (
       currentQuestionIndex >= 0 &&
       currentQuestionIndex < allQuestions.length - 1
     ) {
-      // Navigate to the next question
       const nextQuestion = allQuestions[currentQuestionIndex + 1];
       navigate(
         `/topic/${topicId}/tag/${tagId}/question/${nextQuestion.id}/practice`
@@ -375,27 +355,22 @@ export default function QuestionPracticePage() {
   };
 
   const handleFinishPractice = () => {
-    // Navigate to results page
     navigate(`/topic/${topicId}/tag/${tagId}/results`, {
       state: { results: results },
     });
   };
 
-  // Xác định loại câu hỏi dựa trên dữ liệu câu hỏi
   const getQuestionType = () => {
     if (!question) return "";
 
-    // Kiểm tra xem có phải Part 1 không (có imageUrl)
     if ((question as IQuestionPartOneResponseItem).imageUrl) {
       return "part1";
     }
 
-    // Nếu không có imageUrl nhưng có audioUrl, đây có thể là Part 2
     if (question.audioUrl) {
       return "part2";
     }
 
-    // Nếu có thông tin từ topic, sử dụng type của topic
     if (topic?.type) {
       return topic.type.toLowerCase();
     }
@@ -578,7 +553,6 @@ export default function QuestionPracticePage() {
             }}
           />
 
-          {/* Question progress indicator */}
           {allQuestions.length > 0 && currentQuestionIndex >= 0 && (
             <Chip
               label={`Câu hỏi ${currentQuestionIndex + 1}/${
@@ -649,7 +623,6 @@ export default function QuestionPracticePage() {
             </Box>
           )}
 
-          {/* Tiêu đề câu hỏi với thông tin topic */}
           <Box
             sx={{
               mb: 3,
@@ -730,7 +703,6 @@ export default function QuestionPracticePage() {
 
           <Divider sx={{ mb: 3 }} />
 
-          {/* Nội dung câu hỏi dựa trên loại */}
           {questionType === "part1" && (
             <Box>
               {/* Hình ảnh cho Part 1 */}
@@ -772,7 +744,6 @@ export default function QuestionPracticePage() {
                 />
               </Box>
 
-              {/* Điều khiển âm thanh */}
               {audio && (
                 <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
                   <Button
@@ -813,7 +784,6 @@ export default function QuestionPracticePage() {
 
           {questionType === "part2" && (
             <Box>
-              {/* Chỉ âm thanh cho Part 2 */}
               {audio && (
                 <Box
                   sx={{
@@ -862,7 +832,6 @@ export default function QuestionPracticePage() {
             </Box>
           )}
 
-          {/* Các lựa chọn đáp án */}
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
             Chọn đáp án đúng:
           </Typography>
@@ -942,7 +911,6 @@ export default function QuestionPracticePage() {
                           },
                         }}
                       >
-                        {/* Hiển thị biểu tượng đánh dấu đáp án đúng/sai */}
                         {isAnswerSubmitted && (
                           <Box
                             sx={{
@@ -1042,7 +1010,6 @@ export default function QuestionPracticePage() {
             </RadioGroup>
           </FormControl>
 
-          {/* Phần giải thích (hiển thị sau khi nộp) */}
           {isAnswerSubmitted && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -1184,7 +1151,6 @@ export default function QuestionPracticePage() {
           )}
         </Paper>
 
-        {/* Các nút hành động */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
           <Button
             variant="outlined"
@@ -1305,7 +1271,6 @@ export default function QuestionPracticePage() {
         </Box>
       </motion.div>
 
-      {/* Results Dialog */}
       <Dialog
         open={showResultsDialog}
         onClose={() => setShowResultsDialog(false)}
@@ -1401,7 +1366,6 @@ export default function QuestionPracticePage() {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar cho thông báo */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

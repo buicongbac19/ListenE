@@ -81,22 +81,20 @@ import type {
 } from "../../../../types/question";
 import type { ITagItem } from "../../../../types/tag";
 
-// Define question type display names and colors
 const QUESTION_TYPE_CONFIG: Record<
   string,
   { label: string; color: string; icon: React.ElementType }
 > = {
-  Part1: { label: "Part 1 (Image & Audio)", color: "#4CAF50", icon: ImageIcon }, // Green
-  Part2: { label: "Part 2 (Audio Only)", color: "#2196F3", icon: AudioFile }, // Blue
-  Part3: { label: "Part 3 (Conversation)", color: "#9C27B0", icon: Groups }, // Purple
+  Part1: { label: "Part 1 (Image & Audio)", color: "#4CAF50", icon: ImageIcon },
+  Part2: { label: "Part 2 (Audio Only)", color: "#2196F3", icon: AudioFile },
+  Part3: { label: "Part 3 (Conversation)", color: "#9C27B0", icon: Groups },
   Part4: {
     label: "Part 4 (Short Talk)",
     color: "#FF9800",
     icon: FormatListNumbered,
-  }, // Orange
+  },
 };
 
-// Define sort direction type
 type SortDirection = "asc" | "desc";
 
 export default function QuestionListView() {
@@ -126,28 +124,23 @@ export default function QuestionListView() {
     "questions"
   );
 
-  // Pagination state
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Group pagination state
   const [groupPage, setGroupPage] = useState(1);
   const [groupSize, setGroupSize] = useState(10);
   const [groupTotalPages, setGroupTotalPages] = useState(1);
   const [groupTotalItems, setGroupTotalItems] = useState(0);
 
-  // Sorting state
   const [sortField, setSortField] = useState<string>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  // Group sorting state
   const [groupSortField, setGroupSortField] = useState<string>("groupId");
   const [groupSortDirection, setGroupSortDirection] =
     useState<SortDirection>("desc");
 
-  // Fetch all tags
   useEffect(() => {
     const fetchTags = async () => {
       setTagsLoading(true);
@@ -235,20 +228,19 @@ export default function QuestionListView() {
     groupSortDirection,
     filterType,
     filterTag,
-  ]); // Refetch when these parameters change
+  ]);
 
-  // Debounce search to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
       if (activeTab === "questions") {
         if (page !== 1) {
-          setPage(1); // Reset to page 1 when search changes
+          setPage(1);
         } else {
           handleGetAllQuestions();
         }
       } else {
         if (groupPage !== 1) {
-          setGroupPage(1); // Reset to page 1 when search changes
+          setGroupPage(1);
         } else {
           handleGetAllGroups();
         }
@@ -377,7 +369,6 @@ export default function QuestionListView() {
   };
 
   const handleViewQuestion = (questionId: number, questionType: string) => {
-    // Determine the correct route based on question type
     if (questionType === "Part1" || questionType === "Part2") {
       navigate(`/practice/${questionType}/${questionId}`);
     } else {
@@ -425,7 +416,6 @@ export default function QuestionListView() {
     setActiveTab(newValue);
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -447,7 +437,6 @@ export default function QuestionListView() {
     },
   };
 
-  // Function to get question type config
   const getQuestionTypeConfig = (type: string) => {
     return (
       QUESTION_TYPE_CONFIG[type] || {
@@ -455,10 +444,9 @@ export default function QuestionListView() {
         color: "#757575",
         icon: QuestionAnswer,
       }
-    ); // Default gray
+    );
   };
 
-  // Function to render question type chip
   const renderQuestionTypeChip = (type: string) => {
     const config = getQuestionTypeConfig(type);
     return (
@@ -480,7 +468,6 @@ export default function QuestionListView() {
     );
   };
 
-  // Function to render tag chip
   const renderTagChip = (tagName: string) => {
     return (
       <Chip
@@ -500,7 +487,6 @@ export default function QuestionListView() {
     );
   };
 
-  // Function to render question media icons
   const renderMediaIcons = (type: string) => {
     return (
       <Box sx={{ display: "flex", gap: 0.5 }}>
@@ -562,7 +548,6 @@ export default function QuestionListView() {
     );
   };
 
-  // Render table view for questions
   const renderQuestionsTableView = () => {
     return (
       <TableContainer
@@ -629,7 +614,6 @@ export default function QuestionListView() {
                     bgcolor: alpha(theme.palette.primary.main, 0.05),
                   },
                   transition: "background-color 0.2s",
-                  // Animation with CSS
                   animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
                   "@keyframes fadeIn": {
                     from: { opacity: 0, transform: "translateY(20px)" },
@@ -710,7 +694,6 @@ export default function QuestionListView() {
     );
   };
 
-  // Render table view for groups
   const renderGroupsTableView = () => {
     return (
       <TableContainer
@@ -782,7 +765,6 @@ export default function QuestionListView() {
                     bgcolor: alpha(theme.palette.secondary.main, 0.05),
                   },
                   transition: "background-color 0.2s",
-                  // Animation with CSS
                   animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
                   "@keyframes fadeIn": {
                     from: { opacity: 0, transform: "translateY(20px)" },
@@ -863,7 +845,6 @@ export default function QuestionListView() {
     );
   };
 
-  // Render grid view for questions
   const renderQuestionsGridView = () => {
     return (
       <Grid container spacing={3}>
@@ -1021,7 +1002,6 @@ export default function QuestionListView() {
     );
   };
 
-  // Render grid view for groups
   const renderGroupsGridView = () => {
     return (
       <Grid container spacing={3}>
@@ -1179,7 +1159,6 @@ export default function QuestionListView() {
     );
   };
 
-  // Render empty state for questions
   const renderQuestionsEmptyState = () => (
     <Paper
       sx={{
@@ -1223,7 +1202,6 @@ export default function QuestionListView() {
     </Paper>
   );
 
-  // Render empty state for groups
   const renderGroupsEmptyState = () => (
     <Paper
       sx={{

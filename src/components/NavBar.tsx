@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-// import PlayLessonIcon from "@mui/icons-material/PlayLesson";
 import TopicIcon from "@mui/icons-material/Topic";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import { useNavigate } from "react-router-dom";

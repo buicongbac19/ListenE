@@ -41,7 +41,6 @@ export default function TrackEditView() {
   const [error, setError] = useState<string | null>(null);
   const [trackData, setTrackData] = useState<any>(null);
 
-  // Track information
   const [trackName, setTrackName] = useState("");
   const [trackNameError, setTrackNameError] = useState("");
   const [fullTranscript, setFullTranscript] = useState("");
@@ -52,13 +51,11 @@ export default function TrackEditView() {
 
   console.log(originalSegments);
 
-  // Dialog state
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [segmentToClean, setSegmentToClean] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [segmentToDelete, setSegmentToDelete] = useState<number | null>(null);
 
-  // Fetch track data
   useEffect(() => {
     const fetchTrackData = async () => {
       if (!trackId) return;
@@ -66,7 +63,7 @@ export default function TrackEditView() {
       setLoading(true);
       try {
         const response = await getDetailsTrack(Number.parseInt(trackId));
-        const data = response?.data?.data || response; // Adjust based on your API response structure
+        const data = response?.data?.data || response;
 
         setTrackData(data);
         setTrackName(data.name);
@@ -207,7 +204,6 @@ export default function TrackEditView() {
     );
   }
 
-  // Animation variants for Framer Motion
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -231,7 +227,6 @@ export default function TrackEditView() {
     },
   };
 
-  // Save button component to be reused in both tabs
   const SaveButton = () => (
     <LoadingButton
       loading={apiLoading}
@@ -381,11 +376,10 @@ export default function TrackEditView() {
                 sentences={segments}
                 setSentences={setSegments}
                 fullAudioURL={trackData?.fullAudioUrl}
-                isEditMode={true} // Set to true for edit mode
-                hideCreateButton={true} // Hide the create button in edit mode
+                isEditMode={true}
+                hideCreateButton={true}
               />
 
-              {/* Add Save button at the bottom of the audio tab */}
               <Box
                 sx={{
                   display: "flex",

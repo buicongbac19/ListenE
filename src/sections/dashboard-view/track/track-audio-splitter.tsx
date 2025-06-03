@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -70,7 +70,7 @@ export default function TrackAudioSplitter({
   setSentences,
   fullAudioURL,
   isEditMode = false,
-  hideCreateButton = false, // New prop to hide the create button
+  hideCreateButton = false,
 }: {
   isShowContent: boolean;
   sentences: IPostSegmentItem[];
@@ -104,7 +104,6 @@ export default function TrackAudioSplitter({
   );
   const [apiLoading, setApiLoading] = useState(false);
 
-  // State for editing transcripts
   const [editingSentenceId, setEditingSentenceId] = useState<number | null>(
     null
   );
@@ -116,7 +115,6 @@ export default function TrackAudioSplitter({
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [sentenceToClean, setSentenceToClean] = useState<number | null>(null);
 
-  // Add state for new segment dialog
   const [addSegmentDialogOpen, setAddSegmentDialogOpen] = useState(false);
   const [newSegmentTranscript, setNewSegmentTranscript] = useState("");
 
@@ -134,7 +132,6 @@ export default function TrackAudioSplitter({
     }
   };
 
-  // Effect to load audio from fullAudioURL if provided
   useEffect(() => {
     if (fullAudioURL && !audioUrl) {
       setLoading(true);
@@ -198,7 +195,6 @@ export default function TrackAudioSplitter({
         setWavesurfer(ws);
         setRegionsPlugin(regions);
 
-        // Load audio from fullAudioURL if available
         if (fullAudioURL) {
           ws.load(fullAudioURL);
         }
@@ -356,13 +352,11 @@ export default function TrackAudioSplitter({
       audioElementRef.current.src = audioUrl;
     }
 
-    // Set up the timeupdate event to monitor playback position
     const handleTimeUpdate = () => {
       if (audioElementRef.current && sentence.endSec !== undefined) {
         if (audioElementRef.current.currentTime >= sentence.endSec) {
           audioElementRef.current.pause();
           setPlayingSentenceId(null);
-          // Remove the event listener after stopping
           audioElementRef.current.removeEventListener(
             "timeupdate",
             handleTimeUpdate
@@ -371,10 +365,8 @@ export default function TrackAudioSplitter({
       }
     };
 
-    // Add the timeupdate event listener
     audioElementRef.current.addEventListener("timeupdate", handleTimeUpdate);
 
-    // Set up the ended event to clean up
     audioElementRef.current.onended = () => {
       setPlayingSentenceId(null);
       if (audioElementRef.current) {
@@ -385,7 +377,6 @@ export default function TrackAudioSplitter({
       }
     };
 
-    // Start playback from the segment start time
     audioElementRef.current.currentTime = sentence.startSec;
     audioElementRef.current.play();
     setPlayingSentenceId(sentenceId);
@@ -430,7 +421,6 @@ export default function TrackAudioSplitter({
     setSentenceToClean(null);
   };
 
-  // Function to start editing a sentence transcript
   const handleEditTranscript = (
     sentenceId: number,
     transcript: string,
@@ -441,7 +431,6 @@ export default function TrackAudioSplitter({
     setEditingTranscript(transcript);
   };
 
-  // Function to save the edited transcript
   const handleSaveTranscript = (sentenceId: number, e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -466,7 +455,6 @@ export default function TrackAudioSplitter({
     setEditingTranscript("");
   };
 
-  // Function to cancel editing
   const handleCancelEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingSentenceId(null);
@@ -533,13 +521,9 @@ export default function TrackAudioSplitter({
       formData.append("name", trackName);
       formData.append("fullTranscript", getFullTranscript());
 
-      // Only append the file if we're using an uploaded file
-      // If using fullAudioURL, the server already has the file
       if (audioFile) {
         formData.append("fullAudio", audioFile);
       } else if (fullAudioURL) {
-        // If using existing audio URL, we might need to send the URL or a flag
-        // depending on your API implementation
         formData.append("useExistingAudio", "true");
       }
 
@@ -584,8 +568,6 @@ export default function TrackAudioSplitter({
       return;
     }
 
-    // Generate a new unique ID for the segment
-    // In a real app, this might come from the server
     const maxId =
       sentences.length > 0
         ? Math.max(
@@ -595,20 +577,17 @@ export default function TrackAudioSplitter({
 
     const newId = maxId + 1;
 
-    // Create a new segment with the correct type (IPostSegmentItem)
     const newSegment: IPostSegmentItem = {
       id: newId,
       transcript: newSegmentTranscript.trim(),
       order: sentences.length + 1,
       isCreate: true,
-      // startSec and endSec will be undefined until assigned
     };
 
     setSentences((prev) => [...prev, newSegment]);
     setNewSegmentTranscript("");
     setAddSegmentDialogOpen(false);
 
-    // Optionally select the new segment
     setSelectedSentenceId(newId);
   };
 
@@ -628,7 +607,6 @@ export default function TrackAudioSplitter({
     }
   };
 
-  // Determine if audio is available (either from file upload or fullAudioURL)
   const isAudioAvailable = !!audioUrl;
 
   return (

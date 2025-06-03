@@ -45,7 +45,6 @@ export default function TopicListView() {
   const navigate = useNavigate();
   const theme = useTheme();
 
-  // State for all topics (unfiltered)
   const [allTopics, setAllTopics] = useState<ITopicItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);

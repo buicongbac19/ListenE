@@ -27,7 +27,6 @@ export const getAllTags = async ({
     URL += `&size=${size}`;
   }
 
-  // Add sorting if provided
   if (sortField) {
     URL += `&sort=${sortField},${sortDirection}`;
   }

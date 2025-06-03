@@ -2,8 +2,6 @@ import { ITopicItem } from "./../types/topic";
 
 import axios, { endpoints } from "../utils/axios";
 
-// ----------------------------------------------------------------------
-
 export async function getAllTopics() {
   const URL = `${endpoints.topic.root}`;
   const res = await axios.get(URL);
@@ -15,20 +13,17 @@ export async function updateOrCreateTopic(
   isDelete: boolean = false
 ) {
   if (isDelete) {
-    // delete
     const URL = `${endpoints.topic.root}/${params.id}`;
     const res = await axios.delete(URL);
     return res;
   }
 
   if (params.id) {
-    // update
     const URL = `${endpoints.topic.root}/${params.id}`;
     const response = await axios.put(URL, params);
     return response;
   }
 
-  // add
   const res = await axios.post(endpoints.topic.root, params);
   return res;
 }
