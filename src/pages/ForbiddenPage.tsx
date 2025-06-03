@@ -16,17 +16,6 @@ import { Lock, Home, ArrowBack, Security, Warning } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { keyframes } from "@mui/system";
 
-const float = keyframes`
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
-`;
-
-const shake = keyframes`
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
-`;
-
 const ForbiddenPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
